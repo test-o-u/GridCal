@@ -33,7 +33,6 @@ from GridCalEngine.Core.DataStructures.numerical_circuit import NumericalCircuit
 from GridCalEngine.IO.file_system import get_create_gridcal_folder
 from GridCalEngine.basic_structures import ConvergenceReport
 
-
 NEWTON_PA_RECOMMENDED_VERSION = "2.1.13"
 NEWTON_PA_VERSION = ''
 NEWTON_PA_AVAILABLE = False
@@ -984,8 +983,10 @@ def to_newton_pa(circuit: MultiCircuit,
     add_npa_generators(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices, opf_results)
     add_battery_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices, opf_results)
     add_npa_line(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices)
-    add_transformer_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices, override_branch_controls)
-    add_transformer3w_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices, override_branch_controls)
+    add_transformer_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices,
+                         override_branch_controls)
+    add_transformer3w_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices,
+                           override_branch_controls)
     add_vsc_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices)
     add_dc_line_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices)
     add_hvdc_data(circuit, npa_circuit, bus_dict, use_time_series, n_time, time_indices)
@@ -1592,3 +1593,47 @@ def debug_newton_pa_circuit_at(npa_circuit: "npa.HybridCircuit", t: int = None):
 
         print('Qmax')
         print(data[i].Qmax_bus)
+
+
+def get_all_elements_dict(newton_grid: npa.HybridCircuit):
+    """
+    Get a dictionary of all elements
+    :return: Dict[idtag] -> object
+    """
+    data = dict()
+    for elements in [newton_grid.calculation_nodes,
+                     newton_grid.ac_lines,
+                     newton_grid.dc_lines,
+                     newton_grid.hvdc_lines,
+                     newton_grid.transformers_2w,
+                     newton_grid.transformers_3w,
+                     newton_grid.transformers_2w_full,
+                     newton_grid.transformers_phase_shifters,
+                     newton_grid.transformers_voltage_regulators,
+                     newton_grid.ac_dc_converters,
+                     newton_grid.generators,
+                     newton_grid.loads,
+                     newton_grid.capacitors,
+                     newton_grid.capacitor_banks,
+                     newton_grid.batteries]:
+
+        for elm in elements:
+            data[elm.uuid] = elm
+
+    return data
+
+
+def set_investments_status(investments_list: List[dev.Investment], status: bool,
+                           all_elemnts_dict: Union[None, dict[str, object]]) -> None:
+    """
+    Set the active (and active profile) status of a list of investmensts' objects
+    :param investments_list: list of investments
+    :param status: status to set in the internal strctures
+    :param all_elemnts_dict: Dictionary of all elemets (idtag -> object), if None if is computed
+    """
+
+    for inv in investments_list:
+        device_idtag = inv.device_idtag
+        device = all_elemnts_dict[device_idtag]
+        # device.active = status
+        device.setAllActive(status)
