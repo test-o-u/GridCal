@@ -591,7 +591,7 @@ def ac_optimal_power_flow(nc: NumericalCircuit,
     Va_max = nc.bus_data.angle_max  # This limits are not really used as of right now.
     Va_min = nc.bus_data.angle_min
 
-    # Transformer control modes and line parameters to calculate the associated derivatives w.r.t the tap variables.
+    # Transformer control modes and line parameters to calculate the associated derivatives w.r.t the tap variables
     k_m = nc.k_m
     k_tau = nc.k_tau
     k_mtau = nc.k_mtau
