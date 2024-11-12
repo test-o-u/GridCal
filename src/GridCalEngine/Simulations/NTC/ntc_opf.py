@@ -1144,6 +1144,9 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
         if zonal_grouping == ZonalGrouping.NoGrouping:
 
+
+
+
             # declare the linear analysis
             ls = LinearAnalysis(numerical_circuit=nc,
                                 distributed_slack=False,
@@ -1152,8 +1155,20 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             # compute the PTDF and LODF
             ls.run()
 
+            if consider_contingencies:
+
+                if len(contingency_groups_used) > 0:
+
+                    # declare the multi-contingencies analysis and compute
+                    mctg = LinearMultiContingencies(grid=grid,
+                                                    contingency_groups_used=contingency_groups_used)
+                    mctg.compute(lodf=ls.LODF,
+                                 ptdf=ls.PTDF,
+                                 ptdf_threshold=lodf_threshold,
+                                 lodf_threshold=lodf_threshold)
+
             # compute the sensitivity to the exchange
-            alpha = compute_alpha(ptdf=ls.PTDF,
+            alpha, alpha_n1 = compute_alpha(ptdf=ls.PTDF,
                                   lodf=ls.LODF,
                                   P0=nc.Sbus.real,
                                   Pinstalled=nc.bus_installed_power,
@@ -1161,7 +1176,9 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                                   Pload=nc.load_data.get_injections_per_bus().real,
                                   bus_a1_idx=bus_a1_idx,
                                   bus_a2_idx=bus_a2_idx,
-                                  mode=mode_2_int[transfer_method])
+                                  mode=mode_2_int[transfer_method],
+                                  multi_contingencies=mctg.multi_contingencies)
+
             mip_vars.branch_vars.alpha[t_idx, :] = alpha
 
             # compute the structural NTC: this is the sum of ratings in the inter area
@@ -1201,13 +1218,13 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
                 if len(contingency_groups_used) > 0:
 
-                    # declare the multi-contingencies analysis and compute
-                    mctg = LinearMultiContingencies(grid=grid,
-                                                    contingency_groups_used=contingency_groups_used)
-                    mctg.compute(lodf=ls.LODF,
-                                 ptdf=ls.PTDF,
-                                 ptdf_threshold=lodf_threshold,
-                                 lodf_threshold=lodf_threshold)
+                    # # declare the multi-contingencies analysis and compute
+                    # mctg = LinearMultiContingencies(grid=grid,
+                    #                                 contingency_groups_used=contingency_groups_used)
+                    # mctg.compute(lodf=ls.LODF,
+                    #              ptdf=ls.PTDF,
+                    #              ptdf_threshold=lodf_threshold,
+                    #              lodf_threshold=lodf_threshold)
 
                     # formulate the contingencies
                     f_obj += add_linear_branches_contingencies_formulation(
