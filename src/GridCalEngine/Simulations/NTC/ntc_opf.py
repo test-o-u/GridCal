@@ -1167,6 +1167,8 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                                  ptdf_threshold=lodf_threshold,
                                  lodf_threshold=lodf_threshold)
 
+
+
             # compute the sensitivity to the exchange
             alpha, alpha_n1 = compute_alpha(ptdf=ls.PTDF,
                                   lodf=ls.LODF,
