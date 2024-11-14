@@ -161,24 +161,27 @@ def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=
     #     alpha_n1 = None
 
     alpha_n1_info = dict()
+    nbr= len(alpha)
 
     if multi_contingencies is not None:
-        for c in multi_contingencies:
+        for cnum, c in enumerate(multi_contingencies):
 
             c_branch = c.branch_indices
 
-            dflow_n1 = dflow+ c.mlodf_factors.A * dflow[c_branch]
+            delta_dflow_n1 = c.mlodf_factors.A * dflow[c_branch]
+            dflow_n1 = dflow + delta_dflow_n1.reshape(nbr,)
             dflow_n1[c_branch]=0
 
-            alpha_n1_info[c].alpha_n1= dflow_n1 / dT
-            alpha_n1_info[c].c_branch = c_branch
+            alpha_n1_info[cnum]=dict()
+            alpha_n1_info[cnum]['alpha_n1']= dflow_n1 / dT
+            alpha_n1_info[cnum]['c_branch'] = c_branch
 
 
     else:
         alpha_n1 = None
 
 
-    return alpha, alpha_n1
+    return alpha, alpha_n1_info
 
 
 

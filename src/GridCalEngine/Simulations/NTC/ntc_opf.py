@@ -790,7 +790,8 @@ def add_linear_branches_contingencies_formulation(t_idx: int,
                                                   monitor_only_sensitive_branches: bool,
                                                   structural_ntc: float,
                                                   ntc_load_rule: float,
-                                                  alpha_threshold: float):
+                                                  alpha_threshold: float,
+                                                  alpha_n1_info: dict):
     """
     Formulate the branches
     :param t_idx: time index
@@ -817,33 +818,33 @@ def add_linear_branches_contingencies_formulation(t_idx: int,
             if isinstance(contingency_flow, LpExp):
 
                 # Monitoring logic: Avoid unrealistic ntc flows over CEP rule limit in N-1 condition
-                # if monitor_only_ntc_load_rule_branches:
-                #     """
-                #     Calculo el porcentaje del ratio de la línea que se reserva al intercambio según la regla de ACER,
-                #     y paso dicho valor a la frontera, y si el valor es mayor que el máximo intercambio estructural
-                #     significa que la linea no puede limitar el intercambio
-                #     Ejemplo:
-                #         ntc_load_rule = 0.7
-                #         rate = 1700
-                #         alpha_n1 = 0.05
-                #         structural_rate = 5200
-                #         0.7 * 1700 --> 1190 mw para el intercambio
-                #         1190 / 0.05 --> 23.800 MW en la frontera en N
-                #         23.800 >>>> 5200 --> esta linea no puede ser declarada como limitante en la NTC en N.
-                #        """
-                #     monitor_by_load_rule_n1 = ntc_load_rule * branch_data_t.rates[m] / (alpha_n1[m, c] + 1e-20) <= structural_ntc
-                # else:
-                #     monitor_by_load_rule_n1 = True
-                #
-                # # Monitoring logic: Exclude branches with not enough sensibility to exchange in N-1 condition
-                # if monitor_only_sensitive_branches:
-                #     monitor_by_sensitivity_n1 = alpha_n1[m, c] > alpha_threshold
-                # else:
-                #     monitor_by_sensitivity_n1 = True
+                if monitor_only_ntc_load_rule_branches:
+                    """
+                    Calculo el porcentaje del ratio de la línea que se reserva al intercambio según la regla de ACER,
+                    y paso dicho valor a la frontera, y si el valor es mayor que el máximo intercambio estructural
+                    significa que la linea no puede limitar el intercambio
+                    Ejemplo:
+                        ntc_load_rule = 0.7
+                        rate = 1700
+                        alpha_n1 = 0.05
+                        structural_rate = 5200
+                        0.7 * 1700 --> 1190 mw para el intercambio
+                        1190 / 0.05 --> 23.800 MW en la frontera en N
+                        23.800 >>>> 5200 --> esta linea no puede ser declarada como limitante en la NTC en N.
+                       """
+                    monitor_by_load_rule_n1 = ntc_load_rule * branch_data_t.rates[m] / (alpha_n1_info[c]['alpha_n1'] + 1e-20) <= structural_ntc
+                else:
+                    monitor_by_load_rule_n1 = True
+
+                # Monitoring logic: Exclude branches with not enough sensibility to exchange in N-1 condition
+                if monitor_only_sensitive_branches:
+                    monitor_by_sensitivity_n1 = alpha_n1_info[c]['alpha_n1'] > alpha_threshold
+                else:
+                    monitor_by_sensitivity_n1 = True
 
                 # TODO: Figure out how to compute Alpha N-1 to be able to uncomment the block above
-                monitor_by_load_rule_n1 = True
-                monitor_by_sensitivity_n1 = True
+                # monitor_by_load_rule_n1 = True
+                # monitor_by_sensitivity_n1 = True
 
                 if monitor_by_load_rule_n1 and monitor_by_sensitivity_n1:
                     # declare slack variables
@@ -1170,7 +1171,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
 
             # compute the sensitivity to the exchange
-            alpha, alpha_n1 = compute_alpha(ptdf=ls.PTDF,
+            alpha, alpha_n1_info = compute_alpha(ptdf=ls.PTDF,
                                   lodf=ls.LODF,
                                   P0=nc.Sbus.real,
                                   Pinstalled=nc.bus_installed_power,
@@ -1242,6 +1243,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                         structural_ntc=structural_ntc,
                         ntc_load_rule=ntc_load_rule,
                         alpha_threshold=alpha_threshold,
+                        alpha_n1_info=alpha_n1_info
                     )
 
                 else:
