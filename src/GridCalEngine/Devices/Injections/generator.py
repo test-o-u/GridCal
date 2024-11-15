@@ -9,6 +9,7 @@ import pandas as pd
 from typing import Union
 from matplotlib import pyplot as plt
 from GridCalEngine.basic_structures import Logger
+from GridCalEngine.basic_structures import CxVec, Vec
 from GridCalEngine.enumerations import DeviceType, BuildStatus, SubObjectType
 from GridCalEngine.Devices.Associations.association import Associations
 from GridCalEngine.Devices.Parents.generator_parent import GeneratorParent
@@ -406,3 +407,10 @@ class Generator(GeneratorParent):
         :param val: float value
         """
         self._Snom = val
+
+    def get_dispachable_Pprof(self) -> Vec:
+        """
+
+        :return:
+        """
+        return self.P_prof.toarray().astype(complex) * self.active_prof.toarray().astype(int) * float(self.enabled_dispatch)

@@ -8,7 +8,7 @@ import numpy as np
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode
 from GridCalEngine.enumerations import BuildStatus, DeviceType
-from GridCalEngine.basic_structures import CxVec
+from GridCalEngine.basic_structures import CxVec, Vec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Parents.injection_parent import InjectionParent
 
@@ -168,3 +168,17 @@ class GeneratorParent(InjectionParent):
         :return:
         """
         return self.P_prof.toarray().astype(complex) * self.active_prof.toarray().astype(int)
+
+    def get_Pmax_prof(self) -> Vec:
+        """
+
+        :return:
+        """
+        return self.Pmax * self.active_prof.toarray().astype(int)
+
+    def get_Pmin_prof(self) -> Vec:
+        """
+
+        :return:
+        """
+        return self.Pmin * self.active_prof.toarray().astype(int)

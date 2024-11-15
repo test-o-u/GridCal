@@ -1639,10 +1639,53 @@ class MultiCircuit(Assets):
 
         bus_dict = self.get_bus_index_dict()
 
-        for elm in self.get_generation_like_devices():
+        for elm in self.get_generation_like_devices_iter():
             k = bus_dict[elm.bus]
             val[:, k] = elm.get_Sprof()
 
+        return val
+
+    def get_dispachable_generation_like_Sbus_prof(self) -> CxMat:
+        """
+        Get the complex bus power Injections (Generation like)
+        :return: (ntime, nbus) [MW + j MVAr]
+        """
+        val = np.zeros((self.get_time_number(), self.get_bus_number()), dtype=complex)
+
+        bus_dict = self.get_bus_index_dict()
+
+        for elm in self.get_generation_like_devices_iter():
+            k = bus_dict[elm.bus]
+            val[:, k] = elm.get_dispachable_Pprof()
+
+        return val
+
+    def get_generation_like_Pmax_per_bus(self) -> CxMat:
+        """
+        Get the bus max power Injections (Generation like objects)
+        :return: (ntime, nbus) [MW + j MVAr]
+        """
+        val = np.zeros((self.get_time_number(), self.get_bus_number()), dtype=complex)
+
+        bus_dict = self.get_bus_index_dict()
+
+        for elm in self.get_generation_like_devices_iter():
+            k = bus_dict[elm.bus]
+            val[:, k] = elm.get_Pmax_prof()
+        return val
+
+    def get_generation_like_Pmin_per_bus(self) -> CxMat:
+        """
+        Get the bus min power Injections (Generation like objects)
+        :return: (ntime, nbus) [MW + j MVAr]
+        """
+        val = np.zeros((self.get_time_number(), self.get_bus_number()), dtype=complex)
+
+        bus_dict = self.get_bus_index_dict()
+
+        for elm in self.get_generation_like_devices_iter():
+            k = bus_dict[elm.bus]
+            val[:, k] = elm.get_Pmax_prof()
         return val
 
     def get_load_like_Sbus_prof(self) -> CxMat:
@@ -1654,7 +1697,7 @@ class MultiCircuit(Assets):
 
         bus_dict = self.get_bus_index_dict()
 
-        for elm in self.get_load_like_devices():
+        for elm in self.get_load_like_devices_iter():
             k = bus_dict[elm.bus]
             val[:, k] = elm.get_Sprof()
 
