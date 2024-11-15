@@ -125,7 +125,7 @@ class LoadParent(InjectionParent):
 
         :return:
         """
-        return -self.P_prof.toarray() - 1j * self.Q_prof.toarray()
+        return (-self.P_prof.toarray() - 1j * self.Q_prof.toarray()) * self.active_prof.toarray().astype(int)
 
     def plot_profiles(self, time=None, show_fig=True):
         """

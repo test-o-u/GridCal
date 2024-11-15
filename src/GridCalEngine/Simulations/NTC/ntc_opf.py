@@ -791,7 +791,8 @@ def add_linear_branches_contingencies_formulation(t_idx: int,
                                                   structural_ntc: float,
                                                   ntc_load_rule: float,
                                                   alpha_threshold: float,
-                                                  alpha_n1_info: dict):
+                                                  alpha_n1: list,
+                                                  n1_branches: list):
     """
     Formulate the branches
     :param t_idx: time index
@@ -1145,9 +1146,6 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
         if zonal_grouping == ZonalGrouping.NoGrouping:
 
-
-
-
             # declare the linear analysis
             ls = LinearAnalysis(numerical_circuit=nc,
                                 distributed_slack=False,
@@ -1176,11 +1174,8 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             else:
                 cont_info = None
 
-
-
-
             # compute the sensitivity to the exchange
-            alpha, alpha_n1_info = compute_alpha(ptdf=ls.PTDF,
+            alpha, alpha_n1, n1_branches = compute_alpha(ptdf=ls.PTDF,
                                   lodf=ls.LODF,
                                   P0=nc.Sbus.real,
                                   Pinstalled=nc.bus_installed_power,
@@ -1393,43 +1388,60 @@ def run_linear_ntc_opf_ts_fast(grid: MultiCircuit,
     # TODO: Analyze variablity to determine the minimal NumericalCircuits to compute
     # note: There are very little chances of simplifying this step and experience shows it is not
     #        worth the effort, so compile every time step
-    nc: NumericalCircuit = compile_numerical_circuit_at(circuit=grid,
-                                                        t_idx=None,  # yes, this is not a bug
-                                                        bus_dict=bus_dict,
-                                                        areas_dict=areas_dict,
-                                                        logger=logger)
+
+    nc: NumericalCircuit = compile_numerical_circuit_at(
+        circuit=grid,
+        t_idx=None,  # yes, this is not a bug
+        bus_dict=bus_dict,
+        areas_dict=areas_dict,
+        logger=logger)
 
     Pbus_prof = grid.get_Sbus_prof().real
+    Gbus_prof = grid.get_generation_like_Sbus_prof().real
+    Lbus_prof = grid.get_load_like_Sbus_prof().real
 
     # declare the linear analysis
-    ls = LinearAnalysis(numerical_circuit=nc,
-                        distributed_slack=False,
-                        correct_values=True)
+    ls = LinearAnalysis(
+        numerical_circuit=nc,
+        distributed_slack=False,
+        correct_values=True)
 
     # compute the PTDF and LODF
     ls.run()
 
+    # declare the multi-contingencies analysis and compute
+    if consider_contingencies:
+        mctg = LinearMultiContingencies(
+            grid=grid,
+            contingency_groups_used=contingency_groups_used)
+
+        mctg.compute(
+            lodf=ls.LODF,
+            ptdf=ls.PTDF,
+            ptdf_threshold=lodf_threshold,
+            lodf_threshold=lodf_threshold)
+        multi_contingencies = mctg.multi_contingencies
+
+    else:
+        multi_contingencies = None
+
     # compute the sensitivity to the exchange
-    alpha = compute_alpha(ptdf=ls.PTDF,
-                          lodf=ls.LODF,
-                          P0=nc.Sbus.real,
-                          Pinstalled=nc.bus_installed_power,
-                          Pgen=nc.generator_data.get_injections_per_bus().real,
-                          Pload=nc.load_data.get_injections_per_bus().real,
-                          bus_a1_idx=bus_a1_idx,
-                          bus_a2_idx=bus_a2_idx,
-                          mode=mode_2_int[transfer_method])
+    # only devices with galvanical connection are considered
+    alpha, alpha_n1, n1_branches = compute_alpha(
+        ptdf=ls.PTDF,
+        lodf=ls.LODF,
+        P0=nc.Sbus.real,
+        Pinstalled=nc.bus_installed_power,
+        Pgen=nc.generator_data.get_injections_per_bus().real,
+        Pload=nc.load_data.get_injections_per_bus().real,
+        bus_a1_idx=bus_a1_idx,
+        bus_a2_idx=bus_a2_idx,
+        mode=mode_2_int[transfer_method],
+        multi_contingencies=multi_contingencies)
 
     # compute the structural NTC: this is the sum of ratings in the inter area
     structural_ntc = nc.get_structural_ntc(bus_a1_idx=bus_a1_idx, bus_a2_idx=bus_a2_idx)
 
-    # declare the multi-contingencies analysis and compute
-    mctg = LinearMultiContingencies(grid=grid,
-                                    contingency_groups_used=contingency_groups_used)
-    mctg.compute(lodf=ls.LODF,
-                 ptdf=ls.PTDF,
-                 ptdf_threshold=lodf_threshold,
-                 lodf_threshold=lodf_threshold)
 
     # END OF THINGS THAT CAN BE COMPUTED LESS TIMES --------------------------------------------------------------------
 
@@ -1452,10 +1464,12 @@ def run_linear_ntc_opf_ts_fast(grid: MultiCircuit,
             bus_a2_idx_set = set(bus_a2_idx)
 
             # find the inter space branches given the bus indices of each space
-            mip_vars.branch_vars.inter_space_branches = nc.branch_data.get_inter_areas(bus_idx_from=bus_a1_idx_set,
-                                                                                       bus_idx_to=bus_a2_idx_set)
-            mip_vars.hvdc_vars.inter_space_hvdc = nc.hvdc_data.get_inter_areas(bus_idx_from=bus_a1_idx_set,
-                                                                               bus_idx_to=bus_a2_idx_set)
+            mip_vars.branch_vars.inter_space_branches = nc.branch_data.get_inter_areas(
+                bus_idx_from=bus_a1_idx_set,
+                bus_idx_to=bus_a2_idx_set)
+            mip_vars.hvdc_vars.inter_space_hvdc = nc.hvdc_data.get_inter_areas(
+                bus_idx_from=bus_a1_idx_set,
+                bus_idx_to=bus_a2_idx_set)
 
         # formulate the bus angles ---------------------------------------------------------------------------------
         for k in range(nc.bus_data.nbus):

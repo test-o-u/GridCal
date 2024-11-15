@@ -1630,6 +1630,36 @@ class MultiCircuit(Assets):
 
         return val
 
+    def get_generation_like_Sbus_prof(self) -> CxMat:
+        """
+        Get the complex bus power Injections (Generation like)
+        :return: (ntime, nbus) [MW + j MVAr]
+        """
+        val = np.zeros((self.get_time_number(), self.get_bus_number()), dtype=complex)
+
+        bus_dict = self.get_bus_index_dict()
+
+        for elm in self.get_generation_like_devices():
+            k = bus_dict[elm.bus]
+            val[:, k] = elm.get_Sprof()
+
+        return val
+
+    def get_load_like_Sbus_prof(self) -> CxMat:
+        """
+        Get the complex bus power Injections (Load like)
+        :return: (ntime, nbus) [MW + j MVAr]
+        """
+        val = np.zeros((self.get_time_number(), self.get_bus_number()), dtype=complex)
+
+        bus_dict = self.get_bus_index_dict()
+
+        for elm in self.get_load_like_devices():
+            k = bus_dict[elm.bus]
+            val[:, k] = elm.get_Sprof()
+
+        return val
+
     def get_Sbus_prof_fixed(self) -> CxMat:
         """
         Get the complex bus power Injections considering those devices that cannot be dispatched

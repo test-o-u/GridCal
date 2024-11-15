@@ -4797,6 +4797,15 @@ class Assets:
 
         return n
 
+    def get_load_like_devices_iter(self) -> Generator[INJECTION_DEVICE_TYPES, None, None]:
+        """
+        Returns an iterator of :ref:`Injection<Injection>` names.
+        Sort by order: turbines, pumps, p2xs
+        """
+        for lst in self.get_load_like_devices_lists():
+            for elm in lst:
+                yield elm
+
     # ------------------------------------------------------------------------------------------------------------------
     # Shunt-like devices
     # ------------------------------------------------------------------------------------------------------------------
@@ -4880,6 +4889,15 @@ class Assets:
         for lst in self.get_generation_like_lists():
             elms += lst
         return elms
+
+    def get_generation_like_devices_iter(self) -> Generator[INJECTION_DEVICE_TYPES, None, None]:
+        """
+        Returns an iterator of :ref:`Injection<Injection>` names.
+        Sort by order: turbines, pumps, p2xs
+        """
+        for lst in self.get_generation_like_lists():
+            for elm in lst:
+                yield elm
 
     # ------------------------------------------------------------------------------------------------------------------
     # Fluid injections

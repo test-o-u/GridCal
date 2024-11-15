@@ -79,7 +79,7 @@ def scale_proportional_sensed(P, idx1, idx2, dT=1.0):
     return P + dP
 
 
-#@nb.njit()
+@nb.njit()
 def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=1.0, mode=0, multi_contingencies=None, lodf=None):
     """
     Compute line sensitivity to power transfer
@@ -129,39 +129,14 @@ def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=
     # compute the sensitivity
     alpha = dflow / dT
 
+    nbr = len(alpha)
 
-    # alpha_n1 = np.zeros((len(alpha), len(alpha)))
-    #
-    # if lodf is not None:
-    #     for m in range(len(alpha)):
-    #         for c in range(len(alpha)):
-    #             if m != c:
-    #                 dflow_n1 = dflow[m] + lodf[m, c] * dflow[c]
-    #                 alpha_c = dflow_n1 / dT
-    #                 alpha_n1[m, c] = alpha_c
+    # todo: Check if it is possible to get a generalized method considering group and branch
+    #  L = concat(LODF_brn + PTDF_brn)
+    #  M => accordingly
 
-    # alpha_n1 = np.zeros((len(alpha), len(alpha)))
-
-
-    # Ojo falta por hacer que el dflow[c] se refiera a la contingencia que quiero!! y si tengo contingencias dobles?
-    # igual lo tengo que guardar en otro lado porque segun esta ahora mismo sobrecribiria si tuviesemos dobles y simples
-    # puede que lo mejor sea que alpha n-1 sea un diccionario
-
-    # if multi_contingencies is not None:
-    #     for m in range(len(alpha)):
-    #         for c in range(len(multi_contingencies)):
-    #
-    #             c_branch = multi_contingencies[c].branch_indices
-    #
-    #             if m != c_branch:
-    #                 dflow_n1 = dflow[m] + multi_contingencies[c].mlodf_factors.A[m] * dflow[c_branch]
-    #                 alpha_c = dflow_n1 / dT
-    #                 alpha_n1[m, c_branch] = alpha_c
-    # else:
-    #     alpha_n1 = None
-
-    alpha_n1_info = dict()
-    nbr= len(alpha)
+    alpha_n1 = list()
+    n1_branches = list()
 
     if multi_contingencies is not None:
         for cnum, c in enumerate(multi_contingencies):
@@ -170,18 +145,15 @@ def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=
 
             delta_dflow_n1 = c.mlodf_factors.A * dflow[c_branch]
             dflow_n1 = dflow + delta_dflow_n1.reshape(nbr,)
-            dflow_n1[c_branch]=0
+            dflow_n1[c_branch] = 0
 
-            alpha_n1_info[cnum]=dict()
-            alpha_n1_info[cnum]['alpha_n1']= dflow_n1 / dT
-            alpha_n1_info[cnum]['c_branch'] = c_branch
-
+            alpha_n1.append(dflow_n1 / dT)
+            n1_branches.append(c_branch)
 
     else:
         alpha_n1 = None
 
-
-    return alpha, alpha_n1_info
+    return alpha, alpha_n1, n1_branches
 
 
 

@@ -167,4 +167,4 @@ class GeneratorParent(InjectionParent):
 
         :return:
         """
-        return self.P_prof.toarray().astype(complex)
+        return self.P_prof.toarray().astype(complex) * self.active_prof.toarray().astype(int)
