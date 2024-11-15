@@ -838,7 +838,7 @@ def add_linear_branches_contingencies_formulation(t_idx: int,
 
                 # Monitoring logic: Exclude branches with not enough sensibility to exchange in N-1 condition
                 if monitor_only_sensitive_branches:
-                    monitor_by_sensitivity_n1 = alpha_n1_info[c]['alpha_n1'] > alpha_threshold
+                    monitor_by_sensitivity_n1 = alpha_n1_info[c]['alpha_n1'][m] > alpha_threshold
                 else:
                     monitor_by_sensitivity_n1 = True
 
@@ -1168,6 +1168,15 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                                  ptdf_threshold=lodf_threshold,
                                  lodf_threshold=lodf_threshold)
 
+                    cont_info = mctg.multi_contingencies
+
+                else:
+                    cont_info = None
+
+            else:
+                cont_info = None
+
+
 
 
             # compute the sensitivity to the exchange
@@ -1180,7 +1189,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                                   bus_a1_idx=bus_a1_idx,
                                   bus_a2_idx=bus_a2_idx,
                                   mode=mode_2_int[transfer_method],
-                                  multi_contingencies=mctg.multi_contingencies)
+                                  multi_contingencies=cont_info)
 
             mip_vars.branch_vars.alpha[t_idx, :] = alpha
 
