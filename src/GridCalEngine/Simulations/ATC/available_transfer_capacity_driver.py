@@ -79,7 +79,7 @@ def scale_proportional_sensed(P, idx1, idx2, dT=1.0):
     return P + dP
 
 
-@nb.njit()
+# @nb.njit()
 def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=1.0, mode=0, multi_contingencies=None, lodf=None):
     """
     Compute line sensitivity to power transfer
