@@ -143,7 +143,7 @@ def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=
 
             c_branch = c.branch_indices
 
-            delta_dflow_n1 = c.mlodf_factors.to_dense() * dflow[c_branch]
+            delta_dflow_n1 = c.mlodf_factors.todense() * dflow[c_branch]
             dflow_n1 = dflow + delta_dflow_n1.reshape(nbr,)
             dflow_n1[c_branch] = 0
 
