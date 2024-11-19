@@ -27,7 +27,10 @@ from GridCalEngine.enumerations import TapPhaseControl, HvdcControlType, Availab
 from GridCalEngine.Simulations.LinearFactors.linear_analysis import LinearAnalysis, LinearMultiContingencies
 from GridCalEngine.Simulations.ATC.available_transfer_capacity_driver import compute_alpha
 from GridCalEngine.IO.file_system import opf_file_path
-
+from GridCalEngine.Simulations.ATC.scaling_factors import (compute_exchange_factors,
+                                                           compute_nodal_power_by_transfer_method,
+                                                           compute_nodal_max_power_by_transfer_method,
+                                                           compute_nodal_min_power_by_transfer_method)
 
 def formulate_monitorization_logic(monitor_only_sensitive_branches: bool,
                                    monitor_only_ntc_load_rule_branches: bool,
@@ -116,138 +119,6 @@ def formulate_monitorization_logic(monitor_only_sensitive_branches: bool,
         monitor_type[i] = ';'.join(res)
 
     return monitor, monitor_type, branch_ntc_load_rule, branch_zero_exchange_load
-
-
-def get_nodal_power_by_transfer_method(generation_per_bus: Vec,
-                                       load_per_bus: Vec,
-                                       pmin_per_bus: Vec,
-                                       pmax_per_bus: Vec,
-                                       dispatchable_per_bus: Vec,
-                                       transfer_method: AvailableTransferMode,
-                                       skip_generation_limits: bool,
-                                       inf_value: float) -> Tuple[Vec, Vec, Vec]:
-    """
-    Get nodal power according to the transfer_method.
-    :param generation_per_bus: Generation per bus
-    :param load_per_bus: Load per bus
-    :param pmin_per_bus: Pmin per bus
-    :param pmax_per_bus: Pmax per bus
-    :param dispatchable_per_bus: dispatchable power per bus
-    :param transfer_method: Exchange transfer method
-    :param skip_generation_limits: Skip generation limits?
-    :param inf_value: infinity value. Ex 1e-20
-    :return: nodal power (p.u.)
-    """
-
-    nbus = len(generation_per_bus)
-
-    # Evaluate transfer method
-    if transfer_method == AvailableTransferMode.InstalledPower:
-        p_ref = pmax_per_bus
-        p_max = pmax_per_bus
-        p_min = pmin_per_bus
-        dispatchable_bus = dispatchable_per_bus
-
-    elif transfer_method == AvailableTransferMode.Generation:
-        p_ref = generation_per_bus
-        p_max = pmax_per_bus
-        p_min = pmin_per_bus
-        dispatchable_bus = dispatchable_per_bus
-
-    elif transfer_method == AvailableTransferMode.Load:
-        p_ref = load_per_bus
-        p_min = np.full(nbus, -inf_value)
-        p_max = np.full(nbus, inf_value)
-        dispatchable_bus = load_per_bus
-
-    elif transfer_method == AvailableTransferMode.GenerationAndLoad:
-        p_ref = generation_per_bus - load_per_bus
-
-        # todo check
-        p_min = np.full(nbus, -inf_value)
-        p_max = np.full(nbus, inf_value)
-        dispatchable_bus = dispatchable_per_bus - load_per_bus
-
-    else:
-        raise Exception('Undefined available transfer mode')
-
-    if skip_generation_limits:
-        p_min = np.full(nbus, -inf_value)
-        p_max = np.full(nbus, inf_value)
-
-    return p_ref * dispatchable_bus, p_max, p_min
-
-
-def get_sensed_factors(power: Vec,
-                       idx: IntVec,
-                       logger: Logger) -> Vec:
-    """
-
-    :param power:
-    :param idx:
-    :param logger:
-    :return:
-    """
-    nelem = len(power)
-
-    # bus area mask
-    isin_ = np.isin(range(nelem), idx, assume_unique=True)
-
-    p_ref = power * isin_
-
-    # get proportions of contribution by sense (gen or pump) and area
-    # the idea is both techs contributes to achieve the power shift goal in the same proportion
-    # that in base situation
-
-    # Filter positive and negative generators. Same vectors lenght, set not matched values to zero.
-    gen_pos = np.where(p_ref < 0, 0, p_ref)
-    gen_neg = np.where(p_ref > 0, 0, p_ref)
-
-    prop_up = np.sum(gen_pos) / np.sum(np.abs(p_ref))
-    prop_dw = np.sum(gen_neg) / np.sum(np.abs(p_ref))
-
-    # get proportion by production (ammount of power contributed by generator to his sensed area).
-    if np.sum(np.abs(gen_pos)) != 0:
-        prop_up_gen = gen_pos / np.sum(np.abs(gen_pos))
-    else:
-        prop_up_gen = np.zeros_like(gen_pos)
-
-    if np.sum(np.abs(gen_neg)) != 0:
-        prop_dw_gen = gen_neg / np.sum(np.abs(gen_neg))
-    else:
-        prop_dw_gen = np.zeros_like(gen_neg)
-
-    # delta proportion by generator (considering both proportions: sense and production)
-    prop_gen_delta_up = prop_up_gen * prop_up
-    prop_gen_delta_dw = prop_dw_gen * prop_dw
-
-    # Join generator proportions into one vector
-    # Notice this is not a summatory, it's just joining like 'or' logical operation
-    proportions = prop_gen_delta_up + prop_gen_delta_dw
-
-    # some checks
-    if not np.isclose(np.sum(proportions), 1, rtol=1e-6):
-        logger.add_warning('Issue computing proportions to scale delta generation in area 1.')
-
-    return proportions
-
-
-def get_exchange_factors(power: Vec,
-                         bus_a1_idx: IntVec,
-                         bus_a2_idx: IntVec,
-                         logger: Logger):
-    """
-    Get generation factors by transfer method with sign consideration.
-    :param power: Vec. Power reference
-    :param bus_a1_idx: bus indices within area 1
-    :param bus_a2_idx: bus indices within area 2
-    :param logger: logger instance
-    :return: factors, sense, p_max, p_min
-    """
-    factors_a1 = get_sensed_factors(power=power, idx=bus_a1_idx, logger=logger)
-    factors_a2 = get_sensed_factors(power=power, idx=bus_a2_idx, logger=logger)
-    factors = factors_a1 - factors_a2
-    return factors
 
 
 class BusNtcVars:
@@ -519,25 +390,27 @@ class NtcVars:
         return np.ones((self.nt, self.nbus)) * np.exp(1j * self.bus_vars.theta)
 
 
-def add_linear_injections_formulation(generation_per_bus: Vec,
-                                      load_per_bus: Vec,
-                                      pmax_per_bus: Vec,
-                                      pmin_per_bus: Vec,
-                                      dispachable_per_bus: Vec,
-                                      bus_a1_idx: IntVec,
-                                      bus_a2_idx: IntVec,
-                                      transfer_method: AvailableTransferMode,
-                                      skip_generation_limits: bool,
-                                      ntc_vars: NtcVars,
-                                      prob: LpModel,
-                                      logger: Logger):
+def add_linear_injections_formulation(
+        t_idx: int,
+        generation_per_bus: Vec,
+        load_per_bus: Vec,
+        pmax_per_bus: Vec,
+        pmin_per_bus: Vec,
+        bus_a1_idx: IntVec,
+        bus_a2_idx: IntVec,
+        transfer_method: AvailableTransferMode,
+        skip_generation_limits: bool,
+        ntc_vars: NtcVars,
+        prob: LpModel,
+        logger: Logger):
+
     """
     Add MIP injections formulation
+    :param t_idx: time index
     :param generation_per_bus: Generation per bus array
     :param load_per_bus: Load per bus array
     :param pmax_per_bus: Pmax per bus array
     :param pmin_per_bus: Pmin per bus array
-    :param dispachable_per_bus: Power dispachable per bus array
     :param bus_a1_idx: bus indices within area "from"
     :param bus_a2_idx: bus indices within area "to"
     :param transfer_method: Exchange transfer method
@@ -548,41 +421,53 @@ def add_linear_injections_formulation(generation_per_bus: Vec,
     :return objective function
     """
 
-    # Ge
-    bus_pref_t, bus_pmax_t, bus_pmin_t = get_nodal_power_by_transfer_method(
+    # Get bus power reference to scale by transfer method
+    bus_pref = compute_nodal_power_by_transfer_method(
         generation_per_bus=generation_per_bus,
         load_per_bus=load_per_bus,
         pmax_per_bus=pmax_per_bus,
+        transfer_method=transfer_method,
+    )
+
+    # Get bus power reference to scale by transfer method
+    bus_pmax = compute_nodal_max_power_by_transfer_method(
+        pmax_per_bus=pmax_per_bus,
+        transfer_method=transfer_method,
+        skip_generation_limits=skip_generation_limits,
+        inf_value=prob.INFINITY
+    )
+
+    # Get bus power reference to scale by transfer method
+    bus_pmin = compute_nodal_min_power_by_transfer_method(
         pmin_per_bus=pmin_per_bus,
-        dispachable_per_bus=dispachable_per_bus,
         transfer_method=transfer_method,
         skip_generation_limits=skip_generation_limits,
         inf_value=prob.INFINITY,
     )
 
-    proportions = get_exchange_factors(
-        power=bus_pref_t,
-        bus_a1_idx=bus_a1_idx,
-        bus_a2_idx=bus_a2_idx,
+    proportions = compute_exchange_factors(
+        power=bus_pref,
+        up_idx=bus_a1_idx,
+        down_idx=bus_a2_idx,
         logger=logger
     )
 
     # copy the computed proportions
-    ntc_vars.bus_vars.proportions[t, :] = proportions
+    ntc_vars.bus_vars.proportions[t_idx, :] = proportions
 
     f_obj = 0.0
     deltas_1 = 0.0
     for k in bus_a1_idx:
         if bus_data_t.active[k] and proportions[k] != 0:
             # declare bus delta injections
-            ntc_vars.bus_vars.delta_p[t, k] = prob.add_var(
+            ntc_vars.bus_vars.delta_p[t_idx, k] = prob.add_var(
                 lb=0,
                 ub=prob.INFINITY,
-                name=join("dp_up_", [t, k], "_")
+                name=join("dp_up_", [t_idx, k], "_")
             )
 
             # add the deltas of the sending area
-            deltas_1 += ntc_vars.bus_vars.delta_p[t, k]
+            deltas_1 += ntc_vars.bus_vars.delta_p[t_idx, k]
 
     # maximize the deltas of the sending area
     # f_obj -= deltas_1
@@ -591,14 +476,14 @@ def add_linear_injections_formulation(generation_per_bus: Vec,
     for k in bus_a2_idx:
         if bus_data_t.active[k] and proportions[k] != 0:
             # declare bus delta injections
-            ntc_vars.bus_vars.delta_p[t, k] = prob.add_var(
+            ntc_vars.bus_vars.delta_p[t_idx, k] = prob.add_var(
                 lb=0,
                 ub=prob.INFINITY,
-                name=join("dp_down_", [t, k], "_")
+                name=join("dp_down_", [t_idx, k], "_")
             )
 
             # add the deltas of the sending area
-            deltas_2 += ntc_vars.bus_vars.delta_p[t, k]
+            deltas_2 += ntc_vars.bus_vars.delta_p[t_idx, k]
 
     # maximize the deltas of the sending area
     # f_obj -= deltas_2
@@ -607,24 +492,24 @@ def add_linear_injections_formulation(generation_per_bus: Vec,
     # we have declared the deltas positive for the sending and receiving areas
     prob.add_cst(
         cst=deltas_1 == deltas_2,
-        name=join(f'deltas_equality_', [t], "_")
+        name=join(f'deltas_equality_', [t_idx], "_")
     )
 
     # now, formulate the final injections for all buses
     for k in range(bus_data_t.nbus):
         # declare bus injections
-        ntc_vars.bus_vars.Pcalc[t, k] = prob.add_var(
-            lb=bus_pmin_t[k],
-            ub=bus_pmax_t[k],
-            name=join("inj_p", [t, k], "_")
+        ntc_vars.bus_vars.Pcalc[t_idx, k] = prob.add_var(
+            lb=bus_pmin[k],
+            ub=bus_pmax[k],
+            name=join("inj_p", [t_idx, k], "_")
         )
 
         # we compute the injections power:
         # P = Pset + proportion · ΔP
         # the proportion is positive for the sending buses and negative for the receiving buses
         prob.add_cst(
-            cst=ntc_vars.bus_vars.Pcalc[t, k] == p_bus_t[k] + proportions[k] * ntc_vars.bus_vars.delta_p[t, k],
-            name=join("bus_balance", [t, k], "_")
+            cst=ntc_vars.bus_vars.Pcalc[t_idx, k] == p_bus_t[k] + proportions[k] * ntc_vars.bus_vars.delta_p[t_idx, k],
+            name=join("bus_balance", [t_idx, k], "_")
         )
 
     return f_obj
@@ -1025,12 +910,6 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     :param robust: Robust optimization?
     :return: NtcVars class with the results
     """
-    mode_2_int = {
-        AvailableTransferMode.Generation: 0,
-        AvailableTransferMode.InstalledPower: 1,
-        AvailableTransferMode.Load: 2,
-        AvailableTransferMode.GenerationAndLoad: 3
-    }
 
     bus_dict = {bus: i for i, bus in enumerate(grid.buses)}
     areas_dict = {elm: i for i, elm in enumerate(grid.areas)}
@@ -1062,32 +941,39 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     f_obj = 0.0
 
     # START OF THINGS THAT CAN BE COMPUTED LESS TIMES ------------------------------------------------------------------
-    # TODO: Analyze variablity to determine the minimal NumericalCircuits to compute
+    # TODO: Analyze variability to determine the minimal NumericalCircuits to compute
     # note: There are very little chances of simplifying this step and experience shows it is not
     #        worth the effort, so compile every time step
 
-    nc: NumericalCircuit = compile_numerical_circuit_at(
-        circuit=grid,
-        t_idx=None,  # yes, this is not a bug
-        bus_dict=bus_dict,
-        areas_dict=areas_dict,
-        logger=logger)
+    topological_dict = grid.get_topological_profile_variability_dict()
 
-    Pbus_prof = grid.get_Sbus_prof().real / grid.Sbase
-    Gbus_prof = grid.get_generation_like_Sbus_prof().real / grid.Sbase
-    Lbus_prof = grid.get_load_like_Sbus_prof().real / grid.Sbase
-    Pmax_bus_prof = grid.get_generation_like_Pmax_per_bus() / grid.Sbase
-    Pmin_bus_prof = grid.get_generation_like_Pmin_per_bus() / grid.Sbase
-    dispachable_bus_prof = grid.get_dispachable_generation_like_Sbus_prof() / grid.Sbase
+    nc_dict = dict()
 
-    # declare the linear analysis
-    ls = LinearAnalysis(
-        numerical_circuit=nc,
-        distributed_slack=False,
-        correct_values=True)
+    for idx in list(set(topological_dict.values())):
+        if idx not in nc_dict.keys():
+            nc: NumericalCircuit = compile_numerical_circuit_at(
+                circuit=grid,
+                t_idx=idx,
+                bus_dict=bus_dict,
+                areas_dict=areas_dict,
+                logger=logger)
 
-    # compute the PTDF and LODF
-    ls.run()
+            # declare the linear analysis
+            ls = LinearAnalysis(
+                numerical_circuit=nc,
+                distributed_slack=False,
+                correct_values=True)
+
+            # compute the PTDF and LODF
+            ls.run()
+
+
+    dispatchable_bus_prof = grid.get_dispachable_generation_like_Sbus_prof() / grid.Sbase
+    injections_bus_prof = grid.get_Sbus_prof().real / grid.Sbase
+    load_bus_prof = grid.get_load_like_Sbus_prof().real / grid.Sbase
+    max_power_bus_prof = grid.get_generation_like_Pmax_per_bus() / grid.Sbase
+    min_power_bus_prof = grid.get_generation_like_Pmin_per_bus() / grid.Sbase
+
 
     # declare the multi-contingencies analysis and compute
     if consider_contingencies:
@@ -1107,16 +993,18 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
     # compute the sensitivity to the exchange
     # only devices with galvanical connection are considered
+    power = compute_nodal_power_by_transfer_method(
+        generation_per_bus=nc.generator_data.get_injections_per_bus().real,
+        load_per_bus=nc.load_data.get_injections_per_bus().real,
+        pmax_per_bus=nc.bus_installed_power,
+        transfer_method=transfer_method,
+    )
+
     alpha, alpha_n1, n1_branches = compute_alpha(
         ptdf=ls.PTDF,
-        lodf=ls.LODF,
-        P0=nc.Sbus.real,
-        Pinstalled=nc.bus_installed_power,
-        Pgen=nc.generator_data.get_injections_per_bus().real,
-        Pload=nc.load_data.get_injections_per_bus().real,
+        P0=power,
         bus_a1_idx=bus_a1_idx,
         bus_a2_idx=bus_a2_idx,
-        mode=mode_2_int[transfer_method],
         multi_contingencies=multi_contingencies)
 
     # compute the structural NTC: this is the sum of ratings in the inter area
@@ -1131,7 +1019,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
         if t is None:
             Pbus = grid.get_Sbus().real
         else:
-            Pbus = Pbus_prof[t, :]
+            Pbus = injections_bus_prof[t, :]
 
         # magic scaling: the demand must be exactly (to the solver tolerance) the same as the demand
         # TODO: Replace by old more detailed scaling function
@@ -1163,11 +1051,11 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
         # TODO: review that the samples NumericalCircuit is ok to use here
         f_obj += add_linear_injections_formulation(
-            generation_per_bus=Gbus_prof[t, :],
-            load_per_bus=Lbus_prof[t, :],
-            pmin_per_bus=Pmin_bus_prof[t, :],
-            pmax_per_bus=Pmax_bus_prof[t, :],
-            dispachable_bus_prof=dispachable_bus_prof,
+            t_idx=t_idx,
+            generation_per_bus=dispatchable_bus_prof,
+            load_per_bus=load_bus_prof[t, :],
+            pmin_per_bus=min_power_bus_prof[t, :],
+            pmax_per_bus=max_power_bus_prof[t, :],
             bus_a1_idx=bus_a1_idx,
             bus_a2_idx=bus_a2_idx,
             transfer_method=transfer_method,

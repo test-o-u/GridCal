@@ -21,6 +21,7 @@ from GridCalEngine.Simulations.driver_template import TimeSeriesDriverTemplate
 from GridCalEngine.Simulations.Clustering.clustering_results import ClusteringResults
 from GridCalEngine.basic_structures import Vec, Mat, IntVec, StrVec, DateVec
 from GridCalEngine.enumerations import StudyResultsType, AvailableTransferMode, ResultTypes, DeviceType, SimulationTypes
+from GridCalEngine.Simulations.ATC.scaling_factors import compute_nodal_power_by_transfer_method
 
 
 class AvailableTransferCapacityTimeSeriesResults(ResultsTemplate):
@@ -237,11 +238,6 @@ class AvailableTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
         """
         self.tic()
 
-        mode_2_int = {AvailableTransferMode.Generation: 0,
-                      AvailableTransferMode.InstalledPower: 1,
-                      AvailableTransferMode.Load: 2,
-                      AvailableTransferMode.GenerationAndLoad: 3}
-
         # declare the linear analysis
         self.report_text("Analyzing...")
         self.report_progress(0.0)
@@ -293,15 +289,20 @@ class AvailableTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
             else:
                 flows_t: Vec = linear_analysis.get_flows(P)
 
+            # compute the nodal power by transfer method
+            power = compute_nodal_power_by_transfer_method(
+                generation_per_bus=nc.generator_data.get_injections_per_bus().real,
+                load_per_bus=nc.load_data.get_injections_per_bus().real,
+                pmax_per_bus=nc.bus_installed_power,
+                transfer_method=self.options.mode,
+            )
+
             # compute the branch exchange sensitivity (alpha)
-            alpha = compute_alpha(ptdf=linear_analysis.PTDF,
-                                  P0=P,  # no problem that there are in p.u., are only used for the sensitivity
-                                  Pinstalled=nc.bus_installed_power,
-                                  Pgen=nc.generator_data.get_injections_per_bus().real,
-                                  Pload=nc.load_data.get_injections_per_bus().real,
-                                  bus_a1_idx=self.options.bus_idx_from,
-                                  bus_a2_idx=self.options.bus_idx_to,
-                                  mode=mode_2_int[self.options.mode])
+            alpha = compute_alpha(
+                ptdf=linear_analysis.PTDF,
+                P0=power,  # no problem that there are in p.u., are only used for the sensitivity
+                bus_a1_idx=self.options.bus_idx_from,
+                bus_a2_idx=self.options.bus_idx_to)
 
             # base exchange
             base_exchange = (self.options.inter_area_branch_sense * flows_t[self.options.inter_area_branch_idx]).sum()

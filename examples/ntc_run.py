@@ -2,9 +2,8 @@ import os
 from GridCalEngine.api import *
 from GridCalEngine.Simulations.ATC.available_transfer_capacity_driver import AvailableTransferMode
 import time
-from GridCalEngine.basic_structures import BranchImpedanceMode
 from GridCalEngine.IO.file_handler import FileOpen
-from GridCalEngine.Simulations.ATC.available_transfer_capacity_driver import compute_alpha
+from GridCalEngine.Simulations.ATC.available_transfer_capacity_driver import compute_alpha, compute_nodal_power_by_transfer_method
 
 folder = r'\\mornt4\DESRED\DPE-Internacional\Interconexiones\FRANCIA\2022 MoU\5GW 8.0\Con N-x\merged\GridCal'
 fname = os.path.join(folder, 'MOU_2022_5GW_v6f_contingencias_dc.gridcal')
@@ -42,19 +41,23 @@ linear.run()
 print(f'linear analysis computed in {time.time() - tm0:.2f} scs.')
 
 tm0 = time.time()
-alpha = compute_alpha(
-    ptdf=linear.PTDF,
-    lodf=linear.LODF,
-    P0=numerical_circuit_.Sbus.real,
-    Pinstalled=numerical_circuit_.bus_installed_power,
-    Pgen=numerical_circuit_.generator_data.get_injections_per_bus()[:, 0].real,
-    Pload=numerical_circuit_.load_data.get_injections_per_bus()[:, 0].real,
-    bus_a1_idx=a1,
-    bus_a2_idx=a2,
-    mode=AvailableTransferMode.InstalledPower.value,
+
+power = compute_nodal_power_by_transfer_method(
+    generation_per_bus=numerical_circuit_.generator_data.get_injections_per_bus().real,
+    load_per_bus=numerical_circuit_.load_data.get_injections_per_bus().real,
+    pmax_per_bus=numerical_circuit_.bus_installed_power,
+    transfer_method=AvailableTransferMode.InstalledPower,
 )
 
-print(f'alpha and alpha n-1 computed in {time.time() - tm0:.2f} scs.')
+alpha = compute_alpha(
+    ptdf=linear.PTDF,
+    P0=numerical_circuit_.Sbus.real,
+    bus_a1_idx=a1,
+    bus_a2_idx=a2,
+    multi_contingencies=None,
+)
+
+print(f'alpha and computed in {time.time() - tm0:.2f} scs.')
 
 problem = OpfNTC(
     numerical_circuit=numerical_circuit_,

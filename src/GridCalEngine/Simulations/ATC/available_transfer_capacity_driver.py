@@ -16,112 +16,59 @@ from GridCalEngine.Simulations.driver_template import DriverTemplate
 from GridCalEngine.Simulations.ATC.available_transfer_capacity_options import AvailableTransferCapacityOptions
 from GridCalEngine.enumerations import StudyResultsType, AvailableTransferMode, ResultTypes, DeviceType, SimulationTypes
 from GridCalEngine.basic_structures import Vec, IntVec, Mat
+from GridCalEngine.Simulations.ATC.scaling_factors import compute_exchange_factors, compute_nodal_power_by_transfer_method
+from GridCalEngine.Simulations.LinearFactors.linear_analysis import LinearMultiContingency
 
 if TYPE_CHECKING:
     from GridCalEngine.Simulations import ClusteringResults
 
 
-@nb.njit()
-def get_proportional_deltas_sensed(P, idx, dP=1.0):
+# @nb.njit()
+def scale_proportional_sensed(power, up_idx, down_idx, delta=1.0):
+    """
+    Scale power by sensed proportions. (Positive and negative raise in same direction)
+    :param power: Power vector
+    :param up_idx: indices of sending region
+    :param down_idx: indices of receiving region
+    :param delta: Exchange amount
+    :return: scaled power
     """
 
-    :param P: all power Injections
-    :param idx: bus indices of the sending region
-    :param dP: Power amount
-    :return:
-    """
+    factors = compute_exchange_factors(
+        power=power,
+        up_idx=up_idx,
+        down_idx=down_idx)
 
-    # declare the power increment due to the transference
-    deltaP = np.zeros(len(P))
-
-    nU = 0.0
-    nD = 0.0
-
-    for i in idx:
-
-        if P[i] > 0:
-            nU += P[i]
-
-        if P[i] < 0:
-            nD -= P[i]  # store it as positive value
-
-    # compute witch proportion to attend with positive and negative sense
-    dPu = nU / (nU + nD)  # positive proportion
-    dPd = nD / (nU + nD)  # negative proportion
-
-    for i in idx:
-
-        if P[i] > 0:
-            deltaP[i] = dP * dPu * P[i] / nU
-
-        if P[i] < 0:
-            deltaP[i] = -dP * dPd * P[i] / nD  # P[i] is already negative
-
-    return deltaP
-
-
-@nb.njit()
-def scale_proportional_sensed(P, idx1, idx2, dT=1.0):
-    """
-
-    :param P: Power vector
-    :param idx1: indices of sending region
-    :param idx2: indices of receiving region
-    :param dT: Exchange amount
-    :return:
-    """
-
-    dPu = get_proportional_deltas_sensed(P, idx1, dP=dT)
-    dPd = get_proportional_deltas_sensed(P, idx2, dP=-dT)
-
-    dP = dPu + dPd
-
-    return P + dP
+    return power + delta * factors
 
 
 # @nb.njit()
-def compute_alpha(ptdf, P0, Pgen, Pinstalled, Pload, bus_a1_idx, bus_a2_idx, dT=1.0, mode=0, multi_contingencies=None, lodf=None):
+def compute_alpha(
+        P0: Vec,
+        ptdf: Vec,
+        bus_a1_idx: IntVec,
+        bus_a2_idx: IntVec,
+        dT: float=1.0,
+        multi_contingencies: List[LinearMultiContingency] = None):
+
     """
     Compute line sensitivity to power transfer
-    :param ptdf: Power transfer distribution factors (n-branch, n-bus)
-    :param lodf: Optional. Line outage distribution factor (n-branch, n-branch). Needed to compute alpha n-1.
-    :param P0: all bus Injections [p.u.]
-    :param Pinstalled: bus generation installed power [p.u.]
-    :param Pgen: bus generation current power [p.u.]
-    :param Pload: bus load power [p.u.]
+    :param P0: initial nodal power
+    :param ptdf: power transfer distribution factors (n-branch, n-bus)
     :param bus_a1_idx: bus indices of the sending region
     :param bus_a2_idx: bus indices of the receiving region
     :param dT: Exchange amount
-    :param mode: Type of power shift
-                 0: shift generation based on the current generated power
-                 1: shift generation based on the installed power
-                 2: shift load
-                 3 (or else): shift udasing generation and load
+    :param multi_contingencies: list of linear multi contingencies
 
     :return: Exchange sensitivity vector for all the lines
     """
 
-    if mode == 0:
-        # move the generators based on the generated power
-        P = Pgen
-
-    elif mode == 1:
-        # move the generators based on the installed power
-        P = Pinstalled
-
-    elif mode == 2:
-        # move the load
-        P = Pload
-
-    else:
-        # move all of it
-        P = P0
-
     # compute the bus injection increments due to the exchange
-    dPu = get_proportional_deltas_sensed(P, bus_a1_idx, dP=dT)
-    dPd = get_proportional_deltas_sensed(P, bus_a2_idx, dP=-dT)
-
-    dP = dPu + dPd
+    dP = scale_proportional_sensed(
+        power=P0,
+        up_idx=bus_a1_idx,
+        down_idx=bus_a2_idx,
+        delta=dT)
 
     # compute the line flow increments due to the exchange increment dT in MW
     dflow = ptdf.dot(dP)
@@ -475,19 +422,18 @@ class AvailableTransferCapacityDriver(DriverTemplate):
          2: shift load
          3 (or else): shift udasing generation and load
         """
-        mode_2_int = {AvailableTransferMode.Generation: 0,
-                      AvailableTransferMode.InstalledPower: 1,
-                      AvailableTransferMode.Load: 2,
-                      AvailableTransferMode.GenerationAndLoad: 3}
+
+        power = compute_nodal_power_by_transfer_method(
+            generation_per_bus=nc.generator_data.get_injections_per_bus().real,
+            load_per_bus=nc.load_data.get_injections_per_bus().real,
+            pmax_per_bus=nc.bus_installed_power,
+            transfer_method=self.options.mode
+        )
 
         alpha = compute_alpha(ptdf=linear.PTDF,
-                              P0=nc.Sbus.real,
-                              Pinstalled=nc.bus_installed_power,
-                              Pgen=nc.generator_data.get_injections_per_bus().real,
-                              Pload=nc.load_data.get_injections_per_bus().real,
+                              P0=power,
                               bus_a1_idx=idx1b,
-                              bus_a2_idx=idx2b,
-                              mode=mode_2_int[self.options.mode])
+                              bus_a2_idx=idx2b)
 
         # get flow
         if self.options.use_provided_flows:
