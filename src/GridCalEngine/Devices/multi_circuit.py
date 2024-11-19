@@ -119,7 +119,7 @@ def get_fused_device_lst(elm_list: List[INJECTION_DEVICE_TYPES], property_names:
         return list(), list()
 
 
-def get_data_variability(data: Vec):
+def get_data_variability_dict(data: Vec):
     """
     Get data variability.
     :return: dictionary with index as key and representative profile as value.
@@ -2857,38 +2857,38 @@ class MultiCircuit(Assets):
         self.wire_types += data.wire_types
         self.sequence_line_types += data.sequence_line_types
 
-    def get_branch_active_profile_variability(self):
+    def get_branch_active_profile_variability_dict(self):
         """
         Get branch active profile variability.
         :return: dictionary with representative index as key and list of indices with same active profile as value.
         """
         data = self.get_branch_active_time_array()
-        return get_data_variability(data)
+        return get_data_variability_dict(data=data)
 
-    def get_bus_active_profile_variability(self):
+    def get_bus_active_profile_variability_dict(self):
         """
         Get bus active profile variability.
         :return: dictionary with representative index as key and list of indices with same active profile as value.
         """
         data = self.get_bus_active_time_array()
-        return get_data_variability(data)
+        return get_data_variability_dict(data=data)
 
-    def get_topological_profile_variability(self):
+    def get_topological_profile_variability_dict(self):
         """
         Get topological profile variability.
         :return: dictionary with representative index as key and list of indices with same active profile as value.
         """
 
         # get topologies by device
-        branch_active_profile_variability = self.get_branch_active_profile_variability()
-        bus_active_profile_variability = self.get_bus_active_profile_variability()
+        branch_active_profile_variability = self.get_branch_active_profile_variability_dict()
+        bus_active_profile_variability = self.get_bus_active_profile_variability_dict()
 
-        # concatenate horizontally distinct topologies
-        data = np.hstack([
-            np.array(branch_active_profile_variability.values()),
-            np.array(bus_active_profile_variability.values())
-        ])
+        # concatenate distinct topologies as columns
+        data = np.vstack([
+            np.array(list(branch_active_profile_variability.values())),
+            np.array(list(bus_active_profile_variability.values()))
+        ]).T
 
-        return get_data_variability(data=data)
+        return get_data_variability_dict(data=data)
 
 
