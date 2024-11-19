@@ -119,6 +119,22 @@ def get_fused_device_lst(elm_list: List[INJECTION_DEVICE_TYPES], property_names:
         return list(), list()
 
 
+def get_data_variability(data: Vec):
+    """
+    Get data variability.
+    :return: dictionary with index as key and representative profile as value.
+    """
+    unique_patterns = {}
+    result = {}
+    for idx in range(data.shape[0]):
+        pattern = tuple(data[idx])
+
+        if pattern not in unique_patterns:
+            unique_patterns[pattern] = idx
+
+        result[idx] = unique_patterns[pattern]
+    return result
+
 class MultiCircuit(Assets):
     """
     The concept of circuit should be easy enough to understand. It represents a set of
@@ -761,6 +777,16 @@ class MultiCircuit(Assets):
         :return: snapshot datetime string
         """
         return self.snapshot_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_bus_active_time_array(self) -> IntMat:
+        """
+        Get bus active matrix
+        :return: array with bus active status
+        """
+        active = np.empty((self.get_time_number(), self.get_bus_number()), dtype=int)
+        for i, b in enumerate(self.get_buses()):
+            active[:, i] = b.active_prof.toarray()
+        return active
 
     def get_bus_branch_connectivity_matrix(self) -> Tuple[csc_matrix, csc_matrix, csc_matrix]:
         """
@@ -2830,3 +2856,39 @@ class MultiCircuit(Assets):
         self.underground_cable_types += data.underground_cable_types
         self.wire_types += data.wire_types
         self.sequence_line_types += data.sequence_line_types
+
+    def get_branch_active_profile_variability(self):
+        """
+        Get branch active profile variability.
+        :return: dictionary with representative index as key and list of indices with same active profile as value.
+        """
+        data = self.get_branch_active_time_array()
+        return get_data_variability(data)
+
+    def get_bus_active_profile_variability(self):
+        """
+        Get bus active profile variability.
+        :return: dictionary with representative index as key and list of indices with same active profile as value.
+        """
+        data = self.get_bus_active_time_array()
+        return get_data_variability(data)
+
+    def get_topological_profile_variability(self):
+        """
+        Get topological profile variability.
+        :return: dictionary with representative index as key and list of indices with same active profile as value.
+        """
+
+        # get topologies by device
+        branch_active_profile_variability = self.get_branch_active_profile_variability()
+        bus_active_profile_variability = self.get_bus_active_profile_variability()
+
+        # concatenate horizontally distinct topologies
+        data = np.hstack([
+            np.array(branch_active_profile_variability.values()),
+            np.array(bus_active_profile_variability.values())
+        ])
+
+        return get_data_variability(data=data)
+
+
