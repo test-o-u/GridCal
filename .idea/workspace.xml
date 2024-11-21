@@ -28,10 +28,18 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="scaling_factors test:&#10;- Probed and working!">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="scaling_factors test:&#10;- Tests for vectors and matrix&#10;- Code working!!">
+      <change afterPath="$PROJECT_DIR$/src/tests/data/grids/ntc/ntc_test.gridcal" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tests/data/grids/ntc/ntc_test_new_area.gridcal" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tests/data/grids/ntc/ntc_test_nohvdc.gridcal" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tests/data/grids/ntc/ntc_test_ts.gridcal" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/tests/data/grids/ntc/ntc_test_ts_unbalanced.gridcal" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/tests/scaling_factors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/scaling_factors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/assets.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/assets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/multi_circuit.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/multi_circuit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/scaling_factors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/test_scaling_factors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/test_ntc.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/test_ntc.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,10 +153,12 @@
     "Python tests.pytest for scaling_factors.test_1.executor": "Run",
     "Python tests.pytest for scaling_factors.test_2.executor": "Run",
     "Python tests.pytest for scaling_factors.test_3.executor": "Debug",
+    "Python tests.pytest for test_ntc.test_ntc_ultra_simple.executor": "Debug",
     "Python tests.pytest in scaling_factors.py.executor": "Run",
     "Python tests.pytest in test_hydro.py.executor": "Run",
+    "Python tests.pytest in test_ntc.py.executor": "Debug",
     "Python.AnalysisDialogue.executor": "Run",
-    "Python.ExecuteGridCal.executor": "Debug",
+    "Python.ExecuteGridCal.executor": "Run",
     "Python.acopf_run.executor": "Run",
     "Python.bitflip.executor": "Run",
     "Python.cgmes_rdfs_graph.executor": "Run",
@@ -175,7 +185,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "devel__ntc",
-    "last_opened_file_path": "C:/Users/ramferan/ReposGit/github/sanpen/GridCal",
+    "last_opened_file_path": "C:/Users/ramferan/ReposGit/github/sanpen/GridCal/src/tests/data/grids",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
@@ -201,11 +211,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ramferan\ReposGit\github\sanpen\GridCal\src\tests\data\grids" />
       <recent name="$PROJECT_DIR$/src/trunk/qt_related" />
       <recent name="$PROJECT_DIR$/src/trunk/investments" />
       <recent name="C:\Work\git_local\GridCal\doc" />
       <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/ContingencyAnalysis/Methods" />
-      <recent name="$PROJECT_DIR$/src/tests/data/grids" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/trunk/investments" />
@@ -215,7 +225,7 @@
       <recent name="C:\WorkProjects\PycharmProjects\GridCal\src\GridCalEngine\IO\cim\cgmes" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.pytest in scaling_factors.py">
+  <component name="RunManager" selected="Python.ExecuteGridCal">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -450,6 +460,29 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
+    <configuration name="ExecuteGridCal" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="GridCal" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/GridCal" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/GridCal/ExecuteGridCal.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -465,29 +498,6 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="scaling_factors" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="GridCal" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -600,7 +610,7 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="pytest for scaling_factors.test_1" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+    <configuration name="pytest for test_ntc.test_ntc_ultra_simple" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -614,11 +624,11 @@
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_parameters" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;scaling_factors.test_1&quot;" />
+      <option name="_new_target" value="&quot;test_ntc.test_ntc_ultra_simple&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="pytest for scaling_factors.test_2" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+    <configuration name="pytest for tests.test_scaling_factors.test_3" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -632,11 +642,11 @@
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_parameters" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;scaling_factors.test_2&quot;" />
+      <option name="_new_target" value="&quot;tests.test_scaling_factors.test_3&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="pytest for scaling_factors.test_3" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+    <configuration name="pytest in test_ntc.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -650,11 +660,11 @@
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_parameters" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;scaling_factors.test_3&quot;" />
-      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/src/tests/test_ntc.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="pytest in scaling_factors.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+    <configuration name="pytest in test_scaling_factors.py" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -668,24 +678,24 @@
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_parameters" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/src/tests/scaling_factors.py&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/src/tests/test_scaling_factors.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.scaling_factors" />
-      <item itemvalue="Python tests.pytest for scaling_factors.test_1" />
-      <item itemvalue="Python tests.pytest for scaling_factors.test_2" />
-      <item itemvalue="Python tests.pytest for scaling_factors.test_3" />
-      <item itemvalue="Python tests.pytest in scaling_factors.py" />
+      <item itemvalue="Python.ExecuteGridCal" />
+      <item itemvalue="Python tests.pytest for test_ntc.test_ntc_ultra_simple" />
+      <item itemvalue="Python tests.pytest for tests.test_scaling_factors.test_3" />
+      <item itemvalue="Python tests.pytest in test_ntc.py" />
+      <item itemvalue="Python tests.pytest in test_scaling_factors.py" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python tests.pytest in scaling_factors.py" />
-        <item itemvalue="Python tests.pytest for scaling_factors.test_3" />
-        <item itemvalue="Python tests.pytest for scaling_factors.test_2" />
-        <item itemvalue="Python tests.pytest for scaling_factors.test_1" />
-        <item itemvalue="Python.scaling_factors" />
+        <item itemvalue="Python.ExecuteGridCal" />
+        <item itemvalue="Python tests.pytest for test_ntc.test_ntc_ultra_simple" />
+        <item itemvalue="Python tests.pytest in test_ntc.py" />
+        <item itemvalue="Python tests.pytest in test_scaling_factors.py" />
+        <item itemvalue="Python tests.pytest for tests.test_scaling_factors.test_3" />
       </list>
     </recent_temporary>
   </component>
@@ -1721,7 +1731,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="539" />
+    <option name="localTasksCounter" value="540" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1767,7 +1777,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Improved dictionary_of_lists" />
     <MESSAGE value="Improved the way generators set their control bus/cn" />
     <MESSAGE value="Added Ybus as an optional input for `power_flow_post_process`" />
     <MESSAGE value="Fixed children devices not drawing in the busbar" />
@@ -1792,7 +1801,8 @@
     <MESSAGE value="multi_circuit.py:&#10;- New functions to analyze grid topology" />
     <MESSAGE value="scaling_factors:&#10;- Probed and working!" />
     <MESSAGE value="scaling_factors test:&#10;- Probed and working!" />
-    <option name="LAST_COMMIT_MESSAGE" value="scaling_factors test:&#10;- Probed and working!" />
+    <MESSAGE value="scaling_factors test:&#10;- Tests for vectors and matrix&#10;- Code working!!" />
+    <option name="LAST_COMMIT_MESSAGE" value="scaling_factors test:&#10;- Tests for vectors and matrix&#10;- Code working!!" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2187,7 +2197,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/multi_circuit.py</url>
-          <line>1954</line>
+          <line>1978</line>
           <option name="timeStamp" value="1678" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -2254,11 +2264,6 @@
           <url>file://$PROJECT_DIR$/src/GridCalEngine/IO/raw/rawx_parser_writer.py</url>
           <line>132</line>
           <option name="timeStamp" value="1737" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py</url>
-          <line>963</line>
-          <option name="timeStamp" value="1750" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

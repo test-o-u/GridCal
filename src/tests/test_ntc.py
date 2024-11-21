@@ -13,7 +13,7 @@ def test_ntc_ultra_simple() -> None:
     :return:
     """
     np.set_printoptions(precision=4)
-    fname = os.path.join('data', 'grids', 'red_ultra_simple_ntc.gridcal')
+    fname = os.path.join('data', 'grids', 'ntc', 'ntc_test_ts_unbalanced.gridcal')
 
     grid = gce.open_file(fname)
 

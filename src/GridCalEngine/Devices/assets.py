@@ -8,7 +8,7 @@ import pandas as pd
 from typing import List, Dict, Tuple, Union, Any, Set, Generator
 import datetime as dateslib
 
-from GridCalEngine.basic_structures import IntVec, StrVec
+from GridCalEngine.basic_structures import IntVec, StrVec, Vec
 import GridCalEngine.Devices as dev
 from GridCalEngine.Devices.types import ALL_DEV_TYPES, BRANCH_TYPES, INJECTION_DEVICE_TYPES, FLUID_TYPES
 from GridCalEngine.Devices.Parents.editable_device import GCPROP_TYPES
@@ -1165,6 +1165,20 @@ class Assets:
         :return:
         """
         return np.array([e.name for e in self._buses])
+
+    def get_bus_max_angle(self) -> Vec:
+        """
+        List of bus max angles
+        :return:
+        """
+        return np.array([e.angle_max for e in self._buses])
+
+    def get_bus_min_angles(self) -> Vec:
+        """
+        List of bus min angles
+        :return:
+        """
+        return np.array([e.angle_min for e in self._buses])
 
     def get_bus_dict(self, by_idtag=False) -> Dict[str, dev.Bus]:
         """

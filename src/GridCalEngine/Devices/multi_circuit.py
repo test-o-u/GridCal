@@ -1791,7 +1791,7 @@ class MultiCircuit(Assets):
 
     def get_branch_rates_prof_wo_hvdc(self) -> Mat:
         """
-        Get the complex bus power Injections
+        Get the branch rate profiles without hvdc
         :return: (ntime, nbr) [MVA]
         """
         val = np.zeros((self.get_time_number(), self.get_branch_number_wo_hvdc()))
@@ -1803,13 +1803,37 @@ class MultiCircuit(Assets):
 
     def get_branch_rates_wo_hvdc(self) -> Vec:
         """
-        Get the complex bus power Injections
+        Get the branch rates without hvdc
         :return: (nbr) [MVA]
         """
         val = np.zeros(self.get_branch_number_wo_hvdc())
 
         for i, branch in enumerate(self.get_branches_wo_hvdc()):
             val[i] = branch.rate
+
+        return val
+
+    def get_hvdc_rates_prof(self) -> Mat:
+        """
+        Get the hvdc rate profiles
+        :return: (ntime, nbr) [MVA]
+        """
+        val = np.zeros((self.get_time_number(), self.get_branch_number_wo_hvdc()))
+
+        for i, hvdc in enumerate(self.get_hvdc()):
+            val[:, i] = hvdc.rate_prof.toarray()
+
+        return val
+
+    def get_hvdc_rates(self) -> Vec:
+        """
+        Get the hvdc rates without hvdc
+        :return: (nbr) [MVA]
+        """
+        val = np.zeros(self.get_branch_number_wo_hvdc())
+
+        for i, hvdc in enumerate(self.get_hvdc()):
+            val[i] = hvdc.rate
 
         return val
 

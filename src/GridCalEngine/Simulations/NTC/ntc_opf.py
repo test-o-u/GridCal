@@ -391,6 +391,108 @@ class NtcVars:
         return np.ones((self.nt, self.nbus)) * np.exp(1j * self.bus_vars.theta)
 
 
+class NcData:
+    """
+    Structure to host the numerical circuit variables
+    """
+
+    def __init__(self, t: int, nc: NumericalCircuit, bus_idx_from: IntVec, bus_idx_to: IntVec):
+        self.t: int = t
+        self.nc: NumericalCircuit = nc
+        self.bus_idx_from: IntVec = bus_idx_from
+        self.bus_idx_to: IntVec = bus_idx_to
+
+        self.ls: Union[LinearAnalysis, None] = None
+        self.mctg: Union[LinearMultiContingencies, None] = None
+
+        self.PTDF
+        self.LODF
+        self.alpha
+        self.alpha_n1
+        self.n1_branches
+        self.multi_contingencies
+
+    def run_linear_analysis(self, distributed_slack: bool = False, correct_values: bool = True):
+
+        if self.ls is None:
+            # declare the linear analysis
+            self.ls = LinearAnalysis(
+                numerical_circuit=self.nc,
+                distributed_slack=distributed_slack,
+                correct_values=correct_values)
+
+        # compute the PTDF and LODF
+        self.ls.run()
+        self.PTDF = self.ls.PTDF
+        self.LODF = self.ls.LODF
+
+    def compute_multi_contingencies(
+            self,
+            grid: MultiCircuit,
+            contingency_groups_used,
+            consider_contingencies: bool = False,
+            ptdf_threshold: float = 0.001,
+            lodf_threshold: float = 0.001
+    ):
+
+        if self.mctg is None:
+            # declare the multi-contingencies analysis
+            self.mctg = LinearMultiContingencies(
+                grid=grid,
+                contingency_groups_used=contingency_groups_used)
+
+        if consider_contingencies:
+            # compute multi-contingencies
+            self.mctg.compute(
+                lodf=self.ls.LODF,
+                ptdf=self.ls.PTDF,
+                ptdf_threshold=ptdf_threshold,
+                lodf_threshold=lodf_threshold)
+
+            self.multi_contingencies = self.mctg.multi_contingencies
+
+        else:
+            self.multi_contingencies = None
+
+
+    def compute_alphas(self, injections: Vec):
+
+        if self.PTDF is None:
+            self.run_linear_analysis()
+
+        self.alpha, self.alpha_n1, self.n1_branches = compute_alpha(
+            ptdf=self.ls.PTDF,
+            P0=injections,
+            bus_a1_idx=self.bus_idx_from,
+            bus_a2_idx=self.bus_idx_to,
+            multi_contingencies=self.multi_contingencies)
+
+    def get_inter_area_branches(self):
+        # Compute inter area branches
+        # branch index, branch object, flow sense w.r.t the area exchange
+        return self.nc.branch_data.get_inter_areas(
+            bus_idx_from=self.bus_idx_from,
+            bus_idx_to=self.bus_idx_to)
+
+    def get_inter_area_hvdcs(self):
+        # Compute inter area hvdc
+        # branch index, branch object, flow sense w.r.t the area exchange
+        return self.nc.hvdc_data.get_inter_areas(
+            bus_idx_from=self.bus_idx_from,
+            bus_idx_to=self.bus_idx_to)
+
+    def get_structural_ntc(self, branch_rates, hvdc_rates):
+
+        sum_ratings = 0.0
+
+        for k, sense in self.get_inter_area_branches():
+            sum_ratings += branch_rates[k]
+
+        for k, sense in self.get_inter_area_hvdcs():
+            sum_ratings += hvdc_rates[k]
+
+        return sum_ratings
+
 def add_linear_injections_formulation(
         t_idx: int,
         generation_per_bus: Vec,
@@ -941,35 +1043,50 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     # objective function
     f_obj = 0.0
 
-    # START OF THINGS THAT CAN BE COMPUTED LESS TIMES ------------------------------------------------------------------
     # Analyze topological variability in order to minimize computation time compiling numerical circuits
     topological_dict = grid.get_topological_profile_variability_dict()
 
-    # Get nodal profiles as matrix
+    # Get nodal profiles data
     dispatchable_bus_prof = grid.get_dispachable_generation_like_Sbus_prof() / grid.Sbase
     generation_bus_prof = grid.get_generation_like_Sbus_prof().real / grid.Sbase
     load_bus_prof = grid.get_load_like_Sbus_prof().real / grid.Sbase
     max_power_bus_prof = grid.get_generation_like_Pmax_per_bus() / grid.Sbase
     min_power_bus_prof = grid.get_generation_like_Pmin_per_bus() / grid.Sbase
-    # END OF THINGS THAT CAN BE COMPUTED LESS TIMES --------------------------------------------------------------------
+
+    # Get bus data
+    bus_max_angles = grid.get_bus_min_angles()
+    bus_min_angles = grid.get_bus_min_angles()
+
+    # Get branch profile data
+    branch_rates = grid.get_branch_rates_prof_wo_hvdc()
+    hvdc_rates = grid.get_hvdc_rates_prof()
+
 
     # Scale power to load to ensure balance
-    # todo: check if we want to do it
-    kk = sensed_scale_to_reference(
+    # TODO: check if we want to do it
+    generation_bus_prof = sensed_scale_to_reference(
         values=generation_bus_prof,
         target=-load_bus_prof,
-        imbalance=np.zeros(generation_bus_prof.shape[0])
+        imbalance=None
     )
 
     ts_data = dict()
+    # Loop time series to compute NTC
     for t_idx, t in enumerate(time_indices):  # use time_indices = [None] to simulate the snapshot
 
+        # Get the topological reference for this time index
         t_ref = topological_dict[t_idx]
 
-        # Evaluate numerical circuit,
+        # Evaluate topological reference
         if t_ref not in ts_data.keys():
 
-            nc_data = dict()
+            # Topological dependent data ------------------------------------------------------------------------------
+            # Compute the numerical circuit for topological reference if it has not been processed yet:
+            #  All time-consuming functions will be processed only once to improve computing time.
+            #  Data will be saved in a dictionary (ts_data) to be accessible whenever needed. Memory issues
+            #  might arise; if needed dictionary could be discarded, but numerical circuit will be
+            #  recomputed each time the topological reference changes.
+
             nc: NumericalCircuit = compile_numerical_circuit_at(
                 circuit=grid,
                 t_idx=t_ref,
@@ -977,91 +1094,57 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                 areas_dict=areas_dict,
                 logger=logger)
 
-            # declare the linear analysis
-            ls = LinearAnalysis(
-                numerical_circuit=nc,
-                distributed_slack=False,
-                correct_values=True)
+            nc_data = NcData(
+                t=t_ref,
+                nc=nc,
+                bus_idx_from=bus_a1_idx,
+                bus_idx_to=bus_a2_idx)
 
-            # compute the PTDF and LODF
-            ls.run()
-
-            if consider_contingencies:
-
-                # declare the multi-contingencies analysis and compute
-                mctg = LinearMultiContingencies(
-                    grid=grid,
-                    contingency_groups_used=contingency_groups_used)
-
-                mctg.compute(
-                    lodf=ls.LODF,
-                    ptdf=ls.PTDF,
-                    ptdf_threshold=lodf_threshold,
-                    lodf_threshold=lodf_threshold)
-
-                multi_contingencies = mctg.multi_contingencies
-
-            else:
-                multi_contingencies = None
-
-            # evaluate power according transfer method
-            power = compute_nodal_power_by_transfer_method(
-                generation_per_bus=nc.generator_data.get_injections_per_bus().real,
-                load_per_bus=nc.load_data.get_injections_per_bus().real,
-                pmax_per_bus=nc.bus_installed_power,
-                transfer_method=transfer_method,
+            nc_data.compute_multi_contingencies(
+                grid=grid,
+                contingency_groups_used=contingency_groups_used,
+                consider_contingencies=consider_contingencies,
+                ptdf_threshold=alpha_threshold,  # TODO: check this
+                lodf_threshold=lodf_threshold,
             )
 
-
-
-            # compute the sensitivity to the exchange
-            # only devices with galvanic connection are considered
-            alpha, alpha_n1, n1_branches = compute_alpha(
-                ptdf=ls.PTDF,
-                P0=power,
-                bus_a1_idx=bus_a1_idx,
-                bus_a2_idx=bus_a2_idx,
-                multi_contingencies=multi_contingencies)
-
-            # compute the structural NTC: this is the sum of ratings in the inter area
-            structural_ntc = nc.get_structural_ntc(bus_a1_idx=bus_a1_idx, bus_a2_idx=bus_a2_idx)
-
-            nc_data['multi_contingencies'] = multi_contingencies
-            nc_data['alpha'] = alpha
-            nc_data['alpha_n1'] = alpha_n1
-            nc_data['n1_branches'] = n1_branches
-            nc_data['structural_ntc'] = structural_ntc
-            nc_data['power'] = power  # todo: check if it's necessary to store it
-
-            ts_data[t_ref] = nc_data
         else:
             nc_data = ts_data[t_ref]
 
+        # evaluate power according transfer method
+        power = compute_nodal_power_by_transfer_method(
+            generation_per_bus=generation_bus_prof[t_idx, :],
+            load_per_bus=load_bus_prof[t_idx, :],
+            pmax_per_bus=max_power_bus_prof[t_idx, :],
+            transfer_method=transfer_method,
+        )
 
+        # Compute the sensitivity to the exchange:
+        #   Only devices with a galvanic connection are considered.
+        nc_data.compute_alphas(
+            injections=power,
+        )
 
-        if t_idx == 0:
-            # branch index, branch object, flow sense w.r.t the area exchange
-            bus_a1_idx_set = set(bus_a1_idx)
-            bus_a2_idx_set = set(bus_a2_idx)
+        # Compute the structural NTC:
+        #  This is the sum of ratings in the inter-area branches
+        # TODO: check to do it considering active profiles??
+        structural_ntc = nc_data.get_structural_ntc(
+            branch_rates=branch_rates,
+            hvdc_rates=hvdc_rates)
 
-            # find the inter space branches given the bus indices of each space
-            mip_vars.branch_vars.inter_space_branches = nc.branch_data.get_inter_areas(
-                bus_idx_from=bus_a1_idx_set,
-                bus_idx_to=bus_a2_idx_set)
-            mip_vars.hvdc_vars.inter_space_hvdc = nc.hvdc_data.get_inter_areas(
-                bus_idx_from=bus_a1_idx_set,
-                bus_idx_to=bus_a2_idx_set)
+        # Store inter space branches and hvdcs
+        mip_vars.branch_vars.inter_space_branches = nc_data.get_inter_area_branches()
+        mip_vars.hvdc_vars.inter_space_hvdc = nc_data.get_inter_area_hvdcs()
 
         # formulate the bus angles ---------------------------------------------------------------------------------
         for k in range(nc.bus_data.nbus):
             mip_vars.bus_vars.theta[t_idx, k] = lp_model.add_var(
-                lb=nc.bus_data.angle_min[k],
-                ub=nc.bus_data.angle_max[k],
+                lb=float(bus_min_angles[k]),
+                ub=float(bus_max_angles[k]),
                 name=join("th_", [t_idx, k], "_")
             )
 
         # formulate injections -------------------------------------------------------------------------------------
-        # TODO: review that the samples NumericalCircuit is ok to use here
         f_obj += add_linear_injections_formulation(
             t_idx=t_idx,
             generation_per_bus=dispatchable_bus_prof,
@@ -1091,8 +1174,8 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
         if zonal_grouping == ZonalGrouping.NoGrouping:
 
-            mip_vars.branch_vars.alpha[t_idx, :] = alpha
-            mip_vars.structural_ntc[t_idx] = structural_ntc
+            mip_vars.branch_vars.alpha[t_idx, :] = nc_data['alpha']
+            mip_vars.structural_ntc[t_idx] = nc_data['structural_ntc']
 
             # formulate branches -----------------------------------------------------------------------------------
             # TODO: review that the samples NumericalCircuit is ok to use here
