@@ -26,28 +26,32 @@ def sensed_scale_to_reference(
     :param logger: A logger object isntance.
     :return: scaled values
     """
+    # Determine the axis for summation based on the dimensionality of the input.
+    # If values is a 1D array (vector), use axis=0.
+    # If values is a 2D array (matrix), use axis=1.
+    axis = 0 if values.ndim == 1 else 1
 
     if imbalance is None:
         imbalance = np.zeros_like(target)
 
     # Calculate delta based on the dimensions of target
-    if target.ndim == 1:
-        delta = target.sum() - values.sum() + imbalance
-    else:
-        delta = target.sum(axis=1) - values.sum(axis=1) + imbalance.sum(axis=1)
+    delta = target.sum(axis=axis) - values.sum(axis=axis) + imbalance.sum(axis=axis)
 
     # Compute scaling factors
     factors = compute_sensed_factors(values=values, idx=idx)
 
     # Scale the power values
-    result = values + factors * delta[:, np.newaxis]
+    if values.ndim == 1:
+        result = values + factors * delta
+    else:
+        result = values + factors * delta[:, np.newaxis]
 
     # Round the result if decimals is specified
     if decimals is not None:
         result = np.round(result, decimals=decimals)
 
     # Check if the target has been achieved
-    difference = target.sum(axis=1) - result.sum(axis=1)
+    difference = target.sum(axis=axis) - result.sum(axis=axis)
     if not np.allclose(difference, 0, rtol=1e-6):
         if logger:
             logger.add_warning('Issue computing sensed scale to reference: target is not achieved')
@@ -68,31 +72,39 @@ def compute_sensed_factors(
     :return: A vector of scaling factors that adjust the initial values
     """
 
+    # Determine the axis for summation based on the dimensionality of the input.
+    # If values is a 1D array (vector), use axis=0.
+    # If values is a 2D array (matrix), use axis=1.
+    axis = 0 if values.ndim == 1 else 1
+
     # Considering indices mask
     if idx is None:
         values_reference = values
     else:
         mask = np.zeros_like(values, dtype=bool)
-        mask[:, idx] = True
+        if values.ndim == 1:
+            mask[idx] = True
+        else:
+            mask[:, idx] = True
+
         # zero in mask positions, power otherwise.
         values_reference = np.where(mask, values, 0)
 
-    # get proportions of contribution by sense
-    # the idea is both techs contributes to achieve the power shift goal in the same proportion
-    # that in base situation
+    # Calculate the contribution proportions by sense:
+    #   The goal is to scale positive and negative values proportionally in the same direction.
 
     # Calculate total absolute values for normalization
-    total_abs_power = np.sum(np.abs(values_reference), axis=1, keepdims=True)
+    total_abs_power = np.sum(np.abs(values_reference), axis=axis, keepdims=True)
 
     # Filter positive and negative values. Same vectors length, set not matched values to zero.
     power_pos = np.where(values_reference < 0, 0, values_reference)
     power_neg = np.where(values_reference > 0, 0, values_reference)
 
     # Calculate total absolute values up/down for normalization
-    total_power_pos = np.sum(power_pos, axis=1, keepdims=True)
-    total_power_neg = np.sum(power_neg, axis=1, keepdims=True)
-    total_abs_power_pos = np.sum(np.abs(power_pos), axis=1, keepdims=True)
-    total_abs_power_neg = np.sum(np.abs(power_neg), axis=1, keepdims=True)
+    total_power_pos = np.sum(power_pos, axis=axis, keepdims=True)
+    total_power_neg = np.sum(power_neg, axis=axis, keepdims=True)
+    total_abs_power_pos = np.sum(np.abs(power_pos), axis=axis, keepdims=True)
+    total_abs_power_neg = np.sum(np.abs(power_neg), axis=axis, keepdims=True)
 
     # Calculate factor related to sense contribution
     factors_sense_up = np.divide(total_power_pos, total_abs_power, where=total_abs_power != 0)
@@ -111,7 +123,7 @@ def compute_sensed_factors(
     factors = factors_power_delta_up + factors_power_delta_dw
 
     # Check if the sum of factors is close to 1
-    if not np.allclose(np.sum(factors, axis=1), 1, rtol=1e-6):
+    if not np.allclose(np.sum(factors, axis=axis), 1, rtol=1e-6):
         if logger:
             logger.add_warning('Issue computing sensed factors, factors sum is not close to one.')
 
