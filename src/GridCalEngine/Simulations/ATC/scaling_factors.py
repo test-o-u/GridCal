@@ -111,7 +111,7 @@ def compute_sensed_factors(
     factors = factors_power_delta_up + factors_power_delta_dw
 
     # Check if the sum of factors is close to 1
-    if not np.isclose(np.sum(factors), 1, rtol=1e-6):
+    if not np.allclose(np.sum(factors, axis=1), 1, rtol=1e-6):
         if logger:
             logger.add_warning('Issue computing sensed factors, factors sum is not close to one.')
 
@@ -246,17 +246,3 @@ def compute_nodal_min_power_by_transfer_method(
         p_min = np.full(nbus, -inf_value)
 
     return p_min
-
-if __name__ == '__main__':
-    power_matrix = np.array([[10, -20, 30], [40, 50, -60]])
-    target_matrix = np.array([[10, 10, 10], [15, 15, 15]])
-    idx_matrix = np.array([0, 1, 2])
-    factors_matrix = compute_sensed_factors(power_matrix, idx_matrix)
-    final_matrix = sensed_scale_to_reference(
-        values=power_matrix,
-        target=target_matrix,
-        idx=None,
-        imbalance=None,
-        decimals=None,
-    )
-    k=1
