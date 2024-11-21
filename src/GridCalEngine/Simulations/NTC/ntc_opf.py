@@ -27,7 +27,8 @@ from GridCalEngine.enumerations import TapPhaseControl, HvdcControlType, Availab
 from GridCalEngine.Simulations.LinearFactors.linear_analysis import LinearAnalysis, LinearMultiContingencies
 from GridCalEngine.Simulations.ATC.available_transfer_capacity_driver import compute_alpha
 from GridCalEngine.IO.file_system import opf_file_path
-from GridCalEngine.Simulations.ATC.scaling_factors import (compute_exchange_factors,
+from GridCalEngine.Simulations.ATC.scaling_factors import (sensed_scale_to_reference,
+                                                           compute_exchange_factors,
                                                            compute_nodal_power_by_transfer_method,
                                                            compute_nodal_max_power_by_transfer_method,
                                                            compute_nodal_min_power_by_transfer_method)
@@ -446,7 +447,7 @@ def add_linear_injections_formulation(
     )
 
     proportions = compute_exchange_factors(
-        power=bus_pref,
+        values=bus_pref,
         up_idx=bus_a1_idx,
         down_idx=bus_a2_idx,
         logger=logger
@@ -941,19 +942,37 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     f_obj = 0.0
 
     # START OF THINGS THAT CAN BE COMPUTED LESS TIMES ------------------------------------------------------------------
-    # TODO: Analyze variability to determine the minimal NumericalCircuits to compute
-    # note: There are very little chances of simplifying this step and experience shows it is not
-    #        worth the effort, so compile every time step
-
+    # Analyze topological variability in order to minimize computation time compiling numerical circuits
     topological_dict = grid.get_topological_profile_variability_dict()
 
-    nc_dict = dict()
+    # Get nodal profiles as matrix
+    dispatchable_bus_prof = grid.get_dispachable_generation_like_Sbus_prof() / grid.Sbase
+    generation_bus_prof = grid.get_generation_like_Sbus_prof().real / grid.Sbase
+    load_bus_prof = grid.get_load_like_Sbus_prof().real / grid.Sbase
+    max_power_bus_prof = grid.get_generation_like_Pmax_per_bus() / grid.Sbase
+    min_power_bus_prof = grid.get_generation_like_Pmin_per_bus() / grid.Sbase
+    # END OF THINGS THAT CAN BE COMPUTED LESS TIMES --------------------------------------------------------------------
 
-    for idx in list(set(topological_dict.values())):
-        if idx not in nc_dict.keys():
+    # Scale power to load to ensure balance
+    # todo: check if we want to do it
+    kk = sensed_scale_to_reference(
+        values=generation_bus_prof,
+        target=-load_bus_prof,
+        imbalance=np.zeros(generation_bus_prof.shape[0])
+    )
+
+    ts_data = dict()
+    for t_idx, t in enumerate(time_indices):  # use time_indices = [None] to simulate the snapshot
+
+        t_ref = topological_dict[t_idx]
+
+        # Evaluate numerical circuit,
+        if t_ref not in ts_data.keys():
+
+            nc_data = dict()
             nc: NumericalCircuit = compile_numerical_circuit_at(
                 circuit=grid,
-                t_idx=idx,
+                t_idx=t_ref,
                 bus_dict=bus_dict,
                 areas_dict=areas_dict,
                 logger=logger)
@@ -967,64 +986,58 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             # compute the PTDF and LODF
             ls.run()
 
+            if consider_contingencies:
 
-    dispatchable_bus_prof = grid.get_dispachable_generation_like_Sbus_prof() / grid.Sbase
-    injections_bus_prof = grid.get_Sbus_prof().real / grid.Sbase
-    load_bus_prof = grid.get_load_like_Sbus_prof().real / grid.Sbase
-    max_power_bus_prof = grid.get_generation_like_Pmax_per_bus() / grid.Sbase
-    min_power_bus_prof = grid.get_generation_like_Pmin_per_bus() / grid.Sbase
+                # declare the multi-contingencies analysis and compute
+                mctg = LinearMultiContingencies(
+                    grid=grid,
+                    contingency_groups_used=contingency_groups_used)
 
+                mctg.compute(
+                    lodf=ls.LODF,
+                    ptdf=ls.PTDF,
+                    ptdf_threshold=lodf_threshold,
+                    lodf_threshold=lodf_threshold)
 
-    # declare the multi-contingencies analysis and compute
-    if consider_contingencies:
-        mctg = LinearMultiContingencies(
-            grid=grid,
-            contingency_groups_used=contingency_groups_used)
+                multi_contingencies = mctg.multi_contingencies
 
-        mctg.compute(
-            lodf=ls.LODF,
-            ptdf=ls.PTDF,
-            ptdf_threshold=lodf_threshold,
-            lodf_threshold=lodf_threshold)
-        multi_contingencies = mctg.multi_contingencies
+            else:
+                multi_contingencies = None
 
-    else:
-        multi_contingencies = None
-
-    # compute the sensitivity to the exchange
-    # only devices with galvanical connection are considered
-    power = compute_nodal_power_by_transfer_method(
-        generation_per_bus=nc.generator_data.get_injections_per_bus().real,
-        load_per_bus=nc.load_data.get_injections_per_bus().real,
-        pmax_per_bus=nc.bus_installed_power,
-        transfer_method=transfer_method,
-    )
-
-    alpha, alpha_n1, n1_branches = compute_alpha(
-        ptdf=ls.PTDF,
-        P0=power,
-        bus_a1_idx=bus_a1_idx,
-        bus_a2_idx=bus_a2_idx,
-        multi_contingencies=multi_contingencies)
-
-    # compute the structural NTC: this is the sum of ratings in the inter area
-    structural_ntc = nc.get_structural_ntc(bus_a1_idx=bus_a1_idx, bus_a2_idx=bus_a2_idx)
+            # evaluate power according transfer method
+            power = compute_nodal_power_by_transfer_method(
+                generation_per_bus=nc.generator_data.get_injections_per_bus().real,
+                load_per_bus=nc.load_data.get_injections_per_bus().real,
+                pmax_per_bus=nc.bus_installed_power,
+                transfer_method=transfer_method,
+            )
 
 
-    # END OF THINGS THAT CAN BE COMPUTED LESS TIMES --------------------------------------------------------------------
 
-    for t_idx, t in enumerate(time_indices):  # use time_indices = [None] to simulate the snapshot
+            # compute the sensitivity to the exchange
+            # only devices with galvanic connection are considered
+            alpha, alpha_n1, n1_branches = compute_alpha(
+                ptdf=ls.PTDF,
+                P0=power,
+                bus_a1_idx=bus_a1_idx,
+                bus_a2_idx=bus_a2_idx,
+                multi_contingencies=multi_contingencies)
 
-        # TODO: determine if this is sufficient
-        if t is None:
-            Pbus = grid.get_Sbus().real
+            # compute the structural NTC: this is the sum of ratings in the inter area
+            structural_ntc = nc.get_structural_ntc(bus_a1_idx=bus_a1_idx, bus_a2_idx=bus_a2_idx)
+
+            nc_data['multi_contingencies'] = multi_contingencies
+            nc_data['alpha'] = alpha
+            nc_data['alpha_n1'] = alpha_n1
+            nc_data['n1_branches'] = n1_branches
+            nc_data['structural_ntc'] = structural_ntc
+            nc_data['power'] = power  # todo: check if it's necessary to store it
+
+            ts_data[t_ref] = nc_data
         else:
-            Pbus = injections_bus_prof[t, :]
+            nc_data = ts_data[t_ref]
 
-        # magic scaling: the demand must be exactly (to the solver tolerance) the same as the demand
-        # TODO: Replace by old more detailed scaling function
-        Ptotal = np.sum(Pbus)
-        Pbus[nc.vd] -= Ptotal / len(nc.vd)
+
 
         if t_idx == 0:
             # branch index, branch object, flow sense w.r.t the area exchange
@@ -1048,7 +1061,6 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             )
 
         # formulate injections -------------------------------------------------------------------------------------
-
         # TODO: review that the samples NumericalCircuit is ok to use here
         f_obj += add_linear_injections_formulation(
             t_idx=t_idx,

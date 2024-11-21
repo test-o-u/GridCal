@@ -35,7 +35,7 @@ def scale_proportional_sensed(power, up_idx, down_idx, delta=1.0):
     """
 
     factors = compute_exchange_factors(
-        power=power,
+        values=power,
         up_idx=up_idx,
         down_idx=down_idx)
 

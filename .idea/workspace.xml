@@ -28,9 +28,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Requirements:&#10;- Updated numpy version to avoid instalation crash">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="multi_circuit.py:&#10;- New functions to analyze grid topology">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/available_transfer_capacity_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/available_transfer_capacity_driver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -127,59 +129,60 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;Git.Branch.Popup.ShowAllRemotes&quot;: &quot;true&quot;,
-    &quot;MATLAB_INTERPRETER&quot;: &quot;/usr/local/MATLAB/R2018a/bin/matlab&quot;,
-    &quot;Python tests.Nosetests for test_power_flow.test_zip.executor&quot;: &quot;Debug&quot;,
-    &quot;Python tests.Nosetests for tests.test_hydro.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests for tests.test_load_save_load.test_load_save_load.executor&quot;: &quot;Debug&quot;,
-    &quot;Python tests.Nosetests for tests.test_nodal_capacity.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests for tests.test_opf_time_series.test_opf_ts.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests for tests.test_topology_processor.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests in admittance_matrix_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests in deep_copy_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Nosetests in tests.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.pytest in test_hydro.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python.AnalysisDialogue.executor&quot;: &quot;Run&quot;,
-    &quot;Python.ExecuteGridCal.executor&quot;: &quot;Run&quot;,
-    &quot;Python.acopf_run.executor&quot;: &quot;Run&quot;,
-    &quot;Python.bitflip.executor&quot;: &quot;Run&quot;,
-    &quot;Python.cgmes_rdfs_graph.executor&quot;: &quot;Run&quot;,
-    &quot;Python.cv2_cam.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.endpoints.executor&quot;: &quot;Run&quot;,
-    &quot;Python.hydro_spillage.executor&quot;: &quot;Run&quot;,
-    &quot;Python.line_arrow_2.executor&quot;: &quot;Run&quot;,
-    &quot;Python.new_circuit_objects.executor&quot;: &quot;Run&quot;,
-    &quot;Python.node_widget.executor&quot;: &quot;Run&quot;,
-    &quot;Python.plot_solvers.executor&quot;: &quot;Run&quot;,
-    &quot;Python.pymoo_example.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.round_cap.executor&quot;: &quot;Run&quot;,
-    &quot;Python.run.executor&quot;: &quot;Run&quot;,
-    &quot;Python.schematic_widget.executor&quot;: &quot;Run&quot;,
-    &quot;Python.se_editor.executor&quot;: &quot;Run&quot;,
-    &quot;Python.se_editor_to_video.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.slippy_map.executor&quot;: &quot;Run&quot;,
-    &quot;Python.try_multiobj_nsga.executor&quot;: &quot;Run&quot;,
-    &quot;Python.update_gui_file (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.update_gui_file.executor&quot;: &quot;Run&quot;,
-    &quot;Python.upload_to_pypi.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;devel&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/ramferan/ReposGit/github/sanpen/GridCal&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;two.files.diff.last.used.file&quot;: &quot;C:/WorkProjects/PycharmProjects/GridCal/src/trunk/cgmes_py_generator/cgmes_v2_4_15/cgmes_enums.py&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Git.Branch.Popup.ShowAllRemotes": "true",
+    "MATLAB_INTERPRETER": "/usr/local/MATLAB/R2018a/bin/matlab",
+    "Python tests.Nosetests for test_power_flow.test_zip.executor": "Debug",
+    "Python tests.Nosetests for tests.test_hydro.executor": "Run",
+    "Python tests.Nosetests for tests.test_load_save_load.test_load_save_load.executor": "Debug",
+    "Python tests.Nosetests for tests.test_nodal_capacity.executor": "Run",
+    "Python tests.Nosetests for tests.test_opf_time_series.test_opf_ts.executor": "Run",
+    "Python tests.Nosetests for tests.test_topology_processor.executor": "Run",
+    "Python tests.Nosetests in admittance_matrix_test.py.executor": "Run",
+    "Python tests.Nosetests in deep_copy_test.py.executor": "Run",
+    "Python tests.Nosetests in tests.executor": "Run",
+    "Python tests.pytest in test_hydro.py.executor": "Run",
+    "Python.AnalysisDialogue.executor": "Run",
+    "Python.ExecuteGridCal.executor": "Debug",
+    "Python.acopf_run.executor": "Run",
+    "Python.bitflip.executor": "Run",
+    "Python.cgmes_rdfs_graph.executor": "Run",
+    "Python.cv2_cam.executor": "Debug",
+    "Python.endpoints.executor": "Run",
+    "Python.hydro_spillage.executor": "Run",
+    "Python.line_arrow_2.executor": "Run",
+    "Python.new_circuit_objects.executor": "Run",
+    "Python.node_widget.executor": "Run",
+    "Python.plot_solvers.executor": "Run",
+    "Python.pymoo_example.executor": "Debug",
+    "Python.round_cap.executor": "Run",
+    "Python.run.executor": "Run",
+    "Python.scaling_factors.executor": "Debug",
+    "Python.schematic_widget.executor": "Run",
+    "Python.se_editor.executor": "Run",
+    "Python.se_editor_to_video.executor": "Debug",
+    "Python.slippy_map.executor": "Run",
+    "Python.try_multiobj_nsga.executor": "Run",
+    "Python.update_gui_file (1).executor": "Run",
+    "Python.update_gui_file.executor": "Run",
+    "Python.upload_to_pypi.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "devel__ntc",
+    "last_opened_file_path": "C:/Users/ramferan/ReposGit/github/sanpen/GridCal",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "aDefault",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable",
+    "two.files.diff.last.used.file": "C:/WorkProjects/PycharmProjects/GridCal/src/trunk/cgmes_py_generator/cgmes_v2_4_15/cgmes_enums.py",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
       <console-settings module-name="GridCal" is-module-sdk="true">
@@ -209,7 +212,7 @@
       <recent name="C:\WorkProjects\PycharmProjects\GridCal\src\GridCalEngine\IO\cim\cgmes" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ExecuteGridCal">
+  <component name="RunManager" selected="Python.scaling_factors">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -490,7 +493,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="se_editor" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scaling_factors" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -499,12 +502,12 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/trunk/qt_related" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/trunk/qt_related/se_editor.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -681,19 +684,19 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.scaling_factors" />
       <item itemvalue="Python.ExecuteGridCal" />
-      <item itemvalue="Python.se_editor" />
       <item itemvalue="Python.se_editor_to_video" />
       <item itemvalue="Python.update_gui_file" />
       <item itemvalue="Python tests.Nosetests in tests" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.scaling_factors" />
         <item itemvalue="Python.ExecuteGridCal" />
         <item itemvalue="Python.update_gui_file" />
         <item itemvalue="Python tests.Nosetests in tests" />
         <item itemvalue="Python.se_editor_to_video" />
-        <item itemvalue="Python.se_editor" />
       </list>
     </recent_temporary>
   </component>
@@ -1729,7 +1732,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="532" />
+    <option name="localTasksCounter" value="537" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1775,11 +1778,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Change bitflip mutation to remove copy" />
-    <MESSAGE value="Make the linear nodal capacity work" />
-    <MESSAGE value="Set flow slacks as before but increase their cost in IE14" />
-    <MESSAGE value="Fixed some CGMES to GridCal formatting issues" />
-    <MESSAGE value="Fixed some CGMES to GridCal formatting issues (II)" />
     <MESSAGE value="Improved independent investments progress&#10;Added pareto sort to the investments results" />
     <MESSAGE value="Fixed get_snapshot_time_unix and set_snapshot_time_unix" />
     <MESSAGE value="Improved dictionary_of_lists" />
@@ -1800,7 +1798,12 @@
     <MESSAGE value="5.1.12" />
     <MESSAGE value="Refactored the grid analysis" />
     <MESSAGE value="Vastly improved the gridcal_to_raw function" />
-    <option name="LAST_COMMIT_MESSAGE" value="Vastly improved the gridcal_to_raw function" />
+    <MESSAGE value="Added generator_like and load_like Sbus profiles" />
+    <MESSAGE value="work in progress" />
+    <MESSAGE value="New topological analysis functions" />
+    <MESSAGE value="ATC new common scaling functions:&#10;- sensed factors&#10;- exchange factors&#10;- nodal power by transfer method&#10;- nodal max power by transfer method&#10;- nodal min power by transfer method" />
+    <MESSAGE value="multi_circuit.py:&#10;- New functions to analyze grid topology" />
+    <option name="LAST_COMMIT_MESSAGE" value="multi_circuit.py:&#10;- New functions to analyze grid topology" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2195,7 +2198,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/multi_circuit.py</url>
-          <line>1855</line>
+          <line>1954</line>
           <option name="timeStamp" value="1678" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -2263,7 +2266,29 @@
           <line>132</line>
           <option name="timeStamp" value="1737" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/NTC/ntc_opf.py</url>
+          <line>963</line>
+          <option name="timeStamp" value="1750" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py</url>
+          <line>261</line>
+          <option name="timeStamp" value="1787" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/ATC/scaling_factors.py</url>
+          <line>42</line>
+          <option name="timeStamp" value="1790" />
+        </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
