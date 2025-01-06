@@ -194,6 +194,10 @@ def set_bus_control_voltage_hvdc(i: int,
             # bus_data.set_bus_mode(i, BusMode.PV_tpe)
             bus_data.is_p_controlled[i] = True
             bus_data.is_vm_controlled[i] = True
+            # HACK: we set the bus as PQV because if there is a generator or a shunt
+            # in this same bus, the two Qs cannot be left free. One has to be set
+            # since HVDCs are handled after generators and shunts, we update the bus type
+            bus_data.is_q_controlled[i] = True
 
     if not use_stored_guess:
         if not bus_voltage_used[i]:
