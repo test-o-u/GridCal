@@ -177,27 +177,15 @@ def set_bus_control_voltage_hvdc(i: int,
     :param logger: Logger
     """
     if bus_data.bus_types[i] != BusMode.Slack_tpe.value:  # if it is not Slack
-        if remote_control and j > -1 and j != i:
-            # remove voltage control
-            # bus_data.bus_types[j] = BusMode.PQV_tpe.value  # remote bus to PQV type
-            # bus_data.set_bus_mode(j, BusMode.PQV_tpe)
-            bus_data.is_p_controlled[j] = True
-            bus_data.is_q_controlled[j] = True
-            bus_data.is_vm_controlled[j] = True
-
-            # bus_data.bus_types[i] = BusMode.P_tpe.value  # local bus to P type
-            # bus_data.set_bus_mode(i, BusMode.P_tpe)
-            bus_data.is_p_controlled[i] = True
-        else:
-            # local voltage control
-            # bus_data.bus_types[i] = BusMode.PV_tpe.value  # set as PV
-            # bus_data.set_bus_mode(i, BusMode.PV_tpe)
-            bus_data.is_p_controlled[i] = True
-            bus_data.is_vm_controlled[i] = True
-            # HACK: we set the bus as PQV because if there is a generator or a shunt
-            # in this same bus, the two Qs cannot be left free. One has to be set
-            # since HVDCs are handled after generators and shunts, we update the bus type
-            bus_data.is_q_controlled[i] = True
+        # local voltage control
+        # bus_data.bus_types[i] = BusMode.PQV_tpe.value  # set as PV
+        bus_data.set_bus_mode(i, BusMode.PQV_tpe)
+        # bus_data.is_p_controlled[i] = True
+        # bus_data.is_vm_controlled[i] = True
+        # HACK: we set the bus as PQV because if there is a generator or a shunt
+        # in this same bus, the two Qs cannot be left free. One has to be set
+        # since HVDCs are handled after generators and shunts, we update the bus type
+        # bus_data.is_q_controlled[i] = True
 
     if not use_stored_guess:
         if not bus_voltage_used[i]:
