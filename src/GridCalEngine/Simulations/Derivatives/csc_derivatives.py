@@ -356,13 +356,13 @@ def dSbr_dm_csc(nbus, u_cbr_m, F_cbr, T_cbr, yff_cbr, yft_cbr, ytf_cbr, ytt_cbr,
 
         # dSf/dm
         dsf_dm = (-2 * Vm_f * Vm_f * np.conj(yff_cbr[k_idx]) / (
-                    tap_modules[k_idx] * tap_modules[k_idx] * tap_modules[k_idx])
+                tap_modules[k_idx] * tap_modules[k_idx] * tap_modules[k_idx])
                   - 1 * Vf * np.conj(Vt) * np.conj(yft_cbr[k_idx]) * np.exp(-1j * tau[k_idx]) / (
-                              tap_modules[k_idx] * tap_modules[k_idx]))
+                          tap_modules[k_idx] * tap_modules[k_idx]))
 
         # dSt/dm
         dst_dm = -1 * Vt * np.conj(Vf) * np.conj(ytf_cbr[k_idx]) * np.exp(1j * tau[k_idx]) / (
-                    tap_modules[k_idx] * tap_modules[k_idx])
+                tap_modules[k_idx] * tap_modules[k_idx])
 
         # add to the triplets
         Tx[nnz] = dsf_dm
@@ -1814,7 +1814,7 @@ def derivatives_ma_csc_numba(nbus, nbr, iXxma, F, T, Ys, kconv, tap, tap_module,
 
 # original one
 @njit()
-def dSbus_dm_csc(nbus, bus_indices, m_indices, F: IntVec, T: IntVec, Ys: CxVec, Bc: CxVec,
+def dSbus_dm_csc(nbus, bus_indices, m_indices, F: IntVec, T: IntVec, Ys: CxVec, Bc: Vec,
                  kconv: Vec, tap: CxVec, tap_module: Vec, V: CxVec) -> CxCSC:
     """
 
@@ -1919,7 +1919,7 @@ def dSbus_dm_josep_csc(nbus, bus_indices, m_indices, F: IntVec, T: IntVec, yff_c
         if f_idx >= 0:
             dsf_dm = (-2 * Vm_f * Vm_f * np.conj(yff_cbr[c]) / (tap_module[c] * tap_module[c] * tap_module[c])
                       - 1 * Vf * np.conj(Vt) * np.conj(yft_cbr[c]) * np.exp(-1j * np.angle(tap[c])) / (
-                                  tap_module[c] * tap_module[c]))
+                              tap_module[c] * tap_module[c]))
 
             Tx[nnz] = dsf_dm
             Ti[nnz] = f_idx
@@ -1929,7 +1929,7 @@ def dSbus_dm_josep_csc(nbus, bus_indices, m_indices, F: IntVec, T: IntVec, yff_c
         # to side
         if t_idx >= 0:
             dst_dm = -1 * Vt * np.conj(Vf) * np.conj(ytf_cbr[c]) * np.exp(1j * np.angle(tap[c])) / (
-                        tap_module[c] * tap_module[c])
+                    tap_module[c] * tap_module[c])
 
             Tx[nnz] = dst_dm
             Ti[nnz] = t_idx
@@ -2046,7 +2046,7 @@ def dSf_dm_josep_csc(nbr, sf_indices, m_indices, F: IntVec, T: IntVec, yff, yft,
 
             dsf_dm = (-2 * Vm_f * Vm_f * np.conj(yff[k]) / (tap_module[k] * tap_module[k] * tap_module[k])
                       - 1 * Vf * np.conj(Vt) * np.conj(yft[k]) * np.exp(-1j * tap_ang[k]) / (
-                                  tap_module[k] * tap_module[k]))
+                              tap_module[k] * tap_module[k]))
 
             # Partials of Sf w.r.t. Ɵ shift (makes sense that this is ∂Sbus/∂Pxsh assigned to the "from" bus)
             Tx[nnz] = dsf_dm
@@ -2380,7 +2380,6 @@ def dLossvsc_dVm_csc(nvsc, nbus, i_u_vm, alpha1, alpha2, alpha3, V, Pf, Pt, Qt, 
         t = T[kidx]
 
         if j_lookup[t] >= 0:
-
             Vm_t = np.abs(V[t])
             pq = Pt[kidx] * Pt[kidx] + Qt[kidx] * Qt[kidx]
             pq_sqrt = np.sqrt(pq)
@@ -2419,7 +2418,6 @@ def dLosshvdc_dVm_josep_csc(nhvdc, nbus, i_u_vm, V, Pf_hvdc, hvdc_r, F_hvdc):
         f = F_hvdc[kidx]
 
         if j_lookup[f] >= 0:
-
             Vm_f = np.abs(V[f])
             dLosshvdc_dVmf = - 2 * hvdc_r[kidx] * Pf_hvdc[kidx] / (Vm_f * Vm_f * Vm_f)
 
@@ -2479,7 +2477,6 @@ def dLosshvdc_dPthvdc_josep_csc(nhvdc):
     nnz = 0
 
     for kidx in range(nhvdc):
-
         dLosshvdc_dPthvdc = - 1
 
         Tx[nnz] = dLosshvdc_dPthvdc
@@ -2494,7 +2491,7 @@ def dLosshvdc_dPthvdc_josep_csc(nhvdc):
 
 
 @njit()
-def dInjhvdc_dPfhvdc_josep_csc(nhvdc):
+def dPfhvdc_dPfhvdc_josep_csc(nhvdc):
     """
     dInjhvdc = Pf_hvdc - Pset - droop(Va[f] - Va[t])
     """
@@ -2508,10 +2505,7 @@ def dInjhvdc_dPfhvdc_josep_csc(nhvdc):
     nnz = 0
 
     for kidx in range(nhvdc):
-
-        dInjhvdc_dPthvdc = + 1
-
-        Tx[nnz] = dInjhvdc_dPthvdc
+        Tx[nnz] = 1.0
         Ti[nnz] = kidx
         Tj[nnz] = kidx
         nnz += 1
@@ -2543,7 +2537,6 @@ def dLossvsc_dPfvsc_josep_csc(nvsc, u_vsc_pf) -> CSC:
     nnz = 0  # Counter for non-zero entries
 
     for k, vsc in enumerate(u_vsc_pf):
-
         # Populate COO format arrays
         Tx[nnz] = -1.0
         Ti[nnz] = vsc  # Row index corresponds to the current VSC
@@ -2605,15 +2598,15 @@ def dLossvsc_dPtvsc_josep_csc(nvsc, u_vsc_pt, alpha2, alpha3, V, Pt, Qt, T_vsc) 
 
 
 @njit()
-def dLossvsc_dQtvsc_josep_csc(nvsc, u_vsc_qt, alpha2, alpha3, V, Pt, Qt, T_vsc) -> CSC:
+def dLossvsc_dQtvsc_josep_csc(nvsc, u_vsc_qt, alpha2, alpha3, V: CxVec, Pt, Qt, T_vsc) -> CSC:
     """
     Compute the sparse matrix for the derivative of loss with respect to Qt in CSC format.
 
     :param nvsc: Number of VSCs (rows of the matrix).
-    :param u_vsc_pt: Column indices for the sparse matrix.
+    :param u_vsc_qt: Column indices for the sparse matrix.
     :param alpha2: Array of alpha2 coefficients.
     :param alpha3: Array of alpha3 coefficients.
-    :param Vm: Voltage magnitudes at buses.
+    :param V: Voltage at buses.
     :param Pt: Active power flows.
     :param Qt: Reactive power flows.
     :param T_vsc: Indices for VSC buses.
@@ -2629,16 +2622,13 @@ def dLossvsc_dQtvsc_josep_csc(nvsc, u_vsc_qt, alpha2, alpha3, V, Pt, Qt, T_vsc) 
     Ti = np.empty(max_nnz, dtype=np.int32)
     Tj = np.empty(max_nnz, dtype=np.int32)
 
-    j_lookup = make_lookup(len(u_vsc_qt), u_vsc_qt)
-
     nnz = 0  # Counter for non-zero entries
     Vm = np.abs(V)
 
     for k, vsc in enumerate(u_vsc_qt):
         t = T_vsc[vsc]
         Vm_t = Vm[t]
-        val = alpha2[vsc] / Vm_t * 1 / np.sqrt(Pt[vsc] * Pt[vsc] + Qt[vsc] * Qt[vsc] + 1e-20) * Qt[vsc] + 2 * alpha3[
-            vsc] * Qt[vsc] / (Vm_t * Vm_t)
+        val = alpha2[vsc] / Vm_t * 1 / np.sqrt(Pt[vsc] * Pt[vsc] + Qt[vsc] * Qt[vsc] + 1e-20) * Qt[vsc] + 2 * alpha3[vsc] * Qt[vsc] / (Vm_t * Vm_t)
 
         # Populate COO format arrays
         Tx[nnz] = val
@@ -2780,7 +2770,7 @@ def dP_dPfvsc_csc(i_k_p, u_vsc_pf, F_vsc) -> CSC:
         f_bus = F_vsc[vsc]
 
         if j_lookup[f_bus] >= 0:
-        # if f_bus in i_k_p_set:
+            # if f_bus in i_k_p_set:
             Tx[nnz] = 1.0
             # Ti[nnz] = f_bus
             Ti[nnz] = j_lookup[f_bus]
@@ -2822,8 +2812,8 @@ def dPQ_dPQft_csc(nbus, nvsc, i_k_pq, u_dev_pq, FT_dev) -> CSC:
         f_bus = FT_dev[dev]
 
         if j_lookup[f_bus] >= 0:
-        # if f_bus in i_k_p_set:
-        # if vsc_lookup[dev] >= 0:
+            # if f_bus in i_k_p_set:
+            # if vsc_lookup[dev] >= 0:
             Tx[nnz] = 1.0
             Ti[nnz] = j_lookup[f_bus]
             Tj[nnz] = vsc_lookup[dev]
@@ -2934,7 +2924,7 @@ def dLosshvdc_dVm_csc(nhvdc, i_u_vm, Vm, Pf_hvdc, Pt_hvdc, hvdc_r, F_hvdc, T_hvd
 
 
 @njit()
-def dInjhvdc_dVa_josep_csc(nhvdc, nbus, i_u_va, hvdc_droop, F_hvdc, T_hvdc) -> CSC:
+def dPfhvdc_dVa_josep_csc(nhvdc, nbus, i_u_va, hvdc_droop, F_hvdc, T_hvdc) -> CSC:
     """
     Compute dInjhvdc_dVa in CSC format for HVDC systems.
 
@@ -2961,10 +2951,9 @@ def dInjhvdc_dVa_josep_csc(nhvdc, nbus, i_u_va, hvdc_droop, F_hvdc, T_hvdc) -> C
     nnz = 0  # Counter for non-zero entries
 
     for k in range(nhvdc):
-
         # Compute the derivative for the from-side
         dInjhvdc_dVaf = -hvdc_droop[k]
-        dInjhvdc_dVat = +hvdc_droop[k] 
+        dInjhvdc_dVat = +hvdc_droop[k]
 
         # Populate COO format arrays
         Tx[nnz] = dInjhvdc_dVaf
