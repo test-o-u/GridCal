@@ -660,8 +660,8 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         cbr_qt_set = list()
 
         # CONTROLLABLE BRANCH LOOP
-        print('N passive: ', self.nc.passive_branch_data.nelm)
-        print('N active: ', self.nc.active_branch_data.nelm)
+        # print('N passive: ', self.nc.passive_branch_data.nelm)
+        # print('N active: ', self.nc.active_branch_data.nelm)
 
         # print number of fixed and Vm controls        
         nfixed = 0
@@ -678,10 +678,10 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
             elif self.nc.active_branch_data.tap_module_control_mode[k] == TapModuleControl.Qt:
                 nqt += 1
 
-        print('Fixed: ', nfixed)
-        print('Vm: ', nvm)
-        print('Qf: ', nqf)
-        print('Qt: ', nqt)
+        # print('Fixed: ', nfixed)
+        # print('Vm: ', nvm)
+        # print('Qf: ', nqf)
+        # print('Qt: ', nqt)
 
         dic_old_to_new_bus = {val: idx for idx, val in enumerate(self.nc.bus_data.original_idx)}
 
@@ -812,6 +812,9 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
                     self.is_vm_controlled[control1_bus_device] = True
                 if control2_bus_device > -1:
                     self.is_vm_controlled[control2_bus_device] = True
+                u_vsc_pf.append(k)
+                u_vsc_pt.append(k)
+                u_vsc_qt.append(k)
 
             elif control1 == ConverterControlType.Vm_dc and control2 == ConverterControlType.Va_ac:
                 if control1_bus_device > -1:
@@ -1018,9 +1021,10 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
             elif control1 == ConverterControlType.Qac and control2 == ConverterControlType.Pac:
                 if control1_branch_device > -1:
                     u_vsc_pf.append(control1_branch_device)
-                    u_vsc_pt.append(control1_branch_device)
+                    k_vsc_pt.append(control2_branch_device)
                     k_vsc_qt.append(control1_branch_device)
                     vsc_qt_set.append(control1_magnitude)
+                    vsc_pt_set.append(control2_magnitude)
 
 
             elif control1 == ConverterControlType.Pdc and control2 == ConverterControlType.Vm_dc:
