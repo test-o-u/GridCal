@@ -37,7 +37,7 @@ def run_time_39bus():
     """
     Check that a transformer can regulate the voltage at a bus
     """
-    fname = os.path.abspath("C:/Users/raiya/Documents/8. eRoots/HVDCPAPER/leuvenTestCasesACDC/case24_7_jb.gridcal")
+    fname = os.path.abspath("C:/Users/raiya/Documents/8. eRoots/HVDCPAPER/leuvenTestCasesACDC/case39_10_he.gridcal")
 
     grid = gce.open_file(fname)
 
@@ -47,17 +47,29 @@ def run_time_39bus():
     #     print("control1val:", grid.vsc_devices[j].control1_val)
     #     print("control2:", grid.vsc_devices[j].control2)
     #     print("control2val:", grid.vsc_devices[j].control2_val)
-    grid.vsc_devices[0].control1 = ConverterControlType.Vm_dc
+
+    grid.vsc_devices[0].control1 = ConverterControlType.Pac
     grid.vsc_devices[1].control1 = ConverterControlType.Pac
     grid.vsc_devices[2].control1 = ConverterControlType.Pac
     grid.vsc_devices[3].control1 = ConverterControlType.Vm_dc
+    grid.vsc_devices[3].control1_val = 1.0
     grid.vsc_devices[4].control1 = ConverterControlType.Pac
     grid.vsc_devices[5].control1 = ConverterControlType.Pac
     grid.vsc_devices[6].control1 = ConverterControlType.Pac
+    grid.vsc_devices[7].control1 = ConverterControlType.Pac
+    grid.vsc_devices[8].control1 = ConverterControlType.Pac
+    grid.vsc_devices[9].control1 = ConverterControlType.Pac
+
+    for j in range(len(grid.vsc_devices)):
+        print(grid.vsc_devices[j].name)
+        print("control1:", grid.vsc_devices[j].control1)
+        print("control1val:", grid.vsc_devices[j].control1_val)
+        print("control2:", grid.vsc_devices[j].control2)
+        print("control2val:", grid.vsc_devices[j].control2_val)
 
 
     options = PowerFlowOptions(SolverType.NR,
-                               verbose=2,
+                               verbose=1,
                                control_q=False,
                                retry_with_other_methods=False,
                                control_taps_phase=True,
@@ -77,8 +89,8 @@ def run_time_39bus():
 import numpy as np
 elapsed = run_time_39bus()
 times = np.zeros((1))
-for i in range(1):
-    elapsed = run_time_39bus()
-    times[i] = elapsed
+# for i in range(1):
+#     elapsed = run_time_39bus()
+#     times[i] = elapsed
 
 
