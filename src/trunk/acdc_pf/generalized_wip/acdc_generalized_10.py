@@ -34,9 +34,6 @@ def run_time_5bus():
     # assert results.converged
 
 def run_time_39bus():
-    """
-    Check that a transformer can regulate the voltage at a bus
-    """
     fname = os.path.abspath("C:/Users/raiya/Documents/8. eRoots/HVDCPAPER/leuvenTestCasesACDC/case39_10_he.gridcal")
 
     grid = gce.open_file(fname)
@@ -59,6 +56,56 @@ def run_time_39bus():
     grid.vsc_devices[7].control1 = ConverterControlType.Pac
     grid.vsc_devices[8].control1 = ConverterControlType.Pac
     grid.vsc_devices[9].control1 = ConverterControlType.Pac
+
+    for dc_line in grid.dc_lines:
+        dc_line.R = 0.005
+
+    for j in range(len(grid.vsc_devices)):
+        print(grid.vsc_devices[j].name)
+        print("control1:", grid.vsc_devices[j].control1)
+        print("control1val:", grid.vsc_devices[j].control1_val)
+        print("control2:", grid.vsc_devices[j].control2)
+        print("control2val:", grid.vsc_devices[j].control2_val)
+
+
+    options = PowerFlowOptions(SolverType.NR,
+                               verbose=1,
+                               control_q=False,
+                               retry_with_other_methods=False,
+                               control_taps_phase=True,
+                               control_taps_modules=True,
+                               max_iter=80,
+                               tolerance=1e-8, )
+
+    results = gce.power_flow(grid, options)
+
+    print(results.get_bus_df())
+    # print(results.get_branch_df())
+    # print("results.error", results.error)
+    print("results.elapsed_time", results.elapsed)
+    return results.elapsed
+    # assert results.converged
+
+
+def run_time_3kbus():
+    fname = os.path.abspath("C:/Users/raiya/Documents/8. eRoots/HVDCPAPER/leuvenTestCasesACDC/case3120_5_he.gridcal")
+
+    grid = gce.open_file(fname)
+
+    # grid.vsc_devices[0].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[1].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[2].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[3].control1 = ConverterControlType.Vm_dc
+    # grid.vsc_devices[3].control1_val = 1.0
+    # grid.vsc_devices[4].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[5].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[6].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[7].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[8].control1 = ConverterControlType.Pac
+    # grid.vsc_devices[9].control1 = ConverterControlType.Pac
+
+    for dc_line in grid.dc_lines:
+        dc_line.R = 0.005
 
     for j in range(len(grid.vsc_devices)):
         print(grid.vsc_devices[j].name)
@@ -87,7 +134,7 @@ def run_time_39bus():
     # assert results.converged
 
 import numpy as np
-elapsed = run_time_39bus()
+elapsed = run_time_3kbus()
 times = np.zeros((1))
 # for i in range(1):
 #     elapsed = run_time_39bus()

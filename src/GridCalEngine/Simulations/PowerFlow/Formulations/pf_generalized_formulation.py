@@ -1013,10 +1013,11 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
 
             elif control1 == ConverterControlType.Qac and control2 == ConverterControlType.Pdc:
                 if control1_branch_device > -1:
-                    u_vsc_pf.append(control1_branch_device)
                     u_vsc_pt.append(control1_branch_device)
                     k_vsc_qt.append(control1_branch_device)
                     vsc_qt_set.append(control1_magnitude)
+                    k_vsc_pf.append(control2_branch_device)
+                    vsc_pf_set.append(control2_magnitude)
 
             elif control1 == ConverterControlType.Qac and control2 == ConverterControlType.Pac:
                 if control1_branch_device > -1:
