@@ -38,28 +38,6 @@ def run_time_39bus():
 
     grid = gce.open_file(fname)
 
-    # for j in range(len(grid.vsc_devices)):
-    #     print(grid.vsc_devices[j].name)
-    #     print("control1:", grid.vsc_devices[j].control1)
-    #     print("control1val:", grid.vsc_devices[j].control1_val)
-    #     print("control2:", grid.vsc_devices[j].control2)
-    #     print("control2val:", grid.vsc_devices[j].control2_val)
-
-    grid.vsc_devices[0].control1 = ConverterControlType.Pac
-    grid.vsc_devices[1].control1 = ConverterControlType.Pac
-    grid.vsc_devices[2].control1 = ConverterControlType.Pac
-    grid.vsc_devices[3].control1 = ConverterControlType.Vm_dc
-    grid.vsc_devices[3].control1_val = 1.0
-    grid.vsc_devices[4].control1 = ConverterControlType.Pac
-    grid.vsc_devices[5].control1 = ConverterControlType.Pac
-    grid.vsc_devices[6].control1 = ConverterControlType.Pac
-    grid.vsc_devices[7].control1 = ConverterControlType.Pac
-    grid.vsc_devices[8].control1 = ConverterControlType.Pac
-    grid.vsc_devices[9].control1 = ConverterControlType.Pac
-
-    for dc_line in grid.dc_lines:
-        dc_line.R = 0.005
-
     for j in range(len(grid.vsc_devices)):
         print(grid.vsc_devices[j].name)
         print("control1:", grid.vsc_devices[j].control1)
@@ -69,17 +47,21 @@ def run_time_39bus():
 
 
     options = PowerFlowOptions(SolverType.NR,
+                               apply_temperature_correction=False,
                                verbose=1,
                                control_q=False,
                                retry_with_other_methods=False,
-                               control_taps_phase=True,
-                               control_taps_modules=True,
+                               control_remote_voltage=False,
+                               control_taps_phase=False,
+                               control_taps_modules=False,
+                               ignore_single_node_islands=True,
+                               orthogonalize_controls=False,
                                max_iter=80,
                                tolerance=1e-8, )
 
     results = gce.power_flow(grid, options)
 
-    # print(results.get_bus_df())
+    print(results.get_bus_df())
     # print(results.get_branch_df())
     # print("results.error", results.error)
     print("results.elapsed_time", results.elapsed)
@@ -160,15 +142,15 @@ def run_time_spanishGrid():
 
 
 import numpy as np
-elapsed = run_time_spanishGrid()
+elapsed = run_time_39bus()
 times = np.zeros((11))
-for i in range(11):
-    elapsed = run_time_spanishGrid()
-    times[i] = elapsed
+# for i in range(11):
+#     elapsed = run_time_spanishGrid()
+#     times[i] = elapsed
 
-print("time list", times)
+# print("time list", times)
 #delete outlier (more than 0.1 seconds)
 # times = times[times < 0.1]
-print("mean time for spanish grid:", np.mean(times))
+# print("mean time for spanish grid:", np.mean(times))
 
 
