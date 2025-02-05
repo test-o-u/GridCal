@@ -1,11 +1,11 @@
 import os
 import time
 import numpy as np
-from GridCal.Engine import FileOpen
-from GridCal.Engine.Core.numerical_circuit import compile_numerical_circuit_at
-from GridCal.Engine.Core.Compilers.circuit_to_data2 import get_branch_data
-from GridCal.Engine.basic_structures import BranchImpedanceMode
-from GridCal.Engine.Core.admittance_matrices import compute_linear_admittances
+from GridCalEngine import FileOpen
+from GridCalEngine.DataStructures.numerical_circuit import compile_numerical_circuit_at
+from GridCalEngine.Compilers.circuit_to_data import get_branch_data
+from GridCalEngine.enumerations import BranchImpedanceMode
+from GridCalEngine.Topology.admittance_matrices import compute_linear_admittances
 
 
 

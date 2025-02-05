@@ -1061,7 +1061,6 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     branch_rates = grid.get_branch_rates_prof_wo_hvdc()
     hvdc_rates = grid.get_hvdc_rates_prof()
 
-
     # Scale power to load to ensure balance
     # TODO: check if we want to do it
     generation_bus_prof = sensed_scale_to_reference(
@@ -1127,7 +1126,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
 
         # Compute the structural NTC:
         #  This is the sum of ratings in the inter-area branches
-        # TODO: check to do it considering active profiles??
+        # TODO: check to do it considering status profiles??
         structural_ntc = nc_data.get_structural_ntc(
             branch_rates=branch_rates,
             hvdc_rates=hvdc_rates)
@@ -1165,8 +1164,8 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
         # TODO: Add the HVDC saturation logic
         f_obj += add_linear_hvdc_formulation(
             t_idx=t_idx,
-            Sbase=nc.Sbase,
-            hvdc_data_t=nc.hvdc_data,
+            Sbase=nc.Sbase, # todo: change source of data
+            hvdc_data_t=nc.hvdc_data, # todo: change source of data
             hvdc_vars=mip_vars.hvdc_vars,
             vars_bus=mip_vars.bus_vars,
             prob=lp_model,
@@ -1181,14 +1180,14 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             # TODO: review that the samples NumericalCircuit is ok to use here
             f_obj += add_linear_branches_formulation(
                 t_idx=t_idx,
-                Sbase=nc.Sbase,
-                branch_data_t=nc.branch_data,
+                Sbase=nc.Sbase,  # todo: change source of data
+                branch_data_t=nc.branch_data,  # todo: change source of data
                 branch_vars=mip_vars.branch_vars,
                 bus_vars=mip_vars.bus_vars,
                 prob=lp_model,
                 monitor_only_sensitive_branches=monitor_only_sensitive_branches,
                 monitor_only_ntc_load_rule_branches=monitor_only_ntc_load_rule_branches,
-                alpha=alpha,
+                alpha=alpha, # todo: change source of data
                 alpha_threshold=alpha_threshold,
                 structural_ntc=float(structural_ntc),
                 ntc_load_rule=ntc_load_rule,
@@ -1199,10 +1198,10 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             # formulate nodes ---------------------------------------------------------------------------------------
             # TODO: review that the samples NumericalCircuit is ok to use here
             add_linear_node_balance(t_idx=t_idx,
-                                    Bbus=nc.Bbus,
-                                    vd=nc.vd,
-                                    bus_data=nc.bus_data,
-                                    bus_vars=mip_vars.bus_vars,
+                                    Bbus=nc.Bbus,  # todo: change source of data
+                                    vd=nc.vd,  # todo: change source of data
+                                    bus_data=nc.bus_data,  # todo: change source of data
+                                    bus_vars=mip_vars.bus_vars,  # todo: change source of data
                                     prob=lp_model)
 
             # formulate contingencies --------------------------------------------------------------------------------
@@ -1279,3 +1278,4 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     logger += lp_model.logger
 
     return vars_v
+
