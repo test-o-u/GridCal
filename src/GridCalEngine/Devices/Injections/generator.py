@@ -181,7 +181,7 @@ class Generator(GeneratorParent):
         self.fuels: Associations = Associations(device_type=DeviceType.FuelDevice)
 
         # Dynamic vars
-        # self.Ra = Ra
+        #self.Ra = Ra
         # self.Xa = Xa
         # self.Xd = Xd
         # self.Xq = Xq

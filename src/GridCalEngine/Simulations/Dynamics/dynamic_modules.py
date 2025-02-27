@@ -144,6 +144,7 @@ class SynchronousMachineOrder4:
     Copyright (C) 2014-2015 Julius Susanto. All rights reserved.
 
     typical values:
+
     Ra = 0.0
     Xa = 0.0
     Xd = 1.68
