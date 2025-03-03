@@ -28,17 +28,8 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="First_commit">
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_generator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_template.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/Dynamic_solver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/symprocessor.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/dyn_var.py" afterDir="false" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="First dynamic files">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/abc.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/dynamic_modules.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/dynamic_modules.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/enumerations.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/enumerations.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +70,7 @@
     </favorite-branches>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="master" />
+        <entry key="$PROJECT_DIR$" value="339_Implement_basics_of_PyDyn" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -187,7 +178,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;339__Implement__basics__of__PyDyn&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;340__Dynamics__first__implementations&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/marina/PycharmProjects/GridCal/src/GridCalEngine/Devices/Dynamic&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -727,9 +718,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.ExecuteGridCal" />
       <item itemvalue="Python.test_power_flow" />
       <item itemvalue="Python.test_raw_cgmes_cross_roundtrip" />
-      <item itemvalue="Python.ExecuteGridCal" />
       <item itemvalue="Python.upload_to_pypi" />
       <item itemvalue="Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true" />
       <item itemvalue="Python tests.pytest for test_load_save_load.test_load_save_load2" />
@@ -1872,7 +1863,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="572" />
+    <option name="localTasksCounter" value="573" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1918,7 +1909,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="NOMV2 exception" />
     <MESSAGE value="added powerflow comparison" />
     <MESSAGE value="exclude not simulatable grids" />
     <MESSAGE value="latitude and longitude as float" />
@@ -1943,7 +1933,8 @@
     <MESSAGE value="Refactored the transformers short-circuit definition to system per-unit" />
     <MESSAGE value="Improved docs" />
     <MESSAGE value="First_commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="First_commit" />
+    <MESSAGE value="First dynamic files" />
+    <option name="LAST_COMMIT_MESSAGE" value="First dynamic files" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

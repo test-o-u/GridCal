@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 class DynVar:
-    def __init__(self, name: str, eq: str):
+    def __init__(self, name: str, init_eq: str, eq: str):
         self.name = name
+        self.init_eq = init_eq
         self.eq = eq
 
     def __str__(self):
@@ -13,3 +14,44 @@ class DynVar:
 
     def __repr__(self):
         return self.name
+
+
+class AlgebVar(DynVar):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        DynVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+
+class StatVar(DynVar):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        DynVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+class ExternVar(DynVar):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        DynVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+class ExternState(ExternVar):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+class ExternAlgeb(ExternVar):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+class AliasState(ExternState):
+    def __init__(self, name: str, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                        init_eq=init_eq,
+                        eq=eq)
+
+
+

@@ -5,17 +5,16 @@
 from typing import Union
 from GridCalEngine.Devices.Dynamic.dynamic_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState
 
 
 class DynSynchronousModel(DynamicModelTemplate):
-    "This class contains the variables and equations needed for the dynamic simulation"
+    "This class contains the variables needed for the dynamic simulation"
 
     def __init__(self,
                  name: str,
                  code: str,
-                 idtag: Union[str, None],
-                 system_eq):
+                 idtag: Union[str, None]):
         """
 
         :param system_eq:
@@ -36,23 +35,20 @@ class DynSynchronousModel(DynamicModelTemplate):
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
 
         # state variables
-        self.delta = DynVar("delta")  # rotor angle
-        self.omega = DynVar("omega")  # vector speed
+        self.delta = StatVar('delta', 'delta0', 'u * (2 * pi * fn) * (omega - 1)')  # rotor angle
+        self.omega = StatVar("omega", 'u', 'u * (tm - te - D * (omega - 1))')  # vector speed
 
         # network algebraic variables
-        self.a = DynVar("a")  # Bus voltage phase angle
-        self.v = DynVar("v")  # Bus voltage magnitude
+        self.a = ExternAlgeb("a")  # Bus voltage phase angle
+        self.v = ExternAlgeb("v")  # Bus voltage magnitude
 
         # algebraic variables
-        self.Id = DynVar("Id")  # d-axis current
-        self.Iq = DynVar("Iq")  # q-axis current
-        self.Vd = DynVar("Vd")  # v-axis voltage
-        self.Vq = DynVar("Vq")  # q-axis voltage
-        self.tm = DynVar("tm")  # mechanical torque
-        self.te = DynVar("te")  # electric torque
-        self.vf = DynVar("vf")  # excitation voltage
-        self.vfc = DynVar("vfc")  # vf range
-        self.xadIfd = DynVar("xadIfd")  # d-axis armator excitation current
-
-        # system equations
-        self.equations = system_eq
+        self.Id = AlgebVar("Id")  # d-axis current
+        self.Iq = AlgebVar("Iq")  # q-axis current
+        self.Vd = AlgebVar("Vd")  # v-axis voltage
+        self.Vq = AlgebVar("Vq")  # q-axis voltage
+        self.tm = AlgebVar("tm")  # mechanical torque
+        self.te = AlgebVar("te")  # electric torque
+        self.vf = AlgebVar("vf")  # excitation voltage
+        self.vfc = AlgebVar("vfc")  # vf range
+        self.xadIfd = AlgebVar("xadIfd")  # d-axis armator excitation current
