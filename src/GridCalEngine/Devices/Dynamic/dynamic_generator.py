@@ -5,7 +5,7 @@
 from typing import Union
 from GridCalEngine.Devices.Dynamic.dynamic_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 
 
 class DynSynchronousModel(DynamicModelTemplate):
