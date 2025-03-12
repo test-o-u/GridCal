@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from typing import Union
-from GridCalEngine.Devices.Dynamic.dynamic_template import DynamicModelTemplate
+from src.GridCalEngine.Devices.Dynamic.models.dynamic_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
