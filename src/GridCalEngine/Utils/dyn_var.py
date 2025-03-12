@@ -3,12 +3,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-'Class to store variables info'
+'Class to store variables'
 
 
 class DynVar:
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         self.name = name
+        self.symbol = symbol
         self.init_eq = init_eq
         self.eq = eq
 
@@ -20,42 +21,56 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         DynVar.__init__(self, name=name,
+                        symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
 
 
 class StatVar(DynVar):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         DynVar.__init__(self, name=name,
+                        symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
 
 
 class ExternVar(DynVar):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         DynVar.__init__(self, name=name,
+                        symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
 
 
 class ExternState(ExternVar):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         ExternVar.__init__(self, name=name,
+                           symbol=symbol,
                            init_eq=init_eq,
                            eq=eq)
 
 
 class ExternAlgeb(ExternVar):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         ExternVar.__init__(self, name=name,
+                           symbol=symbol,
+                           init_eq=init_eq,
+                           eq=eq)
+
+
+class AliasAlgeb(ExternVar):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                           symbol=symbol,
                            init_eq=init_eq,
                            eq=eq)
 
 
 class AliasState(ExternState):
-    def __init__(self, name: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         ExternVar.__init__(self, name=name,
+                           symbol=symbol,
                            init_eq=init_eq,
                            eq=eq)
