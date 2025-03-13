@@ -8,7 +8,8 @@ from GridCalEngine.Devices.Dynamic.system import System
 
 
 def read(input_file):
-    json_in = json.load(input_file)
+    with open(input_file, "r", encoding="utf-8") as f:
+        json_in = json.load(f)
     for model_name, dct in json_in.items():
         for component_info in dct:
             System.add_components(model_name, component_info)

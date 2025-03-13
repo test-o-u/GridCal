@@ -9,10 +9,10 @@ import io
 import logging
 import os
 import chardet
-from io.json import read
+from GridCalEngine.Devices.Dynamic.io.json import read
 
 
-inputfile_path = 'tryout.json'
+inputfile_path = 'GridCalEngine/Devices/Dynamic/tryout.json'
 
 def parse(inputfile_path):
     read(inputfile_path)
