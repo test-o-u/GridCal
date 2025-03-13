@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import importlib
+from GridCalEngine.Utils.dyn_param import NumDynParam
+
+
 class System:
     def __init__(self, models_list):
         self.models_list = models_list
         self.models = {}
         self.components = {}
-
 
     def import_models(self):
         for model_name in self.models_list:
@@ -19,14 +21,9 @@ class System:
 
     def add_components(self, model_name, component_info):
         self.import_models()
-        model = self.models[model_name](params = component_info)
-        self.components[model_name+component_info['idx']] = model
+        model = self.models[model_name]()
+        for element in model.__dict__:
+            if isinstance(element, NumDynParam):
+                element.__dict__.update(component_info)
 
-
-
-
-
-
-
-
-
+        self.components[model_name + component_info['idx']] = model

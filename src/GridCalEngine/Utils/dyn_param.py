@@ -19,21 +19,21 @@ class DynParam:
 
 
 class NumDynParam(DynParam):
-    def __init__(self, info: str, symbol: str):
-        self.symbol = symbol
+    def __init__(self, info: str, symbol: str, value: float):
+
         DynParam.__init__(self, symbol=symbol,
                           info=info)
 
 
 class IdxDynParam(DynParam):
     def __init__(self, info: str, symbol: str):
-        self.symbol = symbol
+
         DynParam.__init__(self, symbol=symbol,
                           info=info)
 
 
 class ExtParam(NumDynParam):
     def __init__(self, info: str, symbol: str):
-        self.symbol = symbol
+
         NumDynParam.__init__(self, symbol=symbol,
                              info=info)

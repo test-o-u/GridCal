@@ -23,7 +23,7 @@ class ACLine(DynamicModelTemplate):
                                 info="idx of from bus")
         
         self.bus2 = IdxDynParam(symbol='Bus',
-                                id = self.params['idx'],
+                                idx = self.params.get('idx'),
                                 info="idx of to bus")
 
         self.g = NumDynParam(symbol='g',
