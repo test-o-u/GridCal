@@ -2,13 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-"""
-Dynamic simulator entry point. To run the _main_ module of the Dynamic package:
-    cd src
-    python -m GridCalEngine.Devices.Dynamic
-"""
 
-from GridCalEngine.Devices.Dynamic import main
+from
+class System:
+    def __init__(self, models):
+        self.models = models
+        self.components = {}
 
-if __name__ == '__main__':
-    main()
+
+    def import_models(self):
+
+
+    def create_compenents(self):
+
