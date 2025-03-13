@@ -9,6 +9,7 @@ import io
 import logging
 import os
 import chardet
+from system import import_models
 from io.json import read
 
 input_formats = {

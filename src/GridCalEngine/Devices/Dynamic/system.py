@@ -3,15 +3,28 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-from
+import importlib
 class System:
-    def __init__(self, models):
-        self.models = models
+    def __init__(self, models_list):
+        self.models_list = models_list
+        self.models = {}
         self.components = {}
 
 
     def import_models(self):
+        for model_name in self.models_list:
+            model = importlib.import_module('models.' + model_name)
+            self.models[model_name] = model
+
+    def add_components(self, model_name, component_info):
+        self.import_models()
+        model = self.models[model_name]()
 
 
-    def create_compenents(self):
+
+
+
+
+
+
 

@@ -4,8 +4,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import json
+from GridCalEngine.Devices.Dynamic.system import System
 def read(input_file):
     json_in = json.load(input_file)
-    for name, dct in json_in.items():
-        for row in dct:
-            system.add(name, row)
+    for model_name, dct in json_in.items():
+        for component_info in dct:
+            System.add_components(model_name, component_info)
