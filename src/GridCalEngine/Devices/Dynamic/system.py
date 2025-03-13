@@ -21,9 +21,9 @@ class System:
 
     def add_components(self, model_name, component_info):
         self.import_models()
-        model = self.models[model_name]()
+        model = self.models[model_name](name=model_name, code=component_info['code'])
         for element in model.__dict__:
             if isinstance(element, NumDynParam):
                 element.__dict__.update(component_info)
 
-        self.components[model_name + component_info['idx']] = model
+        self.components[model_name + component_info['code']] = model
