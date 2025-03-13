@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from typing import Union
-from src.GridCalEngine.Devices.Dynamic.models.dynamic_template import DynamicModelTemplate
+from GridCalEngine.Devices.Dynamic.models.dynamic_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
@@ -41,14 +41,14 @@ class ACLine(DynamicModelTemplate):
         self.a1 = ExternAlgeb(name='a',       
                               symbol='a', 
                               init_eq='', 
-                              eq='u * (v1 ** 2 * g  - \
+                              eq='-u * (v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
         
         self.v1 = ExternAlgeb(name='a', 
                               symbol='a', 
                               init_eq='', 
-                              eq='u * (- v1 ** 2 * (b + bsh / 2) - \
+                              eq='-u * (- v1 ** 2 * (b + bsh / 2) - \
                                     v1 * v2 * (g * sin(a1 - a2) - \
                                         b * cos(a1 - a2)))')
          

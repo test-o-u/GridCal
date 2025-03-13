@@ -1,5 +1,5 @@
 """
-Exponential load model.
+GENCLS model.
 """
 
 from GridCalEngine.Devices.Dynamic.models.load import ExpLoad
