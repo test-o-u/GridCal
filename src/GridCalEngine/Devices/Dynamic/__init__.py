@@ -11,13 +11,11 @@ import os
 import chardet
 from io.json import read
 
-input_formats = {
-    'xlsx': ('xlsx',),
-    'json': ('json',),
-    'matpower': ('m',),
-    'psse': ('raw', 'dyr'),
-}
 
+inputfile_path = 'tryout.json'
 
 def parse(inputfile_path):
     read(inputfile_path)
+    return(inputfile_path)
+
+parse(inputfile_path)
