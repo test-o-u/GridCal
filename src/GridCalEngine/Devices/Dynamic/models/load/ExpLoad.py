@@ -16,17 +16,19 @@ class ExpLoad(DynamicModelTemplate):
                  code: str,
                  idtag: Union[str, None]):
     
-        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
+        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynExpLoadModel)
 
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
                                 info='Load bus')
 
         self.alfa = NumDynParam(symbol='alfa',
-                               info='Active power load exponential coefficient.')
+                                info='Active power load exponential coefficient.',
+                                value=0.0)
         
         self.beta = NumDynParam(symbol='beta',
-                               info='Reactive Power load exponential coefficient.')
+                                info='Reactive Power load exponential coefficient.',
+                                value=0.0)
 
         # network algebraic variables 
         # TODO:
@@ -37,7 +39,7 @@ class ExpLoad(DynamicModelTemplate):
                               init_eq='', 
                               eq='u * Pl0 * v ** alfa')  
         
-        self.v = ExternAlgeb(name='a', 
-                              symbol='a', 
+        self.v = ExternAlgeb(name='v', 
+                              symbol='v', 
                               init_eq='', 
                               eq='u * Ql0 * v ** beta')

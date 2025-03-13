@@ -23,19 +23,26 @@ class GENCLS(DynamicModelTemplate):
         self.bus = IdxDynParam(symbol='bus', 
                                info='interface bus id')
         self.fn = NumDynParam(symbol='fn',
-                              info='rated frequency')
+                              info='rated frequency',
+                              value=0.0)
         self.D  = NumDynParam(symbol='D',
-                              info='Damping coefficient')
+                              info='Damping coefficient',
+                              value=0.0)
         self.M  = NumDynParam(symbol='M',
-                              info='machine start up time (2H)')
+                              info='machine start up time (2H)',
+                              value=0.0)
         self.ra = NumDynParam(symbol='ra', 
-                              info='armature resistance')
+                              info='armature resistance',
+                              value=0.0)
         self.xd = NumDynParam(symbol='xd',
-                              info='d-axis transient reactance')
+                              info='d-axis transient reactance',
+                              value=0.0)
         self.tm = NumDynParam(symbol='tm',
-                              info='uncontrolled mechanical torque')
+                              info='uncontrolled mechanical torque',
+                              value=0.0)
         self.vf = NumDynParam(symbol='vf',
-                              info='uncontrolled exitation voltage') 
+                              info='uncontrolled exitation voltage',
+                              value=0.0) 
 
         # state variables
         self.delta = StatVar(name='delta', 

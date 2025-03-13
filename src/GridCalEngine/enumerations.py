@@ -872,6 +872,8 @@ class DeviceType(Enum):
 
     DynSynchronousModel = "DynSynchronousModel"
     DynBusModel = "DynBusModel"
+    DynExpLoadModel = "DynExpLoadModel"
+    DynACLineModel = "DynACLineModel"
 
     def __str__(self) -> str:
         return str(self.value)

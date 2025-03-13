@@ -16,24 +16,29 @@ class ACLine(DynamicModelTemplate):
                  code: str,
                  idtag: Union[str, None]):
     
-        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
+        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynACLineModel)
 
-        # parameters TODO: ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do? 
-        self.bus1 = IdxDynParam(symbol='Bus', #TODO: is there a reason why it is called symbol and not model as in ANDES?
+        # parameters 
+        # TODO: 
+        # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do? 
+        # - is there a reason why it is called symbol and not model as in ANDES?
+        self.bus1 = IdxDynParam(symbol='Bus', 
                                 info="idx of from bus")
         
         self.bus2 = IdxDynParam(symbol='Bus',
-                                idx = self.params.get('idx'),
                                 info="idx of to bus")
 
         self.g = NumDynParam(symbol='g',
-                               info='shared shunt conductance')
+                             info='shared shunt conductance',
+                             value=0.0)
         
         self.b = NumDynParam(symbol='b',
-                               info='shared shunt susceptance')
+                             info='shared shunt susceptance',
+                             value=0.0)
         
         self.bsh = NumDynParam(symbol='bsh',
-                               info='from/to-side shunt susceptance')
+                               info='from/to-side shunt susceptance',
+                               value=0.0)
 
         # network algebraic variables 
         # TODO: 

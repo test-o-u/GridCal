@@ -23,6 +23,7 @@ class NumDynParam(DynParam):
 
         DynParam.__init__(self, symbol=symbol,
                           info=info)
+        self.value=value
 
 
 class IdxDynParam(DynParam):

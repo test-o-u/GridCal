@@ -16,7 +16,7 @@ class Bus(DynamicModelTemplate):
                  code: str,
                  idtag: Union[str, None]):
     
-        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
+        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynBusModel)
 
         # network algebraic variables 
         # TODO: check the naming and see if it really make sense to keep them like this.

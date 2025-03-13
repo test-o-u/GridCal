@@ -4,6 +4,5 @@
 # SPDX-License-Identifier: MPL-2.0
 from GridCalEngine.Devices import Dynamic
 
-def test():
-    print(Dynamic.System.models)
-    print(Dynamic.System.components)
+print(Dynamic.System.models)
+print(Dynamic.System.components)
