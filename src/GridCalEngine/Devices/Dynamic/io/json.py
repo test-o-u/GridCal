@@ -15,3 +15,4 @@ def read(input_file):
     for model_name, dct in json_in.items():
         for component_info in dct:
             system.add_components(model_name, component_info)
+
