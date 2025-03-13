@@ -5,6 +5,8 @@
 
 import json
 from GridCalEngine.Devices.Dynamic.system import System
+
+
 def read(input_file):
     json_in = json.load(input_file)
     for model_name, dct in json_in.items():
