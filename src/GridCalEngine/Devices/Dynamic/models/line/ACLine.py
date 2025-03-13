@@ -22,7 +22,8 @@ class ACLine(DynamicModelTemplate):
         self.bus1 = IdxDynParam(symbol='Bus', #TODO: is there a reason why it is called symbol and not model as in ANDES?
                                 info="idx of from bus")
         
-        self.bus2 = IdxDynParam(symbol='Bus', 
+        self.bus2 = IdxDynParam(symbol='Bus',
+                                id = self.params['idx'],
                                 info="idx of to bus")
 
         self.g = NumDynParam(symbol='g',

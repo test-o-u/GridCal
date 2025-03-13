@@ -13,12 +13,14 @@ class System:
 
     def import_models(self):
         for model_name in self.models_list:
-            model = importlib.import_module('models.' + model_name)
-            self.models[model_name] = model
+            the_module = importlib.import_module('models.' + model_name)
+            the_class = getattr(the_module, model_name)
+            self.models[model_name] = the_class
 
     def add_components(self, model_name, component_info):
         self.import_models()
-        model = self.models[model_name]()
+        model = self.models[model_name](params = component_info)
+        self.components[model_name+component_info['idx']] = model
 
 
 
