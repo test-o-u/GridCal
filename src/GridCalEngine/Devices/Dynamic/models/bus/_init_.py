@@ -2,4 +2,4 @@
 Bus model.
 """
 
-from src.GridCalEngine.Dynamic.models.bus import Bus 
+from GridCalEngine.Devices.Dynamic.models.bus import Bus 
