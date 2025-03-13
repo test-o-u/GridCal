@@ -10,7 +10,7 @@ from typing import Union
 class DynamicModelTemplate(EditableDevice):
 
     def __init__(self, name: str, code: str, idtag: Union[str, None],
-                 device_type: DeviceType):
+                 device_type: DeviceType, params: dict):
         """
 
         :param name:
@@ -18,7 +18,7 @@ class DynamicModelTemplate(EditableDevice):
         :param idtag:
         :param device_type:
         """
-
+        self.params = {{'idx':''},
         EditableDevice.__init__(self,
                                 name=name,
                                 code=code,
