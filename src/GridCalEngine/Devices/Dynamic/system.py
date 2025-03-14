@@ -15,6 +15,7 @@ class System:
 
     def import_models(self):
         for model_name in self.models_list:
+            # the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_name + '.' + model_name.title())
             the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_name)
             the_class = getattr(the_module, model_name.title())
             self.models[model_name] = the_class
