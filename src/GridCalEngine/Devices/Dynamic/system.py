@@ -5,27 +5,40 @@
 
 import importlib
 from GridCalEngine.Utils.dyn_param import NumDynParam
-
+from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 
 class System:
+    "This class contains the models and components."
     def __init__(self, models_list):
         self.models_list = models_list
         self.models = {}
-        self.components = {}
+        self.components = []
 
     def import_models(self):
-        for model_name in self.models_list:
+        "this function imports all the models and stores them in self.models"
+        for model_type, devices in self.models_list:
+            for device in devices:
             # the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_name + '.' + model_name.title())
-            the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_name)
-            print(dir(the_module))
-            the_class = getattr(the_module, model_name.title())
-            self.models[model_name] = the_class
+                the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
+                the_class = getattr(the_module, device)
+                self.models[device] = the_class
 
-    def add_components(self, model_name, component_info):
-        self.import_models()
-        model = self.models[model_name](name=model_name, code=component_info['code'])
-        for element in model.__dict__:
+    def prepare(self, components_info):
+        for model_name, dct in components_info.items():
+            for component_info in dct:
+                self.add_component(model_name, component_info)
+
+
+    def add_component(self, model_name, component_info):
+        "this function creates a component, updats the value of its parameters using the information coming from the json file and stores it into self.components"
+        component = self.models[model_name](name=model_name, code=component_info['code'], idtag='')
+        for key, val in list(component_info.items()):
+            element = getattr(component, key)
             if isinstance(element, NumDynParam):
-                element.__dict__.update(component_info)
-
-        self.components[model_name + component_info['code']] = model
+                element.value = val
+        self.components.append(component)
+        # store function from dynamic_madel_template, it stores the component info into the object spoint
+        component.store()
+        component.generate()
+        print(component.spoint.f)
+        print(component.spoint.g)

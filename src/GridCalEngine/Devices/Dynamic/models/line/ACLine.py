@@ -3,7 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from typing import Union
-from GridCalEngine.Devices.Dynamic.models.dynamic_template import DynamicModelTemplate
+from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
@@ -44,8 +44,8 @@ class ACLine(DynamicModelTemplate):
         # TODO: 
         # - discuss modeling. Here a pi-model is considered and the power flow equations are derived according to it, while in ANDES they apply some transformations first.
         # - check if naming makes sense.
-        self.a1 = ExternAlgeb(name='a',       
-                              symbol='a', 
+        self.a1 = ExternAlgeb(name='',
+                              symbol='',
                               init_eq='', 
                               eq='-u * (v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \

@@ -1,22 +1,4 @@
 {
-  "Bus": [
-    {
-      "code": 0,
-      "name": "Bus 1"
-    },
-    {
-      "code": 1,
-      "name": "Bus 2"
-    }
-  ],
-  "ExpLoad": [
-    {
-      "code": 0,
-      "name": "Load 1",
-      "alpha": 0.1,
-      "beta": 0.2
-    }
-  ],
   "ACLine": [
     {
       "code": 0,
@@ -37,6 +19,24 @@
       "xd": 1.0,
       "tm": 1.1,
       "vf": 1.2
+    }
+  ],
+  "Bus": [
+    {
+      "code": 0,
+      "name": "Bus 1"
+    },
+    {
+      "code": 1,
+      "name": "Bus 2"
+    }
+  ],
+  "ExpLoad": [
+    {
+      "code": 0,
+      "name": "Load 1",
+      "alfa": 0.1,
+      "beta": 0.2
     }
   ]
 }

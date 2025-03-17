@@ -2,11 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-from GridCalEngine.Devices import Dynamic
+"""
+GENCLS model.
+"""
 
-
-
-
-
-#print(Dynamic.system.System.models)
-#print(Dynamic.system.System.components)
+from GridCalEngine.Devices.Dynamic.models.syngen.GENCLS import GENCLS
