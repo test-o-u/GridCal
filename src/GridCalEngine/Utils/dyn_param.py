@@ -11,11 +11,11 @@ class DynParam:
         self.info = info
         self.symbol = symbol
 
-    def __str__(self):
-        return self.symbol
+    #def __str__(self):
+     #   return self.symbol
 
-    def __repr__(self):
-        return self.symbol
+    #def __repr__(self):
+     #   return self.symbol
 
 
 class NumDynParam(DynParam):
