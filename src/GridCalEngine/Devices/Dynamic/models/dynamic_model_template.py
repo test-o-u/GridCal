@@ -6,10 +6,10 @@
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
 from GridCalEngine.Devices.Dynamic.spoint import Spoint
+from GridCalEngine.Devices.Dynamic.symprocess import Symprocess
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Utils.dyn_var import *
 from GridCalEngine.Utils.dyn_param import *
-
 
 
 class DynamicModelTemplate(EditableDevice):
@@ -31,8 +31,9 @@ class DynamicModelTemplate(EditableDevice):
 
         self.spoint = Spoint()
         self.dict = self.__dict__
+        self.symp = Symprocess(self)
 
-    def store(self):
+    def store_data(self):
 
         for key, elem in self.dict.items():
 
@@ -59,4 +60,4 @@ class DynamicModelTemplate(EditableDevice):
                 self.spoint.add_extparam(elem)
 
     def process_data(self):
-        symp.gerenate()
+        self.symp.generate()
