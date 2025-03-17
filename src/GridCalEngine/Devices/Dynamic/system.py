@@ -38,7 +38,5 @@ class System:
                 element.value = val
         self.components.append(component)
         # store function from dynamic_madel_template, it stores the component info into the object spoint
-        component.store()
-        component.generate()
-        print(component.spoint.f)
-        print(component.spoint.g)
+        component.store_data()
+        component.process_data()

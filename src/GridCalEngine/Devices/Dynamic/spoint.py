@@ -4,7 +4,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 class Spoint:
-    def __init__(self):
+    def __init__(self, component_name):
+        self.name = component_name
+
         self.f = []
         self.g = []
 
