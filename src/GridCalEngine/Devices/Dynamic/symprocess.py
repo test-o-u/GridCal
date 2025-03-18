@@ -3,17 +3,20 @@ import numpy
 import sympy as sp
 from sympy.printing.pycode import NumPyPrinter
 class Symprocess:
-    def __init__(self, component):
-        self.component = component
-        self.spoint = component.spoint
-
-
+    def __init__(self, device):
+        self.device = device
+        self.spoint = device.spoint
 
     def generate(self):
         """Parses multiple equations, computes Jacobians, and generates Python files."""
         # Convert strings to symbolic expressions
         f_expressions = [sp.sympify(expr) for expr in self.spoint.f]
         g_expressions = [sp.sympify(expr) for expr in self.spoint.g]##
+
+        # Define symbolic parameters
+        num_params = [sp.Symbol(param) for param in self.spoint.numdynParam]
+        idx_params = [sp.Symbol(param) for param in self.spoint.idxdynParam]
+        ext_params = [sp.Symbol(param) for param in self.spoint.extdynParam]
 
         # Define symbolic variables
         state_vars = [sp.Symbol(v) for v in self.spoint.statVars]
