@@ -23,8 +23,8 @@ class System:
                 the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
                 the_class = getattr(the_module, device)
                 self.models[device] = the_class
-                the_class.store_data()
-                the_class.process_data()
+                the_class.store_data(self)
+                the_class.process_data(self)
 
     def prepare(self):
         self.import_models()

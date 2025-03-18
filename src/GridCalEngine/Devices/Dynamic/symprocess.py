@@ -1,7 +1,8 @@
 # TODO: integrate:)
 import numpy
 import sympy as sp
-from sympy.printing.pycode import NumPyPrinter
+from sympy.utilities.lambdify import lambdify
+
 class Symprocess:
     def __init__(self, device):
         self.device = device
@@ -27,7 +28,6 @@ class Symprocess:
         jacobian_g = [[sp.diff(expr, var) for var in algeb_vars] for expr in g_expressions]
 
         # -------- Python Code Generation -------- #
-        printer = NumPyPrinter()
         filename = f"{self.spoint.name}.py"
         with open(filename, 'w') as f:
             # Write imports
@@ -38,35 +38,35 @@ class Symprocess:
             for i, var in enumerate(state_vars):
                 f.write(f"    {var} = args[{i}]\n")
             for idx, expr in enumerate(f_expressions):
-                py_expr = printer.doprint(expr)
+                py_expr = lambdify(state_vars, expr, modules="numpy")
                 f.write(f"    expr{idx} = {py_expr}\n")
             f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(f_expressions))])}]\n\n")
 
-            # g_update function
-            f.write("def g_update(*args):\n")
-            for i, var in enumerate(algeb_vars):
-                f.write(f"    {var} = args[{i}]\n")
-            for idx, expr in enumerate(g_expressions):
-                py_expr = printer.doprint(expr)
-                f.write(f"    expr{idx} = {py_expr}\n")
-            f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(g_expressions))])}]\n\n")
+            # # g_update function
+            # f.write("def g_update(*args):\n")
+            # for i, var in enumerate(algeb_vars):
+            #     f.write(f"    {var} = args[{i}]\n")
+            # for idx, expr in enumerate(g_expressions):
+            #     py_expr = printer.doprint(expr)
+            #     f.write(f"    expr{idx} = {py_expr}\n")
+            # f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(g_expressions))])}]\n\n")
 
-            # f Jacobians
-            f.write("def jac_f_update(*args):\n")
-            for i, var in enumerate(state_vars):
-                f.write(f"    {var} = args[{i}]\n")
-            for idx, expr in enumerate(jacobian_f):
-                py_expr = printer.doprint(expr)
-                f.write(f"    expr{idx} = {py_expr}\n")
-            f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_f))])}]\n\n")
+            # # f Jacobians
+            # f.write("def jac_f_update(*args):\n")
+            # for i, var in enumerate(state_vars):
+            #     f.write(f"    {var} = args[{i}]\n")
+            # for idx, expr in enumerate(jacobian_f):
+            #     py_expr = printer.doprint(expr)
+            #     f.write(f"    expr{idx} = {py_expr}\n")
+            # f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_f))])}]\n\n")
 
-            # g Jacobians
-            f.write("def jac_g_update(*args):\n")
-            for i, var in enumerate(algeb_vars):
-                f.write(f"    {var} = args[{i}]\n")
-            for idx, expr in enumerate(jacobian_g):
-                py_expr = printer.doprint(expr)
-                f.write(f"    expr{idx} = {py_expr}\n")
-            f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_g))])}]\n\n")
+            # # g Jacobians
+            # f.write("def jac_g_update(*args):\n")
+            # for i, var in enumerate(algeb_vars):
+            #     f.write(f"    {var} = args[{i}]\n")
+            # for idx, expr in enumerate(jacobian_g):
+            #     py_expr = printer.doprint(expr)
+            #     f.write(f"    expr{idx} = {py_expr}\n")
+            # f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_g))])}]\n\n")
 
         return filename
