@@ -29,7 +29,7 @@ class DynamicModelTemplate(EditableDevice):
                                 idtag=idtag,
                                 device_type=device_type)
 
-        self.spoint = Spoint(str(self.name)+str(self.code))
+        self.spoint = Spoint(self.name)
         self.dict = self.__dict__
         self.symp = Symprocess(self)
 

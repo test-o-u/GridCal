@@ -21,7 +21,7 @@ class Spoint:
 
         self.numdynParam = []
         self.idxdynParam = []
-        self.extParam = []
+        self.extdynParam = []
 
     def add_statvars(self, expr):
         self.statVars.append(expr.symbol)

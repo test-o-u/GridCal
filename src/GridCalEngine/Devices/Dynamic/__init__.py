@@ -19,7 +19,7 @@ def prepare(inputfile_path):
     my_system = System(model_list)
     my_system.import_models()
     components_info = readjson(inputfile_path)
-    my_system.prepare(components_info)
+    my_system.prepare()
 
 
 
