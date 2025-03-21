@@ -26,8 +26,8 @@ class Bus(DynamicModelTemplate):
                           eq=''
                          )
         
-        self.v = AlgebVar(name='a',
-                          symbol='a',
+        self.v = AlgebVar(name='v',
+                          symbol='v',
                           init_eq='',
                           eq=''
                          )

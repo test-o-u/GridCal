@@ -45,28 +45,28 @@ class ACLine(DynamicModelTemplate):
         # - discuss modeling. Here a pi-model is considered and the power flow equations are derived according to it, while in ANDES they apply some transformations first.
         # - check if naming makes sense.
         self.a1 = ExternAlgeb(name='',
-                              symbol='',
+                              symbol='a1',
                               init_eq='', 
                               eq='-u * (v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
         
-        self.v1 = ExternAlgeb(name='a', 
-                              symbol='a', 
+        self.v1 = ExternAlgeb(name='v1',
+                              symbol='v1',
                               init_eq='', 
                               eq='-u * (- v1 ** 2 * (b + bsh / 2) - \
                                     v1 * v2 * (g * sin(a1 - a2) - \
                                         b * cos(a1 - a2)))')
          
-        self.a2 = ExternAlgeb(name='a', 
-                              symbol='a', 
+        self.a2 = ExternAlgeb(name='a2',
+                              symbol='a2',
                               init_eq='', 
                               eq='u * (v2 ** 2 * g21  - \
                                     v2 * v1 * (g21 * cos(a2 - a1) + \
                                         b21 * sin(a2 - a1)))')  
         
-        self.v2 = ExternAlgeb(name='a', 
-                              symbol='a', 
+        self.v2 = ExternAlgeb(name='v2',
+                              symbol='v2',
                               init_eq='', 
                               eq='u * (- v2 ** 2 * (b21 + bsh / 2) - \
                                     v2 * v1 * (g21 * sin(a2 - a1) - \

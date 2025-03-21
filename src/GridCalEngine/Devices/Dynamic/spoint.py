@@ -10,6 +10,12 @@ class Spoint:
         self.f = []
         self.g = []
 
+        self.stats = []
+        self.algebs = []
+
+        self.stats_symb = []
+        self.algebs_symb = []
+
         self.statVars = []
         self.algebVars = []
         self.externVars = []
@@ -24,39 +30,47 @@ class Spoint:
         self.extdynParam = []
 
     def add_statvars(self, expr):
-        self.statVars.append(expr.symbol)
+        self.stats_symb.append(expr.symbol)
+        self.stats.append(expr)
+        self.statVars.append(expr)
         self.f.append(expr.eq)
 
     def add_algebvars(self, expr):
-        self.algebVars.append(expr.symbol)
+        self.algebs_symb.append(expr.symbol)
+        self.algebs.append(expr)
+        self.algebVars.append(expr)
         self.g.append(expr.eq)
 
     def add_externvars(self, expr):
-        self.externVars.append(expr.symbol)
+        self.externVars.append(expr)
 
     def add_externstates(self, expr):
-        self.externStates.append(expr.symbol)
+        self.stats_symb.append(expr.symbol)
+        self.stats.append(expr)
+        self.externStates.append(expr)
         self.f.append(expr.eq)
 
     def add_externalgebs(self, expr):
-        self.externAlgebs.append(expr.symbol)
+        self.algebs_symb.append(expr.symbol)
+        self.algebs.append(expr)
+        self.externAlgebs.append(expr)
         self.g.append(expr.eq)
 
     def add_aliasalgebs(self, expr):
-        self.aliasAlgebs.append(expr.symbol)
+        self.aliasAlgebs.append(expr)
         self.g.append(expr.eq)
 
     def add_aliastats(self, expr):
-        self.aliasStats.append(expr.symbol)
+        self.aliasStats.append(expr)
         self.f.append(expr.eq)
 
     def add_numdynparam(self, expr):
-        self.numdynParam.append(expr.symbol)
+        self.numdynParam.append(expr)
 
     def add_idxdynparam(self, expr):
-        self.idxdynParam.append(expr.symbol)
+        self.idxdynParam.append(expr)
 
     def add_extparam(self, expr):
-        self.extParam.append(expr.symbol)
+        self.extParam.append(expr)
 
 
