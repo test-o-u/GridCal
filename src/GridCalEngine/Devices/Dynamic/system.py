@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import os
 import importlib
+import compileall
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
@@ -43,6 +44,7 @@ class System:
             for name in self.models.keys():
                 f.write(f"from . import {name}  \n")
             f.write('\n')
+        compileall.compile_dir(pycode_path)
 
         return
 
