@@ -3,20 +3,21 @@ import numpy
 import os
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
+from sympy import Tuple
 import numpy as np
 import inspect
-
 
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 
 select_args_add = ["__zeros", "__ones", "__falses", "__trues"]
+
 
 class Symprocess:
     def __init__(self, model):
         self.device = model
         self.spoint = model.spoint
 
-        self.sym_num_params =[]
+        self.sym_num_params = []
         self.sym_idx_params = []
         self.sym_ext_params = []
 
@@ -30,17 +31,23 @@ class Symprocess:
 
         self.f_list = []
         self.g_list = []
-        self.f_matrix = []
-        self.g_matrix = []
+        self.f_matrix = ()
+        self.g_matrix = ()
         self.f_jacob_sym = sp.Matrix([])
         self.g_jacob_sym = sp.Matrix([])
         self.symb_vars_dict = {}
         self.lambda_equations = {}
 
+        self.jacob_states = []
+        self.jacob_algebs = []
+        self.sym_variables = []
+
+        self.all_variables = self.spoint.stats + self.spoint.algebs
 
     def generate(self):
         self.generate_symbols()
         self.generate_equations()
+        self.generate_jacobians()
         self.generate_pycode()
 
     def _rename_func(self, func, func_name, vars):
@@ -84,8 +91,8 @@ class Symprocess:
         self.sym_ext_params = [sp.Symbol(param.symbol) for param in self.spoint.extdynParam]
 
         # Define symbolic variables
-        self.sym_state = [sp.Symbol(v.symbol) for v in self.spoint.statVars]
-        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.spoint.algebVars]
+        self.sym_state = [sp.Symbol(v.symbol) for v in self.spoint.stats]
+        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.spoint.algebs]
         self.sym_extern = [sp.Symbol(v.symbol) for v in self.spoint.externAlgebs]
         self.sym_aliasalgeb = [sp.Symbol(v.symbol) for v in self.spoint.aliasAlgebs]
         self.sym_externstate = [sp.Symbol(v.symbol) for v in self.spoint.externStates]
@@ -114,18 +121,48 @@ class Symprocess:
                     for symb in symb_var:
                         if symb not in var_symb:
                             var_symb.append(symb)
+                    if eq_type == 'f':
+                        self.f_list.append(symb_expr)
+                    else:
+                        self.g_list.append(symb_expr)
             self.lambda_equations[eq_type] = lambdify(var_symb, tuple(eq_symb), modules='numpy')
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
-        print(self.g_matrix)
 
-    #def generate_jacobians(self):
-     #   # first we call the g and f matrix, where the symbolic equations are stored in, get the jacobians with sp.jacobian, convert the resulting jacobian matrices to sparce matrices and build a list with both matrices for f and g.
-      #  sym_variables = [self.sym_state]+[self.sym_algeb]
+    def generate_jacobians(self):
 
-       # self.g_jacob_sym = self.g_matrix.jacobian(sym_variables)
+        jacob_states = []
+        jacob_algebs = []
+        f_jacob_sym = sp.Matrix([])
+        g_jacob_sym = sp.Matrix([])
 
 
+        # call the g and f matrix, where the symbolic equations are stored in, get the jacobians with sp.jacobian, convert the resulting jacobian matrices to sparce matrices and build a list with both matrices for f and g.
+        self.sym_variables = self.sym_state + self.sym_algeb
+
+        if len(self.f_matrix) > 0:
+            f_jacob_sym = self.f_matrix.jacobian(self.sym_variables)
+
+        if len(self.g_matrix) > 0:
+            g_jacob_sym = self.g_matrix.jacobian(self.sym_variables)
+
+        f_jacob_sym_spa = sp.SparseMatrix(f_jacob_sym)
+        g_jacob_sym_spa = sp.SparseMatrix(g_jacob_sym)
+
+        fg_jacob_sym_spa = [f_jacob_sym_spa, g_jacob_sym_spa]
+
+        # generate sparse matrix, save non zero and lambdify
+
+        for idx, eq_sparse in enumerate(fg_jacob_sym_spa):
+            for item in eq_sparse.row_list():
+                e_idx, v_idx, e_symbolic = item
+                if idx == 0:
+                    jacob_states.append(e_symbolic)
+                else:
+                    jacob_algebs.append(e_symbolic)
+
+        self.jacob_states = sp.lambdify(self.sym_variables, Tuple(jacob_states), modules='numpy')
+        self.jacob_algebs = sp.lambdify(self.sym_variables, Tuple(jacob_algebs), modules='numpy')
 
         return
 
@@ -135,7 +172,6 @@ class Symprocess:
         filename = f"{self.spoint.name}.py"
         file_path = os.path.join(pycode_path, filename)
         with open(file_path, 'w') as f:
-
             # write imports
             f.write("import numpy\n\n")
 
@@ -146,69 +182,12 @@ class Symprocess:
             # write g_equations
             py_expr = self._rename_func(self.lambda_equations['g'], 'g_update', self.spoint.algebs_symb)
             f.write(f"{py_expr}\n")
+
+            # jacobians
+            name = 'f'
+            py_expr = self._rename_func(self.jacob_states, f'{name}_ia', self.all_variables)
+            f.write(f"{py_expr}\n")
+            name = 'g'
+            py_expr = self._rename_func(self.jacob_algebs, f'{name}_ia', self.all_variables)
+            f.write(f"{py_expr}\n")
         return file_path
-
-    def generate_jacobian(self):
-
-        #
-        return
-
-
-
-
-
-
-
-
-
-        #f_expressions = [sp.sympify(expr) for expr in self.spoint.f]
-        #if len(self.spoint.g) != 0:
-            #g_expressions = [sp.sympify(expr) for expr in self.spoint.g if expr != '']
-
-        # Compute Jacobians
-        #jacobian_f = [[sp.diff(expr, var) for var in stateSymb] for expr in f_expressions]
-        #jacobian_g = [[sp.diff(expr, var) for var in algebSymb] for expr in g_expressions]
-
-        ## -------- Python Code Generation -------- #
-        #pycode_path = get_pycode_path()
-        #filename = f"{self.spoint.name}.py"
-        #file_path = os.path.join(pycode_path, filename)
-        #with open(file_path, 'w') as f:
-            ## Write imports
-            #f.write("import numpy\n\n")
-
-            ## Write f_expressions
-            #f.write("def f_update(*args):\n")
-            #for i, var in enumerate(stateSymb):
-                #f.write(f"    {var} = args[{i}]\n")
-            #for idx, expr in enumerate(f_expressions):
-                #py_expr = self._rename_func(lambdify(stateSymb, expr, modules='numpy'),'f_update')
-               # f.write(f"    expr{idx} = {py_expr}\n")
-            #f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(f_expressions))])}]\n\n")
-
-            # g_update function
-            #lambdifyed = lambdify(algebSymb, tuple(g_expressions), modules='numpy')
-
-            #py_expr = self._rename_func(lambdifyed, 'g_update', self.spoint.algebVars)
-            #f.write(f"{py_expr}\n")
-
-
-            # # f Jacobians
-            #f.write("def jac_f_update(*args):\n")
-            #for i, var in enumerate(stateSymb):
-                #f.write(f"    {var} = args[{i}]\n")
-            #for idx, expr in enumerate(jacobian_f):
-                #py_expr = lambdify(stateSymb, expr, modules="numpy")
-                #f.write(f"    expr{idx} = {py_expr}\n")
-            #f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_f))])}]\n\n")
-
-            ## g Jacobians
-            #f.write("def jac_g_update(*args):\n")
-            #for i, var in enumerate(algebSymb):
-               # f.write(f"    {var} = args[{i}]\n")
-            #for idx, expr in enumerate(jacobian_g):
-               # py_expr = lambdify(algebSymb, expr, modules="numpy")
-                #f.write(f"    expr{idx} = {py_expr}\n")
-            #f.write(f"    return [{', '.join([f'expr{i}' for i in range(len(jacobian_g))])}]\n\n")
-
-        #return file_path
