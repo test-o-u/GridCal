@@ -20,16 +20,16 @@ class System:
     def import_models(self):
         "this function imports all the models, stores its information in a spoint object, does the symbolic-numeric transformation and stores the numeric code in .py file."
         for model_type, models in self.models_list:
-            for model in models:
+            for model_name in models:
                 the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
-                the_class = getattr(the_module, model)
-                model = the_class(name=model, code='', idtag='')
-                self.models[model] = model
+                the_class = getattr(the_module, model_name)
+                model = the_class(name=model_name, code='', idtag='')
+                self.models[model_name] = model
 
 
     def prepare(self):
         self.import_models()
-        for model in self.models:
+        for model in self.models.values():
             model.store_data()
             model.process_data()
         self.finalize_pycode()
@@ -47,32 +47,3 @@ class System:
         compileall.compile_dir(pycode_path)
 
         return
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # def prepare(self, components_info):
-    #   for model_name, dct in components_info.items():
-    #      for component_info in dct:
-    #         self.add_component(model_name, component_info)
-
-    # def add_component(self, model_name, component_info):
-    #   "this function creates a component, updats the value of its parameters using the information coming from the json file and stores it into self.components"
-    #  component = self.models[model_name](name=model_name, code=component_info['code'], idtag='')
-    # for key, val in list(component_info.items()):
-    #    element = getattr(component, key)
-    #   if isinstance(element, NumDynParam):
-    #      element.value = val
-    # self.components.append(component)
-    # store function from dynamic_madel_template, it stores the component info into the object spoint
-    # component.store_data()
-    # component.process_data()

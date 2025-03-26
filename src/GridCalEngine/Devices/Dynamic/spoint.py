@@ -10,6 +10,8 @@ class Spoint:
         self.f = []
         self.g = []
 
+        self.all_vars = []
+
         self.stats = []
         self.algebs = []
 
@@ -30,12 +32,14 @@ class Spoint:
         self.extdynParam = []
 
     def add_statvars(self, expr):
+        self.all_vars.append(expr)
         self.stats_symb.append(expr.symbol)
         self.stats.append(expr)
         self.statVars.append(expr)
         self.f.append(expr.eq)
 
     def add_algebvars(self, expr):
+        self.all_vars.append(expr)
         self.algebs_symb.append(expr.symbol)
         self.algebs.append(expr)
         self.algebVars.append(expr)
@@ -57,10 +61,12 @@ class Spoint:
         self.g.append(expr.eq)
 
     def add_aliasalgebs(self, expr):
+        self.all_vars.append(expr)
         self.aliasAlgebs.append(expr)
         self.g.append(expr.eq)
 
     def add_aliastats(self, expr):
+        self.all_vars.append(expr)
         self.aliasStats.append(expr)
         self.f.append(expr.eq)
 

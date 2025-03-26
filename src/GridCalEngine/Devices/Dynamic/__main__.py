@@ -10,5 +10,7 @@ Dynamic simulator entry point. To run the _main_ module of the Dynamic package:
 
 from GridCalEngine.Devices.Dynamic import main
 
-if __name__ == '__main__':
-    main()
+
+# we need to create a cli and define a main() function that calls the functions defined in main.py
+#if __name__ == '__main__':
+    #main()

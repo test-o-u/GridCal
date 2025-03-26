@@ -4,9 +4,19 @@
 # SPDX-License-Identifier: MPL-2.0
 from GridCalEngine.Devices import Dynamic
 
+from GridCalEngine.Devices.Dynamic.io.json import readjson
+from GridCalEngine.Devices.Dynamic.system import System
+from GridCalEngine.Devices.Dynamic.model_list import model_list
+from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
+
+inputfile_path = 'GridCalEngine/Devices/Dynamic/tryout.json'
 
 
+def prepare(inputfile_path):
+    my_system = System(model_list)
+    my_system.import_models()
+    components_info = readjson(inputfile_path)
+    my_system.prepare()
 
 
-#print(Dynamic.system.System.models)
-#print(Dynamic.system.System.components)
+prepare(inputfile_path)
