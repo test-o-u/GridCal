@@ -69,9 +69,6 @@ class DynamicModelTemplate(EditableDevice):
             if isinstance(elem, ExtParam):
                 self.spoint.add_extparam(elem)
 
-    def process_data(self):
-        self.symp.generate()
-
     def calc_local_jacs(self, model):
         jacobians = []
         #input values come from the previous iteration and will be stores in the model

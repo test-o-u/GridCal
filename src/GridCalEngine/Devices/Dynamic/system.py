@@ -33,11 +33,11 @@ class System:
 
     def import_models(self):
         "This function imports all the models, stores its information in a spoint object, does the symbolic-numeric transformation and stores the numeric code in .py file."
-        for model_type, models in self.models_list:
-            for model_name in models:
-                the_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
-                the_class = getattr(the_module, model_name)
-                model = the_class(name=model_name, code='', idtag='')
+        for model_type, model_names in self.models_list:
+            for model_name in model_names:
+                model_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
+                cls = getattr(model_module, model_name)
+                model = cls(name=model_name, code='', idtag='')
                 self.models[model_name] = model
 
     def system_prepare(self):
@@ -70,13 +70,13 @@ class System:
         self.add_time = add_end - add_st
 
     def create_devices(self, data):
-        for model_name, model_entries in data.items():
+        for model_name, model_data in data.items():
             model = self.models[model_name]
-            for entry in model_entries:
+            for device in model_data:
                 model.n += 1
-                for param_name, val in entry.items():
-                    if hasattr(model, param_name):
-                        param = getattr(model, param_name)
+                for name, val in device.items():
+                    if hasattr(model, name):
+                        param = getattr(model, name)
                         if isinstance(param, IdxDynParam):
                             param.id.append(val)
                         if isinstance(param, NumDynParam):
