@@ -10,7 +10,7 @@ from GridCalEngine.Devices.Dynamic.symprocess import Symprocess
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Utils.dyn_var import *
 from GridCalEngine.Utils.dyn_param import *
-from pycode import *
+
 
 
 class DynamicModelTemplate(EditableDevice):
