@@ -12,6 +12,7 @@ from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 
+
 class System:
     "This class contains the models and devices."
 
@@ -72,7 +73,7 @@ class System:
         for model_name, model_entries in data.items():
             model = self.models[model_name]
             for entry in model_entries:
-                model.n += 1 
+                model.n += 1
                 for param_name, val in entry.items():
                     if hasattr(model, param_name):
                         param = getattr(model, param_name)
@@ -89,7 +90,7 @@ class System:
                 f.write(f"from . import {name}  \n")
             f.write('\n')
         compileall.compile_dir(pycode_path)
-                
+
     def set_addresses(self):
         self.global_id = 0
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
@@ -119,5 +120,45 @@ class System:
                     # Store in extalgeb_idx using src as the key (grouping multiple references)
                     if var_list.src not in model_instance.extalgeb_idx:
                         model_instance.extalgeb_idx[var_list.src] = []  # Initialize as a list of lists
-                    
+
                     model_instance.extalgeb_idx[var_list.src].append([parent_idx[i] for i in var_list.indexer.id])
+
+    def update_jacobian(self):
+        all_triplets = {}
+        # for model in self.models.values():
+        model = self.models['ACLine']
+
+        # get the function type, var type info and the local jacobians
+        jacobian_info, local_jacobians = model.calc_local_jacs(model)
+        # print(local_jacobians[])
+        var_adresses = {0: ('a1', (0, 1, 2)),
+                        1: ('g21', (3, 4, 5)),
+                        2: ('a2', (6, 7, 8)),
+                        3: ('u', (9, 10, 11)),
+                        4: ('v1', (12, 13, 14)),
+                        5: ('b', (15, 16, 17)),
+                        6: ('g', (18, 19, 20)),
+                        7: ('v2', (21, 22, 23)),
+                        8: ('bsh', (24, 25, 26)),
+                        9: ('b21', (27, 28, 29))}
+        for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
+            if jac_type == 'dgy':
+                triplets = self.assign_positions(model.n, local_jacobians, jac_type, positions, var_adresses)
+                all_triplets[jac_type] = triplets
+
+
+    def assign_positions(self, num_components, local_jacobian, jac_type, positions, var_adresses):
+        triplets = []
+        i = 0
+        while i < num_components:
+            j = 0
+            for elem in positions:
+                val = local_jacobian[i][j]
+                func_index, var_index = elem
+                adress_func = var_adresses[func_index][1][i]
+                adress_var = var_adresses[var_index][1][i]
+                triplet = (adress_func, adress_var, val)
+                triplets.append(triplet)
+                j += 1
+            i += 1
+        return triplets

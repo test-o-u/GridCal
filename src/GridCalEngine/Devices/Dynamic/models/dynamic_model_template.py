@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+import importlib
+import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
 from GridCalEngine.Devices.Dynamic.spoint import Spoint
@@ -67,4 +68,34 @@ class DynamicModelTemplate(EditableDevice):
                 self.spoint.add_idxdynparam(elem)
             if isinstance(elem, ExtParam):
                 self.spoint.add_extparam(elem)
+
+    def process_data(self):
+        self.symp.generate()
+
+    def calc_local_jacs(self, model):
+        jacobians = []
+        #input values come from the previous iteration and will be stores in the model
+        a1 = 1
+        g21 = 2
+        a2 = 3
+        u = 4
+        v1 = 5
+        b = 6
+        g = 7
+        v2 =8
+        bsh = 9
+        b21 = 10
+        pycode_module = importlib.import_module('pycode')
+        pycode_code = getattr(pycode_module, model.name)
+        jacobian_info = pycode_code.jacobian_info
+        for i in range(model.n):
+            local_jac = pycode_code.g_ia(a1, g21, a2, u, v1, b, g, v2, bsh, b21)
+            jacobians.append(local_jac)
+        return jacobian_info, jacobians
+
+
+
+
+
+
          
