@@ -124,7 +124,7 @@ class System:
             if jac_type == 'dgy':
                 triplets = self.assign_positions(model.n, local_jacobians, jac_type, positions, var_adresses)
                 all_triplets[jac_type] = triplets
-            print(all_triplets)
+
 
     def assign_positions(self, num_components, local_jacobian, jac_type, positions, var_adresses):
         triplets = []
@@ -137,9 +137,7 @@ class System:
                 adress_func = var_adresses[func_index][1][i]
                 adress_var = var_adresses[var_index][1][i]
                 triplet = (adress_func, adress_var, val)
-                print(triplet)
                 triplets.append(triplet)
                 j += 1
-
             i += 1
         return triplets
