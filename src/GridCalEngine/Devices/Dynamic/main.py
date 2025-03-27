@@ -9,14 +9,16 @@ from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.model_list import model_list
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 
-inputfile_path = 'GridCalEngine/Devices/Dynamic/tryout.json'
-
+inputfile_path = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
+# 'GridCalEngine/Devices/Dynamic/test.json'
+# 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
+# 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
 
 def prepare(inputfile_path):
     my_system = System(model_list)
     my_system.import_models()
     components_info = readjson(inputfile_path)
-    my_system.prepare()
+    my_system.prepare(components_info)
 
 
 prepare(inputfile_path)

@@ -20,15 +20,13 @@ class Bus(DynamicModelTemplate):
 
         # network algebraic variables 
         # TODO: check the naming and see if it really make sense to keep them like this.
-        self.a = AlgebVar(index = 0,
-                          name='a',
+        self.a = AlgebVar(name='a',
                           symbol='a',
                           init_eq='',
                           eq=''
                          )
         
-        self.v = AlgebVar(index = 1,
-                          name='v',
+        self.v = AlgebVar(name='v',
                           symbol='v',
                           init_eq='',
                           eq=''

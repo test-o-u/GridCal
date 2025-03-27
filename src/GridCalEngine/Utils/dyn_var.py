@@ -7,8 +7,7 @@
 
 
 class DynVar:
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        self.index = index
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         self.name = name
         self.symbol = symbol
         self.init_eq = init_eq
@@ -22,9 +21,8 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         DynVar.__init__(self,
-                        index=index,
                         name=name,
                         symbol=symbol,
                         init_eq=init_eq,
@@ -33,9 +31,8 @@ class AlgebVar(DynVar):
 
 
 class StatVar(DynVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
         DynVar.__init__(self,
-                        index=index,
                         name=name,
                         symbol=symbol,
                         init_eq=init_eq,
