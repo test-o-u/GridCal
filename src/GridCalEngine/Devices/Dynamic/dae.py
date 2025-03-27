@@ -7,7 +7,9 @@ class DAE:
         self.y = {}
         self.f = None
         self.g = None 
-        self.fx = None
-        self.fy = None
-        self.gx = None
-        self.gy = None 
+
+        # Jacobian sparse matrices
+        self.dfx = None
+        self.dfy = None
+        self.dgx = None
+        self.dgy = None
