@@ -20,26 +20,31 @@ class ExpLoad(DynamicModelTemplate):
 
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
-                                info='Load bus')
+                                info='Load bus',
+                                id=[])
 
         self.alfa = NumDynParam(symbol='alfa',
                                 info='Active power load exponential coefficient.',
-                                value=0.0)
+                                value=[])
         
         self.beta = NumDynParam(symbol='beta',
                                 info='Reactive Power load exponential coefficient.',
-                                value=0.0)
+                                value=[])
 
         # network algebraic variables 
         # TODO:
         # - check if naming make sense 
         # - indexing is missing 
-        self.a = ExternAlgeb(name='a', 
-                              symbol='a', 
-                              init_eq='', 
-                              eq='u * Pl0 * v ** alfa')  
+        self.a = ExternAlgeb(name='a',
+                             symbol = 'a', 
+                             src='a',
+                             indexer=self.bus, 
+                             init_eq='', 
+                             eq='u * Pl0 * v ** alfa')  
         
-        self.v = ExternAlgeb(name='v', 
-                              symbol='v', 
-                              init_eq='', 
-                              eq='u * Ql0 * v ** beta')
+        self.v = ExternAlgeb(name='v',
+                             symbol = 'v',  
+                             src='v',
+                             indexer=self.bus,  
+                             init_eq='', 
+                             eq='u * Ql0 * v ** beta')

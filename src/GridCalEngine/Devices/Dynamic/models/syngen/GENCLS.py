@@ -21,28 +21,29 @@ class GENCLS(DynamicModelTemplate):
 
         # parameters
         self.bus = IdxDynParam(symbol='bus', 
-                               info='interface bus id')
+                               info='interface bus id',
+                               id=[])
         self.fn = NumDynParam(symbol='fn',
                               info='rated frequency',
-                              value=0.0)
+                              value=[])
         self.D  = NumDynParam(symbol='D',
-                              info='Damping coefficient',
-                              value=0.0)
+                              info='damping coefficient',
+                              value=[])
         self.M  = NumDynParam(symbol='M',
                               info='machine start up time (2H)',
-                              value=0.0)
+                              value=[])
         self.ra = NumDynParam(symbol='ra', 
                               info='armature resistance',
-                              value=0.0)
+                              value=[])
         self.xd = NumDynParam(symbol='xd',
                               info='d-axis transient reactance',
-                              value=0.0)
+                              value=[])
         self.tm = NumDynParam(symbol='tm',
                               info='uncontrolled mechanical torque',
-                              value=0.0)
+                              value=[])
         self.vf = NumDynParam(symbol='vf',
                               info='uncontrolled exitation voltage',
-                              value=0.0) 
+                              value=[]) 
 
         # state variables
         self.delta = StatVar(name='delta', 
@@ -97,10 +98,12 @@ class GENCLS(DynamicModelTemplate):
         # -check naming
         # -check how they are exported
         self.a = ExternAlgeb(name='a', 
-                             symbol='a', 
+                             src='a',
+                             indexer=self.bus, 
                              init_eq='', 
                              eq='u * (vd * Id + vq * Iq)')                                 
         self.v = ExternAlgeb(name='v', 
-                             symbol='v', 
+                             src='v', 
+                             indexer=self.bus,
                              init_eq='', 
                              eq='u * (vq * Id - vd * Iq)')                                

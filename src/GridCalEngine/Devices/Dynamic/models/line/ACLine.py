@@ -23,54 +23,60 @@ class ACLine(DynamicModelTemplate):
         # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do? 
         # - is there a reason why it is called symbol and not model as in ANDES?
         self.bus1 = IdxDynParam(symbol='Bus', 
-                                info="idx of from bus")
+                                info="idx of from bus",
+                                id=[])
         
         self.bus2 = IdxDynParam(symbol='Bus',
-                                info="idx of to bus")
+                                info="idx of to bus",
+                                id=[])
 
         self.g = NumDynParam(symbol='g',
                              info='shared shunt conductance',
-                             value=0.0)
+                             value=[])
         
         self.b = NumDynParam(symbol='b',
                              info='shared shunt susceptance',
-                             value=0.0)
+                             value=[])
         
         self.bsh = NumDynParam(symbol='bsh',
                                info='from/to-side shunt susceptance',
-                               value=0.0)
+                               value=[])
 
         # network algebraic variables 
         # TODO: 
         # - discuss modeling. Here a pi-model is considered and the power flow equations are derived according to it, while in ANDES they apply some transformations first.
         # - check if naming makes sense.
-        self.a1 = ExternAlgeb(index = 0,
-                              name='',
-                              symbol='a1',
+        self.a1 = ExternAlgeb(name='a1',
+                              symbol = 'a1',
+                              src='a',
+                              indexer=self.bus1, 
                               init_eq='', 
                               eq='-u * (v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
         
-        self.v1 = ExternAlgeb(index = 1,
-                              name='v1',
-                              symbol='v1',
+        self.v1 = ExternAlgeb(name='v1',
+                              symbol = 'v1',
+                              src='v',
+                              indexer=self.bus1, 
                               init_eq='', 
                               eq='-u * (- v1 ** 2 * (b + bsh / 2) - \
                                     v1 * v2 * (g * sin(a1 - a2) - \
                                         b * cos(a1 - a2)))')
          
-        self.a2 = ExternAlgeb(index = 2,
-                              name='a2',
-                              symbol='a2',
+        self.a2 = ExternAlgeb(name='a2',
+                              symbol = 'a2',
+                              src='a',
+                              indexer=self.bus2, 
                               init_eq='', 
                               eq='u * (v2 ** 2 * g21  - \
                                     v2 * v1 * (g21 * cos(a2 - a1) + \
                                         b21 * sin(a2 - a1)))')  
         
-        self.v2 = ExternAlgeb(index = 3,
-                              name='v2',
-                              symbol='v2',
+        self.v2 = ExternAlgeb(name='v2',
+                              symbol = 'v2',
+                              src='v',
+                              indexer=self.bus2, 
                               init_eq='', 
                               eq='u * (- v2 ** 2 * (b21 + bsh / 2) - \
                                     v2 * v1 * (g21 * sin(a2 - a1) - \

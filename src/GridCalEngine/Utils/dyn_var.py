@@ -44,36 +44,33 @@ class StatVar(DynVar):
 
 
 class ExternVar(DynVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+        DynVar.__init__(self, name=name,
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
-
+        self.src = src
+        self.indexer = indexer 
 
 class ExternState(ExternVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                           symbol=symbol,
+                           src=src,
+                           indexer=indexer,
+                           init_eq=init_eq,
+                           eq=eq)
         self.var_type = 'x'
 
-
 class ExternAlgeb(ExternVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+        ExternVar.__init__(self, name=name,
+                           symbol=symbol,
+                           src=src,
+                           indexer=indexer,
+                           init_eq=init_eq,
+                           eq=eq)
         self.var_type = 'y'
-
 
 class AliasAlgeb(ExternVar):
     def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
