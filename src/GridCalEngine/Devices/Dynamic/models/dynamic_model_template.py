@@ -33,6 +33,11 @@ class DynamicModelTemplate(EditableDevice):
         self.dict = self.__dict__
         self.symp = Symprocess(self)
 
+        # Set address function
+        self.n = 0
+        self.algeb_idx = {}
+        self.extalgeb_idx = {}
+
     def store_data(self):
 
         for key, elem in self.dict.items():
@@ -61,3 +66,4 @@ class DynamicModelTemplate(EditableDevice):
 
     def process_data(self):
         self.symp.generate()
+         

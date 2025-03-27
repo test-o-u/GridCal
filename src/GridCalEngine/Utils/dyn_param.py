@@ -27,11 +27,11 @@ class NumDynParam(DynParam):
 
 
 class IdxDynParam(DynParam):
-    def __init__(self, info: str, symbol: str):
+    def __init__(self, info: str, symbol: str, id: int):
 
         DynParam.__init__(self, symbol=symbol,
                           info=info)
-
+        self.id=id
 
 class ExtParam(NumDynParam):
     def __init__(self, info: str, symbol: str):

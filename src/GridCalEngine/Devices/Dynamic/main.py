@@ -3,10 +3,3 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from GridCalEngine.Devices import Dynamic
-
-
-
-
-
-#print(Dynamic.system.System.models)
-#print(Dynamic.system.System.components)

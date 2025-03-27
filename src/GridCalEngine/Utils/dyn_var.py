@@ -37,25 +37,30 @@ class StatVar(DynVar):
 
 
 class ExternVar(DynVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
         DynVar.__init__(self, name=name,
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
-
+        self.src = src
+        self.indexer = indexer 
 
 class ExternState(ExternVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
         ExternVar.__init__(self, name=name,
                            symbol=symbol,
+                           src=src,
+                           indexer=indexer,
                            init_eq=init_eq,
                            eq=eq)
 
 
 class ExternAlgeb(ExternVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
         ExternVar.__init__(self, name=name,
                            symbol=symbol,
+                           src=src,
+                           indexer=indexer,
                            init_eq=init_eq,
                            eq=eq)
 
