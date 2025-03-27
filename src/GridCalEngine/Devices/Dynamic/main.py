@@ -19,6 +19,11 @@ def prepare(inputfile_path):
     my_system.import_models()
     components_info = readjson(inputfile_path)
     my_system.prepare(components_info)
+    my_system.update_jacobian()
+
+def run():
+    return
+
 
 
 prepare(inputfile_path)

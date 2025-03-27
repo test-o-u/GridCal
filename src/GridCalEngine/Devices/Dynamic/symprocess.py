@@ -48,7 +48,7 @@ class Symprocess:
         self.f_jac_symbols = []
         self.g_jac_symbols = []
 
-        self.jacobian_store_info = {'fx': [], 'fy': [], 'gx': [], 'gy': []}
+        self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
 
     def generate(self):
         self.generate_symbols()
@@ -132,7 +132,7 @@ class Symprocess:
                         self.f_list.append(symb_expr)
                     else:
                         self.g_list.append(symb_expr)
-            self.lambda_equations[eq_type] = lambdify(var_symb, tuple(eq_symb), modules = 'numpy')
+            self.lambda_equations[eq_type] = lambdify(var_symb, sp.Matrix(eq_symb), modules = 'numpy')
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
 
@@ -146,7 +146,7 @@ class Symprocess:
         # call the g and f matrix, where the symbolic equations are stored in, get the jacobians with sp.jacobian, convert the resulting jacobian matrices to sparce matrices and build a list with both matrices for f and g.
         self.sym_variables = self.sym_state + self.sym_algeb
         self.all_variables = self.spoint.stats + self.spoint.algebs
-        print(self.sym_variables)
+
         if len(self.f_matrix) > 0:
             f_jacob_sym = self.f_matrix.jacobian(self.sym_variables)
         f_jacobian_free_symbols = f_jacob_sym.free_symbols
@@ -175,7 +175,7 @@ class Symprocess:
                     jacob_states.append(e_symbolic)
                     var_type = self.all_variables[v_idx].var_type
 
-                    eq_var_code = 'f' + str(var_type)
+                    eq_var_code = 'df' + str(var_type)
 
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
 
@@ -184,12 +184,11 @@ class Symprocess:
 
                     var_type = self.all_variables[v_idx].var_type
 
-                    eq_var_code = 'g' + str(var_type)
+                    eq_var_code = 'dg' + str(var_type)
 
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
-        print(self.jacobian_store_info)
-        self.jacob_states = sp.lambdify(self.f_jac_symbols, Tuple(jacob_states), modules= 'numpy')
-        self.jacob_algebs = sp.lambdify(self.g_jac_symbols, Tuple(jacob_algebs), modules= 'numpy')
+        self.jacob_states = sp.lambdify(self.f_jac_symbols, sp.Matrix(jacob_states), modules= 'numpy')
+        self.jacob_algebs = sp.lambdify(self.g_jac_symbols, sp.Matrix(jacob_algebs), modules= 'numpy')
 
         return
 
