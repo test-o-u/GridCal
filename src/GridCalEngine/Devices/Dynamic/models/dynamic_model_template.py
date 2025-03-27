@@ -39,6 +39,9 @@ class DynamicModelTemplate(EditableDevice):
         self.algeb_idx = {}
         self.extalgeb_idx = {}
 
+    def process_symbolic(self):
+        self.symp.generate()
+
     def store_data(self):
 
         for key, elem in self.dict.items():
@@ -64,7 +67,4 @@ class DynamicModelTemplate(EditableDevice):
                 self.spoint.add_idxdynparam(elem)
             if isinstance(elem, ExtParam):
                 self.spoint.add_extparam(elem)
-
-    def process_data(self):
-        self.symp.generate()
          

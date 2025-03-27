@@ -5,20 +5,30 @@
 import os
 import importlib
 import compileall
+import time  
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
-from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
-from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.dae import DAE
+from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
+from GridCalEngine.Devices.Dynamic.io.json import readjson
 
 class System:
     "This class contains the models and devices."
 
-    def __init__(self, models_list):
+    def __init__(self, models_list, datafile):
+
         self.models_list = models_list
+
         self.models = {}
         self.devices = {}
+
         self.dae = DAE()
+
+        self.data = readjson(datafile)
+
+        self.import_models()
+        self.system_prepare()
+
 
     def import_models(self):
         "This function imports all the models, stores its information in a spoint object, does the symbolic-numeric transformation and stores the numeric code in .py file."
@@ -29,27 +39,37 @@ class System:
                 model = the_class(name=model_name, code='', idtag='')
                 self.models[model_name] = model
 
+    def system_prepare(self):
 
-    def prepare(self, components_info):
-        self.import_models()
+        # 1. Process models symbolically and lambdify functions (generate fast numerical functions)
+        symb_st = time.perf_counter()
+
         for model in self.models.values():
-            model.store_data()
-            model.process_data()
+            model.process_symbolic()
+            # model.store_data()  
         self.finalize_pycode()
-        self.create_devices(components_info)
-        self.set_addresses()
-        
-        print(f"Bus a = {self.models['Bus'].algeb_idx['a']}")
-        # print(f"Bus v = {self.models['Bus'].algeb_idx['v']}")
-        print(f"ACLine a = {self.models['ACLine'].extalgeb_idx['a']}")
-        # print(f"ACLine1 v1 = {self.models['ACLine'].extalgeb_idx['v1']}")
-        # print(f"ACLine a2 = {self.models['ACLine'].extalgeb_idx['a2']}")
-        # print(f"ACLine2 v2 = {self.models['ACLine'].extalgeb_idx['v2']}")
-        # print(f"ACLine3 a3 = {self.models['ACLine'].extalgeb_idx['a2']}")
-        # print(f"ACLine3 v3 = {self.models['ACLine'].extalgeb_idx['v2']}")
 
-    def create_devices(self, components_info):
-        for model_name, model_entries in components_info.items():
+        symb_end = time.perf_counter() 
+        self.symb_time = symb_end - symb_st
+
+        # 2. Create a model instance per device type to store multiple devices in a vectorized form
+        dev_st = time.perf_counter()
+
+        self.create_devices(self.data)
+
+        dev_end = time.perf_counter() 
+        self.dev_time = dev_end - dev_st
+
+        # 3. Assign global indexes to variables and copy of global indexes to external variables 
+        add_st = time.perf_counter()
+
+        self.set_addresses()
+
+        add_end = time.perf_counter() 
+        self.add_time = add_end - add_st
+
+    def create_devices(self, data):
+        for model_name, model_entries in data.items():
             model = self.models[model_name]
             for entry in model_entries:
                 model.n += 1 

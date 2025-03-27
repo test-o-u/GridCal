@@ -2,23 +2,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-from GridCalEngine.Devices import Dynamic
 
-from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Devices.Dynamic.system import System
-from GridCalEngine.Devices.Dynamic.model_list import model_list
-from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
+from GridCalEngine.Devices.Dynamic.model_list import MODELS
+from GridCalEngine.Devices.Dynamic.io.json import readjson
 
-inputfile_path = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
+# NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'
 # 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
 # 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
+datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
 
-def prepare(inputfile_path):
-    my_system = System(model_list)
-    my_system.import_models()
-    components_info = readjson(inputfile_path)
-    my_system.prepare(components_info)
+def main():
+    # Initialize the abstract system components
+    system = System(MODELS, datafile)
 
+    print("=============== TIME CHECK ================")
+    print(f"Process symbolic time = {system.symb_time} [s]")
+    print(f"Process create device time = {system.dev_time} [s]")
+    print(f"Process set address time = {system.add_time} [s]")
+    print("===========================================")
 
-prepare(inputfile_path)
+    print("=============== ADDRESS CHECK ================")
+    print(f"Bus a = {system.models['Bus'].algeb_idx['a']}")
+    print(f"ACLine a = {system.models['ACLine'].extalgeb_idx['a']}")
+    print("==============================================")

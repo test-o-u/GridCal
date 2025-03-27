@@ -2,18 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-import numpy
+
 import os
 import sympy as sp
-from sympy.utilities.lambdify import lambdify
-from sympy import Tuple
 import numpy as np
 import inspect
-
+from sympy.utilities.lambdify import lambdify
+from sympy import Tuple
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 
 select_args_add = ["__zeros", "__ones", "__falses", "__trues"]
-
 
 class Symprocess:
     def __init__(self, model):

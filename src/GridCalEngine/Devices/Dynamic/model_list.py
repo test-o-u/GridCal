@@ -3,6 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-model_list = list([('line', ['ACLine']), ('bus', ['Bus'])])
+MODELS = list([
+    ('line', ['ACLine']), 
+    ('bus', ['Bus'])])
 
-                #    ('load', ['ExpLoad']), ('syngen', ['GENCLS'])])
+#('load', ['ExpLoad']), ('syngen', ['GENCLS'])])                
