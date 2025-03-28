@@ -30,6 +30,8 @@ class System:
         self.import_models()
         self.system_prepare()
 
+        self.update_jacobian()
+
 
     def import_models(self):
         "This function imports all the models, stores its information in a spoint object, does the symbolic-numeric transformation and stores the numeric code in .py file."
@@ -46,8 +48,8 @@ class System:
         symb_st = time.perf_counter()
 
         for model in self.models.values():
+            model.store_data()
             model.process_symbolic()
-            # model.store_data()  
         self.finalize_pycode()
 
         symb_end = time.perf_counter() 
@@ -129,7 +131,7 @@ class System:
         model = self.models['ACLine']
 
         # get the function type, var type info and the local jacobians
-        jacobian_info, local_jacobians = model.calc_local_jacs(model)
+        jacobian_info, local_jacobians = model.calc_local_jacs()
         # print(local_jacobians[])
         var_adresses = {0: ('a1', (0, 1, 2)),
                         1: ('g21', (3, 4, 5)),
@@ -146,7 +148,6 @@ class System:
                 triplets = self.assign_positions(model.n, local_jacobians, jac_type, positions, var_adresses)
                 all_triplets[jac_type] = triplets
 
-
     def assign_positions(self, num_components, local_jacobian, jac_type, positions, var_adresses):
         triplets = []
         i = 0
@@ -162,3 +163,42 @@ class System:
                 j += 1
             i += 1
         return triplets
+
+
+
+
+  #  def update_jacobian(self):
+    #    all_triplets = {}
+     #   for model in self.models.values():
+      #      model = self.models['ACLine']
+
+          #  # get the function type and var type info and the local jacobians
+        #    jacobian_info, local_jacobians = model.calc_local_jacs()
+         #   var_addresses = model.algeb_idx
+          #  print(var_addresses)
+         #   for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
+          #      if jac_type == 'dgy':
+           #         triplets = self.assign_positions(model, local_jacobians, jac_type, positions, var_addresses)
+            #        all_triplets[jac_type] = triplets
+
+
+    #def assign_positions(self, model, local_jacobian, jac_type, positions, var_adresses):
+     #   d1 = model.algeb_idx
+      #  d2 = model.extalgeb_idx
+       # d1.update(d2)
+        #print(d1)
+
+     #   triplets = []
+      #  i = 0
+       # while i < model.n:
+        #    j = 0
+         #   for elem in positions:
+          #      val = local_jacobian[i][j]
+           #     func_index, var_index = elem
+            #    address_func = var_adresses[model.vars_index[func_index]][i]
+             #   address_var = var_adresses[model.vars_index[var_index]][i]
+              #  triplet = (address_func, address_var, val)
+               # triplets.append(triplet)
+               # j += 1
+           # i += 1
+        #return triplets
