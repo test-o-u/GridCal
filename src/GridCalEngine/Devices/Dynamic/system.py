@@ -53,6 +53,7 @@ class System:
         self.system_prepare()
 
         self.update_jacobian()
+        self.dae.finalize_jacobians()
 
 
     def import_models(self):
@@ -179,9 +180,11 @@ class System:
                     indices = list(range(self.global_id, self.global_id + model_instance.n))
                     model_instance.algeb_idx[var_list.name] = indices
                     self.global_id += model_instance.n  # Move global index forward
-
+                    
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+
+                    self.dae.ny += model_instance.n  
 
         # Second loop: Process ExternAlgeb
         for model_instance in self.models.values():
@@ -200,40 +203,31 @@ class System:
 
                     model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
-
-
-
-
-
     def update_jacobian(self):
         all_triplets = {}
         for model in self.models.values():
             if model.name == 'ACLine':
-
-            # get the function type and var type info and the local jacobians
+                # Get the function type and var type info and the local jacobians
                 jacobian_info, local_jacobians = model.calc_local_jacs()
                 var_addresses = model.extalgeb_idx
                 var_addresses.update(model.algeb_idx)
+
                 for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
                     if jac_type == 'dgy':
                         triplets = self.assign_positions(model, local_jacobians, jac_type, positions, var_addresses)
                         all_triplets[jac_type] = triplets
+
+                        for row, col, val in triplets:
+                            self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)                     
         return all_triplets
 
 
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
-        i = 0
-        while i < model.n:
-            j = 0
-            for elem in positions:
+        for i in range(model.n): 
+            for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][j]
-                func_index, var_index = elem
                 address_func = var_addresses[model.vars_index[func_index]][i]
                 address_var = var_addresses[model.vars_index[var_index]][i]
-                triplet = (address_func, address_var, val)
-                triplets.append(triplet)
-                j += 1
-            print(i)
-            i += 1
+                triplets.append((address_func, address_var, val))
         return triplets

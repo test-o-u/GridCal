@@ -29,20 +29,21 @@ def main():
 
         # Performance timing logs
         logging.info("=============== TIME CHECK ================")
-
         logging.info(f"Process symbolic time = {system.symb_time:.6f} [s]")
         logging.info(f"Create device time = {system.dev_time:.6f} [s]")
         logging.info(f"Set address time = {system.add_time:.6f} [s]")
-
         total_time = time.perf_counter() - start_time
         logging.info(f"Total execution time: {total_time:.6f} [s]")
-        
+        logging.info("===========================================")
+
+        logging.info("=============== JACOBIANS ================")
+        logging.info(f"dgy = {system.dae.dgy}")
         logging.info("===========================================")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
 
-    print("=============== ADDRESS CHECK ================")
-    print(f"Bus a = {system.models['Bus'].algeb_idx}")
-    print(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
-    print("==============================================")
+    # print("=============== ADDRESS CHECK ================")
+    # print(f"Bus a = {system.models['Bus'].algeb_idx}")
+    # print(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
+    # print("==============================================")

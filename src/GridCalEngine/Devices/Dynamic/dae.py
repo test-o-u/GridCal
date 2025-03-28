@@ -1,4 +1,5 @@
-import scipy as sp
+from scipy.sparse import coo_matrix
+
 
 class DAE: 
     def __init__(self):
@@ -39,13 +40,13 @@ class DAE:
         """
         rows, cols = zip(*sparsity_set) if sparsity_set else ([], [])
         values = [jac_dict.get((r, c), 0) for r, c in sparsity_set]
-        return sp.coo_matrix((values, (rows, cols)), shape=shape)
+        return coo_matrix((values, (rows, cols)), shape=shape)
 
     def finalize_jacobians(self):
         """
         Builds all Jacobian matrices from stored triplets and sparsity patterns.
         """
-        self.fx = self.build_sparse_matrix(self.dfx, self.sparsity_fx, (self.nx, self.nx))
-        self.fy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.nx, self.ny))
-        self.gx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
-        self.gy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))
+        # self.dfx = self.build_sparse_matrix(self.dfx, self.sparsity_fx, (self.nx, self.nx))
+        # self.dfy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.nx, self.ny))
+        # self.dgx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
+        self.dgy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))
