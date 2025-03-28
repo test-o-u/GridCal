@@ -30,6 +30,14 @@ class ExpLoad(DynamicModelTemplate):
         self.beta = NumDynParam(symbol='beta',
                                 info='Reactive Power load exponential coefficient.',
                                 value=[])
+        
+        self.Pl0 = NumDynParam(symbol='Pl0',
+                                info='Active Power load base.',
+                                value=[])
+        
+        self.Ql0 = NumDynParam(symbol='Ql0',
+                                info='Reactive Power load base.',
+                                value=[])
 
         # network algebraic variables 
         # TODO:

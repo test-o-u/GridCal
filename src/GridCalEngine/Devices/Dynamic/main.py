@@ -9,7 +9,7 @@ from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.model_list import MODELS
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 # NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'
