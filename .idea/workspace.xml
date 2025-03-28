@@ -29,9 +29,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="dynamic variables class">
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynamic_model_template.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynamic_model_template.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/symprocess.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/symprocess.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/model_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/model_list.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -1859,7 +1857,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="606" />
+    <option name="localTasksCounter" value="607" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

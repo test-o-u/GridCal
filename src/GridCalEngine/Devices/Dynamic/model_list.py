@@ -15,4 +15,11 @@ MODELS = list([
     ('bus', ['Bus']),
     # ('load', ['ExpLoad']), 
     # ('syngen', ['GENCLS'])
-])          
+])
+
+INITIAL_CONDITIONS = {'Bus 1':[],
+                      'Bus 2':[],
+                      'Bus 3':[],
+                      'ACLine 1':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                      'ACLine 2':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                      'ACLine 3':[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
