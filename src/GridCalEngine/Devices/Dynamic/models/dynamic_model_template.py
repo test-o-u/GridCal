@@ -48,6 +48,10 @@ class DynamicModelTemplate(EditableDevice):
         self.sym = SymProcess(self)
 
         # Address mapping for algebraic variables
+        # set index of the variable
+        self.vars_index = {}
+
+        # Set address function
         self.n = 0
         self.algeb_idx = {}     # Dictionary for algebraic variable indexing
         self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
@@ -65,7 +69,15 @@ class DynamicModelTemplate(EditableDevice):
         storage structure.
         """
 
+        index = 0
         for key, elem in self.dict.items():
+            # assign an index to every variable:
+            if isinstance(elem, ExternVar) and elem.src not in self.vars_index.values():
+                self.vars_index[index] = elem.src
+                index += 1
+            if isinstance(elem, AlgebVar) and elem.symbol not in self.vars_index.values():
+                self.vars_index[index] = elem.symbol
+                index += 1
 
             if isinstance(elem, AlgebVar):
                 self.model_storage.add_algebvars(elem)
@@ -90,7 +102,7 @@ class DynamicModelTemplate(EditableDevice):
 
 ####################### TO CLEAN ################################
 
-    def calc_local_jacs(self, model):
+    def calc_local_jacs(self):
         jacobians = []
         #input values come from the previous iteration and will be stores in the model
         a1 = 1
@@ -104,9 +116,9 @@ class DynamicModelTemplate(EditableDevice):
         bsh = 9
         b21 = 10
         pycode_module = importlib.import_module('pycode')
-        pycode_code = getattr(pycode_module, model.name)
+        pycode_code = getattr(pycode_module, self.name)
         jacobian_info = pycode_code.jacobian_info
-        for i in range(model.n):
+        for i in range(self.n):
             local_jac = pycode_code.g_ia(a1, g21, a2, u, v1, b, g, v2, bsh, b21)
             jacobians.append(local_jac)
         return jacobian_info, jacobians
