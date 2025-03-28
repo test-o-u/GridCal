@@ -98,11 +98,13 @@ class GENCLS(DynamicModelTemplate):
         # -check naming
         # -check how they are exported
         self.a = ExternAlgeb(name='a', 
+                             symbol = 'a',
                              src='a',
                              indexer=self.bus, 
                              init_eq='', 
                              eq='u * (vd * Id + vq * Iq)')                                 
         self.v = ExternAlgeb(name='v', 
+                             symbol = 'v',
                              src='v', 
                              indexer=self.bus,
                              init_eq='', 

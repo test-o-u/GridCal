@@ -24,7 +24,9 @@ class DAE:
         self.sparsity_gy = set()
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
-        """Accumulate values and track sparsity pattern."""
+        """
+        Accumulate values and track sparsity pattern.
+        """
         if (row, col) in jac_dict:
             jac_dict[(row, col)] += value 
         else:
@@ -32,14 +34,18 @@ class DAE:
             sparsity_set.add((row, col))  # Store pattern
 
     def build_sparse_matrix(self, jac_dict, sparsity_set, shape):
-        """Convert accumulated values into a sparse matrix using the precomputed pattern."""
+        """
+        Convert accumulated values into a sparse matrix using the precomputed pattern.
+        """
         rows, cols = zip(*sparsity_set) if sparsity_set else ([], [])
         values = [jac_dict.get((r, c), 0) for r, c in sparsity_set]
         return sp.coo_matrix((values, (rows, cols)), shape=shape)
 
     def finalize_jacobians(self):
-        """Builds all Jacobian matrices from stored triplets and sparsity patterns."""
-        self.fx = self.build_sparse_matrix(self.dfx, self.sparsity_fx, (self.n_x, self.n_x))
-        self.fy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.n_x, self.n_y))
-        self.gx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.n_y, self.n_x))
-        self.gy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.n_y, self.n_y))
+        """
+        Builds all Jacobian matrices from stored triplets and sparsity patterns.
+        """
+        self.fx = self.build_sparse_matrix(self.dfx, self.sparsity_fx, (self.nx, self.nx))
+        self.fy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.nx, self.ny))
+        self.gx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
+        self.gy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))

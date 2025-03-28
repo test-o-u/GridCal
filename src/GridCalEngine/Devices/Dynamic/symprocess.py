@@ -148,8 +148,8 @@ class SymProcess:
                 self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
 
         # Lambdify Jacobian functions
-        self.jacob_states = lambdify(self.f_jac_symbols, sp.Matrix(f_jacob_sym), modules='numpy')
-        self.jacob_algebs = lambdify(self.g_jac_symbols, sp.Matrix(g_jacob_sym), modules='numpy')
+        self.jacob_states = lambdify(self.f_jac_symbols, tuple(f_jacob_sym), modules='numpy')
+        self.jacob_algebs = lambdify(self.g_jac_symbols, tuple(g_jacob_sym), modules='numpy')
 
     def _rename_func(self, func, func_name, vars=False):
         """
