@@ -72,10 +72,7 @@ class DynamicModelTemplate(EditableDevice):
         index = 0
         for key, elem in self.dict.items():
             # assign an index to every variable:
-            if isinstance(elem, ExternVar) and elem.src not in self.vars_index.values():
-                self.vars_index[index] = elem.src
-                index += 1
-            if isinstance(elem, AlgebVar) and elem.symbol not in self.vars_index.values():
+            if isinstance(elem, DynVar):
                 self.vars_index[index] = elem.symbol
                 index += 1
 

@@ -195,85 +195,44 @@ class System:
                     parent_idx = algeb_ref_map[key]  # Retrieve index from cache
 
                     # Store in extalgeb_idx using src as the key (grouping multiple references)
-                    if var_list.src not in model_instance.extalgeb_idx:
-                        model_instance.extalgeb_idx[var_list.src] = []  # Initialize as a list of lists
+                    if var_list.name not in model_instance.extalgeb_idx:
+                        model_instance.extalgeb_idx[var_list.name] = []  # Initialize as a list of lists
 
-                    model_instance.extalgeb_idx[var_list.src].append([parent_idx[i] for i in var_list.indexer.id])
+                    model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
+
+
+
+
+
 
     def update_jacobian(self):
         all_triplets = {}
-        # for model in self.models.values():
-        model = self.models['ACLine']
+        for model in self.models.values():
+            model = self.models['ACLine']
 
-        # get the function type, var type info and the local jacobians
-        jacobian_info, local_jacobians = model.calc_local_jacs()
-        # print(local_jacobians[])
-        var_adresses = {0: ('a1', (0, 1, 2)),
-                        1: ('g21', (3, 4, 5)),
-                        2: ('a2', (6, 7, 8)),
-                        3: ('u', (9, 10, 11)),
-                        4: ('v1', (12, 13, 14)),
-                        5: ('b', (15, 16, 17)),
-                        6: ('g', (18, 19, 20)),
-                        7: ('v2', (21, 22, 23)),
-                        8: ('bsh', (24, 25, 26)),
-                        9: ('b21', (27, 28, 29))}
-        for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
-            if jac_type == 'dgy':
-                triplets = self.assign_positions(model.n, local_jacobians, jac_type, positions, var_adresses)
-                all_triplets[jac_type] = triplets
+            # get the function type and var type info and the local jacobians
+            jacobian_info, local_jacobians = model.calc_local_jacs()
+            var_addresses = model.extalgeb_idx
+            var_addresses.update(model.algeb_idx)
+            for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
+                if jac_type == 'dgy':
+                    triplets = self.assign_positions(model, local_jacobians, jac_type, positions, var_addresses)
+                    all_triplets[jac_type] = triplets
+        return all_triplets
 
-    def assign_positions(self, num_components, local_jacobian, jac_type, positions, var_adresses):
+
+    def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
         i = 0
-        while i < num_components:
+        while i < model.n:
             j = 0
             for elem in positions:
                 val = local_jacobian[i][j]
                 func_index, var_index = elem
-                adress_func = var_adresses[func_index][1][i]
-                adress_var = var_adresses[var_index][1][i]
-                triplet = (adress_func, adress_var, val)
+                address_func = var_addresses[model.vars_index[func_index]][i]
+                address_var = var_addresses[model.vars_index[var_index]][i]
+                triplet = (address_func, address_var, val)
                 triplets.append(triplet)
                 j += 1
             i += 1
         return triplets
-
-
-
-
-  #  def update_jacobian(self):
-    #    all_triplets = {}
-     #   for model in self.models.values():
-      #      model = self.models['ACLine']
-
-          #  # get the function type and var type info and the local jacobians
-        #    jacobian_info, local_jacobians = model.calc_local_jacs()
-         #   var_addresses = model.algeb_idx
-          #  print(var_addresses)
-         #   for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
-          #      if jac_type == 'dgy':
-           #         triplets = self.assign_positions(model, local_jacobians, jac_type, positions, var_addresses)
-            #        all_triplets[jac_type] = triplets
-
-
-    #def assign_positions(self, model, local_jacobian, jac_type, positions, var_adresses):
-     #   d1 = model.algeb_idx
-      #  d2 = model.extalgeb_idx
-       # d1.update(d2)
-        #print(d1)
-
-     #   triplets = []
-      #  i = 0
-       # while i < model.n:
-        #    j = 0
-         #   for elem in positions:
-          #      val = local_jacobian[i][j]
-           #     func_index, var_index = elem
-            #    address_func = var_adresses[model.vars_index[func_index]][i]
-             #   address_var = var_adresses[model.vars_index[var_index]][i]
-              #  triplet = (address_func, address_var, val)
-               # triplets.append(triplet)
-               # j += 1
-           # i += 1
-        #return triplets
