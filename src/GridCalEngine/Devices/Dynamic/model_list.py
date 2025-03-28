@@ -3,8 +3,16 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+"""
+This module defines the power system models organized in categories.
+
+Constants:
+    MODELS (list): A list of tuples mapping model categories to their respective models.
+"""
+
 MODELS = list([
     ('line', ['ACLine']), 
-    ('bus', ['Bus'])])
-
-#('load', ['ExpLoad']), ('syngen', ['GENCLS'])])                
+    ('bus', ['Bus']),
+    # ('load', ['ExpLoad']), 
+    # ('syngen', ['GENCLS'])
+])          

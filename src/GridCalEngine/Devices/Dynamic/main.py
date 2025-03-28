@@ -3,9 +3,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import logging
+import time
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.model_list import MODELS
-from GridCalEngine.Devices.Dynamic.io.json import readjson
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'
@@ -14,16 +18,31 @@ from GridCalEngine.Devices.Dynamic.io.json import readjson
 datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
 
 def main():
-    # Initialize the abstract system components
-    system = System(MODELS, datafile)
+    """
+    Main function to initialize and run the system simulation.
+    """
+    try:
+        start_time = time.perf_counter()
 
-    print("=============== TIME CHECK ================")
-    print(f"Process symbolic time = {system.symb_time} [s]")
-    print(f"Process create device time = {system.dev_time} [s]")
-    print(f"Process set address time = {system.add_time} [s]")
-    print("===========================================")
+        # Initialize the system with given models and datafile
+        system = System(MODELS, datafile)
 
-    print("=============== ADDRESS CHECK ================")
-    print(f"Bus a = {system.models['Bus'].algeb_idx['a']}")
-    print(f"ACLine a = {system.models['ACLine'].extalgeb_idx['a']}")
-    print("==============================================")
+        # Performance timing logs
+        logging.info("=============== TIME CHECK ================")
+
+        logging.info(f"Process symbolic time = {system.symb_time:.6f} [s]")
+        logging.info(f"Create device time = {system.dev_time:.6f} [s]")
+        logging.info(f"Set address time = {system.add_time:.6f} [s]")
+
+        total_time = time.perf_counter() - start_time
+        logging.info(f"Total execution time: {total_time:.6f} [s]")
+        
+        logging.info("===========================================")
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}", exc_info=True)
+
+    # print("=============== ADDRESS CHECK ================")
+    # print(f"Bus a = {system.models['Bus'].algeb_idx['a']}")
+    # print(f"ACLine a = {system.models['ACLine'].extalgeb_idx['a']}")
+    # print("==============================================")

@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+
 import importlib
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
-from GridCalEngine.Devices.Dynamic.spoint import Spoint
-from GridCalEngine.Devices.Dynamic.symprocess import Symprocess
+from GridCalEngine.Devices.Dynamic.model_storage import ModelStorage
+from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Utils.dyn_var import *
 from GridCalEngine.Utils.dyn_param import *
@@ -15,15 +16,21 @@ from GridCalEngine.Utils.dyn_param import *
 
 
 class DynamicModelTemplate(EditableDevice):
+    """
+    Represents a dynamic model template for a device, handling symbolic processing,
+    storage of variables, and setting addresses.
 
+    Inherits from EditableDevice, allowing dynamic model creation and symbolic processing.
+    """
     def __init__(self, name: str, code: str, idtag: Union[str, None],
                  device_type: DeviceType):
         """
+        Initializes a dynamic model template with symbolic processing and storage.
 
-        :param name:
-        :param code:
-        :param idtag:
-        :param device_type:
+        :param name: Name of the dynamic model.
+        :param code: Unique code identifier.
+        :param idtag: Optional tag for identifying the model instance.
+        :param device_type: The type of the device (e.g., generator, load, etc.).
         """
         EditableDevice.__init__(self,
                                 name=name,
@@ -31,43 +38,57 @@ class DynamicModelTemplate(EditableDevice):
                                 idtag=idtag,
                                 device_type=device_type)
 
-        self.spoint = Spoint(self.name)
-        self.dict = self.__dict__
-        self.symp = Symprocess(self)
+        # Storage for model variables and parameters
+        self.model_storage = ModelStorage(self.name)
 
-        # Set address function
+        # Dictionary containing instance attributes
+        self.dict = self.__dict__
+        
+        # Symbolic processing engine
+        self.sym = SymProcess(self)
+
+        # Address mapping for algebraic variables
         self.n = 0
-        self.algeb_idx = {}
-        self.extalgeb_idx = {}
+        self.algeb_idx = {}     # Dictionary for algebraic variable indexing
+        self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
 
     def process_symbolic(self):
-        self.symp.generate()
+        """
+        Generates symbolic equations and Jacobians for the dynamic model.
+        """
+        self.sym.generate()
 
     def store_data(self):
+        """
+        Stores different types of variables and parameters in the model storage.
+        This method categorizes each instance variable and adds it to the corresponding 
+        storage structure.
+        """
 
         for key, elem in self.dict.items():
 
             if isinstance(elem, AlgebVar):
-                self.spoint.add_algebvars(elem)
+                self.model_storage.add_algebvars(elem)
             if isinstance(elem, StatVar):
-                self.spoint.add_statvars(elem)
+                self.model_storage.add_statvars(elem)
             if isinstance(elem, ExternVar):
-                self.spoint.add_externvars(elem)
+                self.model_storage.add_externvars(elem)
             if isinstance(elem, ExternState):
-                self.spoint.add_externstates(elem)
+                self.model_storage.add_externstates(elem)
             if isinstance(elem, ExternAlgeb):
-                self.spoint.add_externalgebs(elem)
+                self.model_storage.add_externalgebs(elem)
             if isinstance(elem, AliasAlgeb):
-                self.spoint.add_aliasalgebs(elem)
+                self.model_storage.add_aliasalgebs(elem)
             if isinstance(elem, AliasState):
-                self.spoint.add_aliastats(elem)
-
+                self.model_storage.add_aliastats(elem)
             if isinstance(elem, NumDynParam):
-                self.spoint.add_numdynparam(elem)
+                self.model_storage.add_numdynparam(elem)
             if isinstance(elem, IdxDynParam):
-                self.spoint.add_idxdynparam(elem)
+                self.model_storage.add_idxdynparam(elem)
             if isinstance(elem, ExtParam):
-                self.spoint.add_extparam(elem)
+                self.model_storage.add_extparam(elem)
+
+####################### TO CLEAN ################################
 
     def calc_local_jacs(self, model):
         jacobians = []

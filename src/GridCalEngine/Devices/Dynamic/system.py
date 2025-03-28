@@ -14,9 +14,31 @@ from GridCalEngine.Devices.Dynamic.io.json import readjson
 
 
 class System:
-    "This class contains the models and devices."
+    """
+    This class represents a power system containing various models and devices.
+
+    It handles:
+    - Importing and managing abstract dynamic models.
+    - Processing symbolic and numerical computations.
+    - Creating and managing device instances in one single object in a vecotrized form.
+    - Assigning global indices to system variables and copies of these to external system variables.
+    """
 
     def __init__(self, models_list, datafile):
+        """
+        Initializes the System instance.
+
+        Args:
+            models_list (list): A list of model categories and their associated models.
+            datafile (str): Path to the JSON file containing device data and system configuration.
+
+        Attributes:
+            models_list (list): Stores the provided list of model categories and models.
+            models (dict): A dictionary mapping model names to their respective instances.
+            devices (dict): A dictionary to store instantiated device objects.
+            dae (DAE): An instance of the DAE class for managing algebraic and differential equations.
+            data (dict): Parsed JSON data containing device configurations.
+        """
 
         self.models_list = models_list
 
@@ -32,64 +54,117 @@ class System:
 
 
     def import_models(self):
-        "This function imports all the models, stores its information in a spoint object, does the symbolic-numeric transformation and stores the numeric code in .py file."
-        for model_type, model_names in self.models_list:
+        """
+        Imports dynamic models and initializes their symbolic-numeric representations.
+
+        This method:
+        - Dynamically imports model classes from GridCalEngine.
+        - Creates empty instances of each model and stores them in `self.models`.
+        """
+
+        for category, model_names in self.models_list:
+            # Import the module containing the models for this category (__init__.py)
+            category_module = importlib.import_module(f'GridCalEngine.Devices.Dynamic.models.{category}')
+            
             for model_name in model_names:
-                model_module = importlib.import_module('GridCalEngine.Devices.Dynamic.models.' + model_type)
-                cls = getattr(model_module, model_name)
-                model = cls(name=model_name, code='', idtag='')
+                # Retrieve the model class from the module
+                ModelClass = getattr(category_module, model_name)
+                
+                # Instantiate the model with default attributes
+                model = ModelClass(name=model_name, code='', idtag='')
+                
+                # Store the model instance in the dictionary
                 self.models[model_name] = model
 
     def system_prepare(self):
+        """
+        Prepares the system by processing models, creating devices, and assigning global indices.
 
-        # 1. Process models symbolically and lambdify functions (generate fast numerical functions)
+        This method consists of three main steps:
+        1. Processing models symbolically and generating optimized numerical functions.
+        2. Creating instances of devices and storing them in vectorized form.
+        3. Assigning global indices to algebraic variables and external references.
+
+        Execution time for each step is measured and stored.
+        """
+
+        # STEP 1: Process models symbolically and generate numerical functions
         symb_st = time.perf_counter()
-
         for model in self.models.values():
             model.process_symbolic()
-            # model.store_data()  
+            # model.store_data()
+        
+        # Finalize generated code
         self.finalize_pycode()
+        symb_end = time.perf_counter()
+        self.symb_time = symb_end - symb_st  # Store symbolic processing time
 
-        symb_end = time.perf_counter() 
-        self.symb_time = symb_end - symb_st
-
-        # 2. Create a model instance per device type to store multiple devices in a vectorized form
+        # STEP 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
-
         self.create_devices(self.data)
+        dev_end = time.perf_counter()
+        self.dev_time = dev_end - dev_st  # Store device creation time
 
-        dev_end = time.perf_counter() 
-        self.dev_time = dev_end - dev_st
-
-        # 3. Assign global indexes to variables and copy of global indexes to external variables 
+        # STEP 3: Assign global indices to variables and external references
         add_st = time.perf_counter()
-
         self.set_addresses()
-
-        add_end = time.perf_counter() 
-        self.add_time = add_end - add_st
+        add_end = time.perf_counter()
+        self.add_time = add_end - add_st  # Store addressing time
 
     def create_devices(self, data):
-        for model_name, model_data in data.items():
-            model = self.models[model_name]
-            for device in model_data:
-                model.n += 1
-                for name, val in device.items():
-                    if hasattr(model, name):
-                        param = getattr(model, name)
+        """
+        Populates vectorized model instances with device data from a parsed JSON file.
+
+        This method:
+        - Iterates through parsed JSON data to initialize devices.
+        - Increments the total device count (`n`) for each model.
+        - Assigns parameter values to their corresponding model attributes in a vectorized manner.
+
+        Args:
+            data (dict): A dictionary where keys are model names, and values are lists of device data.
+        """
+
+        for model_name, device_list in data.items():
+            # Retrieve the corresponding model instance
+            model = self.models[model_name]  
+
+            for device in device_list:
+                # Increment the count of devices for this model
+                model.n += 1  
+                
+                for param_name, value in device.items():
+                    if hasattr(model, param_name):
+                        param = getattr(model, param_name)
+
+                        # Store parameter values in the appropriate structure: either IdxDynParam or NumDynParam
                         if isinstance(param, IdxDynParam):
-                            param.id.append(val)
-                        if isinstance(param, NumDynParam):
-                            param.value.append(val)
+                            param.id.append(value)
+                        elif isinstance(param, NumDynParam):
+                            param.value.append(value)
 
     def finalize_pycode(self):
+        """
+        Generates an __init__.py file to later dynamically import compiled models.
+
+        This method:
+        - Retrieves the path of the generated Python code directory.
+        - Writes import statements for each model into __init__.py.
+        - Compiles all Python files within the directory to optimize execution (.pyc).
+        """
+
         pycode_path = get_pycode_path()
         init_path = os.path.join(pycode_path, '__init__.py')
+
+        # Write import statements for dynamically generated model files
         with open(init_path, 'w') as f:
-            for name in self.models.keys():
-                f.write(f"from . import {name}  \n")
-            f.write('\n')
+            for model_name in self.models.keys():
+                # Import each model dynamically
+                f.write(f"from . import {model_name}\n")  
+
+        # Compile all generated Python code to bytecode (.pyc)
         compileall.compile_dir(pycode_path)
+
+######################### TO CLEAN #######################################
 
     def set_addresses(self):
         self.global_id = 0
