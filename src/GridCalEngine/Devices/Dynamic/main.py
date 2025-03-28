@@ -42,7 +42,7 @@ def main():
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
 
-    # print("=============== ADDRESS CHECK ================")
-    # print(f"Bus a = {system.models['Bus'].algeb_idx['a']}")
-    # print(f"ACLine a = {system.models['ACLine'].extalgeb_idx['a']}")
-    # print("==============================================")
+    print("=============== ADDRESS CHECK ================")
+    print(f"Bus a = {system.models['Bus'].algeb_idx}")
+    print(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
+    print("==============================================")
