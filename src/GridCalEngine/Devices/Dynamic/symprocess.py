@@ -53,6 +53,10 @@ class SymProcess:
         self.lambda_equations = {}
 
         # Jacobians
+        self.f_args = []
+        self.g_args = []
+        self.f_jac_args = []
+        self.g_jac_args = []
         self.jacob_states = []
         self.jacob_algebs = []
         self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
@@ -107,6 +111,12 @@ class SymProcess:
                         if symb not in symbolic_vars:
                             symbolic_vars.append(symb)
 
+            symbolic_args = sorted(symbolic_vars, key=lambda s: s.name)
+            if eq_type == 'f':
+                self.f_args = symbolic_args
+            else:
+                self.g_args = symbolic_args
+
             # Lambdify numerical evaluation functions
             self.lambda_equations[eq_type] = lambdify(symbolic_vars, sp.Matrix(symbolic_eqs), modules='numpy')
 
@@ -139,9 +149,14 @@ class SymProcess:
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
                 self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
 
+        f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
+        g_jac_args = sorted(g_jac_symbols, key=lambda s: s.name)
+        self.f_jac_args = f_jac_args
+        self.g_jac_args = g_jac_args
+
         # Lambdify Jacobian functions
-        self.jacob_states = lambdify(f_jac_symbols, tuple(f_jacobian_symbolic), modules='numpy')
-        self.jacob_algebs = lambdify(g_jac_symbols, tuple(g_jacobian_symbolic), modules='numpy')
+        self.jacob_states = lambdify(f_jac_args, tuple(f_jacobian_symbolic), modules='numpy')
+        self.jacob_algebs = lambdify(g_jac_args, tuple(g_jacobian_symbolic), modules='numpy')
 
     def _rename_func(self, func, func_name, vars=False):
         """

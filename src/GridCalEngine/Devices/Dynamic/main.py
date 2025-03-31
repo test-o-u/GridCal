@@ -36,14 +36,17 @@ def main():
         logging.info(f"Total execution time: {total_time:.6f} [s]")
         logging.info("===========================================")
 
+        logging.info("=============== ADDRESS CHECK =============")
+        logging.info(f"Bus a = {system.models['Bus'].algeb_idx}")
+        logging.info(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
+        logging.info(f"ExpLoad a = {system.models['ExpLoad'].extalgeb_idx}")
+        logging.info(f"GENCLS a = {system.models['GENCLS'].algeb_idx}")
+        logging.info(f"GENCLS a = {system.models['GENCLS'].extalgeb_idx}")
+        logging.info("===========================================")
+
         logging.info("=============== JACOBIANS ================")
         logging.info(f"dgy = {system.dae.dgy}")
         logging.info("===========================================")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
-
-    # print("=============== ADDRESS CHECK ================")
-    # print(f"Bus a = {system.models['Bus'].algeb_idx}")
-    # print(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
-    # print("==============================================")
