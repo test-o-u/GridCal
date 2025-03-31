@@ -11,10 +11,10 @@ Constants:
 """
 
 MODELS = list([
-    ('line', ['ACLine']), 
     ('bus', ['Bus']),
-    # ('load', ['ExpLoad']) 
-    # ('syngen', ['GENCLS'])
+    ('line', ['ACLine']), 
+    ('load', ['ExpLoad']),
+    ('syngen', ['GENCLS'])
 ])
 
 INITIAL_CONDITIONS = {'Bus 1':[],

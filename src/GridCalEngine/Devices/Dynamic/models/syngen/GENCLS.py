@@ -20,27 +20,34 @@ class GENCLS(DynamicModelTemplate):
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
 
         # parameters
-        self.bus = IdxDynParam(symbol='bus', 
+        self.bus = IdxDynParam(symbol='Bus', 
                                info='interface bus id',
                                id=[])
+        
         self.fn = NumDynParam(symbol='fn',
                               info='rated frequency',
                               value=[])
+        
         self.D  = NumDynParam(symbol='D',
                               info='damping coefficient',
                               value=[])
+        
         self.M  = NumDynParam(symbol='M',
                               info='machine start up time (2H)',
                               value=[])
+        
         self.ra = NumDynParam(symbol='ra', 
                               info='armature resistance',
                               value=[])
+        
         self.xd = NumDynParam(symbol='xd',
                               info='d-axis transient reactance',
                               value=[])
+        
         self.tm = NumDynParam(symbol='tm',
                               info='uncontrolled mechanical torque',
                               value=[])
+        
         self.vf = NumDynParam(symbol='vf',
                               info='uncontrolled exitation voltage',
                               value=[]) 
@@ -49,49 +56,58 @@ class GENCLS(DynamicModelTemplate):
         self.delta = StatVar(name='delta', 
                              symbol='delta', 
                              init_eq='delta0', 
-                             eq='u * (2 * pi * fn) * (omega - 1)')                         
+                             eq='(2 * pi * fn) * (omega - 1)')   
+                              
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
                              init_eq='omega_0', 
-                             eq='u * (tm - te - D * (omega - 1))')                          
+                             eq='(tm - te - D * (omega - 1))')                          
 
         # algebraic variables
-        self.psid = AlgebVar(name='d-axis flux',
-                             symbol=r'\psi_d',
+        self.psid = AlgebVar(name='psid',
+                             symbol='psid',
                              init_eq='psid0',
-                             eq='u * (ra*Iq + vq) - psid')
-        self.psiq = AlgebVar(name='q-axis flux',
-                             symbol=r'\psi_d',
+                             eq='(ra * i_q + vq) - psid')
+        
+        self.psiq = AlgebVar(name='psiq',
+                             symbol='psiq',
                              init_eq='psiq0',
-                             eq='u * (ra*Id + vd) - psid')
-        self.Id = AlgebVar(name='Id', 
-                           symbol='Id', 
-                           init_eq='Id0', 
-                           eq='psid + xq * Id - vf')                                                     
-        self.Iq = AlgebVar(name='Iq', 
-                           symbol='Iq', 
-                           init_eq='Iq0', 
-                           eq='psiq + xq * Iq')                                                    
+                             eq='(ra * i_d + vd) - psid')
+        
+        self.i_d = AlgebVar(name='i_d', 
+                           symbol='i_d', 
+                           init_eq='i_d0', 
+                           eq='psid + xq * i_d - vf')    
+                                                         
+        self.i_q = AlgebVar(name='i_q', 
+                           symbol='i_q', 
+                           init_eq='i_q0', 
+                           eq='psiq + xq * i_q')       
+                                                     
         self.vd = AlgebVar(name='vd', 
                            symbol='vd', 
                            init_eq='vd0', 
-                           eq='u * v * sin(delta - a) - vd')                              
+                           eq='v * sin(delta - a) - vd')  
+                                    
         self.vq = AlgebVar(name='vq', 
                            symbol='vq', 
                            init_eq='vq0', 
-                           eq='u * v * cos(delta - a) - vq')                            
+                           eq='v * cos(delta - a) - vq')   
+                                 
         self.te = AlgebVar(name='te', 
                            symbol='te', 
                            init_eq='tm', 
-                           eq='u * (psid * Iq - psiq * Id) - te')                
+                           eq='(psid * i_q - psiq * i_d) - te')   
+                     
         self.Pe = AlgebVar(name='Pe', 
                            symbol='Pe', 
-                           init_eq='u * (vd0 * Id0 + vq0 * Iq0)', 
-                           eq='u * (vd * Id + vq * Iq) - Pe')                               
+                           init_eq='(vd0 * i_d0 + vq0 * i_q0)', 
+                           eq='(vd * i_d + vq * i_q) - Pe')       
+                                
         self.Qe = AlgebVar(name='Qe', 
                            symbol='Qe', 
-                           init_eq='u * (vq0 * Id0 - vd0 * Iq0)', 
-                           eq='u * (vq * Id - vd * Iq) - Qe')                            
+                           init_eq='(vq0 * i_d0 - vd0 * i_q0)', 
+                           eq='(vq * i_d - vd * i_q) - Qe')                            
 
         # network algebraic variables 
         # TODO: 
@@ -102,10 +118,11 @@ class GENCLS(DynamicModelTemplate):
                              src='a',
                              indexer=self.bus, 
                              init_eq='', 
-                             eq='u * (vd * Id + vq * Iq)')                                 
+                             eq='(vd * i_d + vq * i_q)')  
+                                       
         self.v = ExternAlgeb(name='v', 
                              symbol = 'v',
                              src='v', 
                              indexer=self.bus,
                              init_eq='', 
-                             eq='u * (vq * Id - vd * Iq)')                                
+                             eq='(vq * i_d - vd * i_q)')                                

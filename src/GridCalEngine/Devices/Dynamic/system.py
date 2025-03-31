@@ -2,10 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+
 import os
 import importlib
 import compileall
 import time  
+import pdb
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Devices.Dynamic.dae import DAE
@@ -52,8 +54,8 @@ class System:
         self.import_models()
         self.system_prepare()
 
-        self.update_jacobian()
-        self.dae.finalize_jacobians()
+        # self.update_jacobian()
+        # self.dae.finalize_jacobians()
 
 
     def import_models(self):
@@ -78,7 +80,7 @@ class System:
                 
                 # Store the model instance in the dictionary
                 self.models[model_name] = model
-
+        
     def system_prepare(self):
         """
         Prepares the system by processing models, creating devices, and assigning global indices.
@@ -130,6 +132,8 @@ class System:
         for model_name, device_list in data.items():
             # Retrieve the corresponding model instance
             model = self.models[model_name]  
+            # Save system devices 
+            self.devices[model_name] = model
 
             for device in device_list:
                 # Increment the count of devices for this model
@@ -174,7 +178,7 @@ class System:
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
 
         # First loop: Process AlgebVar
-        for model_instance in self.models.values():
+        for model_instance in self.devices.values():
             for var_list in model_instance.__dict__.values():
                 if isinstance(var_list, AlgebVar):
                     indices = list(range(self.global_id, self.global_id + model_instance.n))
@@ -185,16 +189,17 @@ class System:
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
                     self.dae.ny += model_instance.n  
-
+         
         # Second loop: Process ExternAlgeb
-        for model_instance in self.models.values():
+        for model_instance in self.devices.values():
             for var_list in model_instance.__dict__.values():
                 if isinstance(var_list, ExternAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
 
+                    print(f"{model_instance} Extrernal Algeb: {var_list}") 
                     if key not in algeb_ref_map:
                         raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.algeb_idx")
-
+                    print(f"{model_instance} is ok") 
                     parent_idx = algeb_ref_map[key]  # Retrieve index from cache
 
                     # Store in extalgeb_idx using src as the key (grouping multiple references)

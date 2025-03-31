@@ -6,8 +6,8 @@
       "g": 0.3,
       "b": 0.4,
       "bsh": 0.5,
-      "bus1": 1,
-      "bus2" : 0
+      "bus1": 0,
+      "bus2" : 1
     }
   ],
   "GENCLS": [
@@ -38,8 +38,8 @@
     {
       "code": 0,
       "name": "Load 1",
-      "alfa": 0.1,
-      "beta": 0.2,
+      "coeff_alfa": 0.1,
+      "coeff_beta": 0.2,
       "bus" : 1
     }
   ]

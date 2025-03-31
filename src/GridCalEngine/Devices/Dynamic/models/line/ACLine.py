@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+
 from typing import Union
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
@@ -51,7 +52,7 @@ class ACLine(DynamicModelTemplate):
                               src='a',
                               indexer=self.bus1, 
                               init_eq='', 
-                              eq='-u * (v1 ** 2 * g  - \
+                              eq='-(v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
         
@@ -60,7 +61,7 @@ class ACLine(DynamicModelTemplate):
                               src='v',
                               indexer=self.bus1, 
                               init_eq='', 
-                              eq='-u * (- v1 ** 2 * (b + bsh / 2) - \
+                              eq='-(- v1 ** 2 * (b + bsh / 2) - \
                                     v1 * v2 * (g * sin(a1 - a2) - \
                                         b * cos(a1 - a2)))')
          
@@ -69,7 +70,7 @@ class ACLine(DynamicModelTemplate):
                               src='a',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='u * (v2 ** 2 * g21  - \
+                              eq='(v2 ** 2 * g21  - \
                                     v2 * v1 * (g21 * cos(a2 - a1) + \
                                         b21 * sin(a2 - a1)))')  
         
@@ -78,6 +79,6 @@ class ACLine(DynamicModelTemplate):
                               src='v',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='u * (- v2 ** 2 * (b21 + bsh / 2) - \
+                              eq='(- v2 ** 2 * (b21 + bsh / 2) - \
                                     v2 * v1 * (g21 * sin(a2 - a1) - \
                                         b21 * cos(a2 - a1)))')  

@@ -6,6 +6,7 @@
 import os
 import sympy as sp
 import inspect
+import pdb
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 
@@ -33,16 +34,16 @@ class SymProcess:
         # Symbolic Parameters
         self.sym_num_params = []
         self.sym_idx_params = []
-        self.sym_ext_params = []
+        # self.sym_ext_params = []
 
         # Symbolic Variables
         self.sym_state = []
         self.sym_algeb = []
-        self.sym_extern = []
-        self.sym_aliasalgeb = []
-        self.sym_externstate = []
-        self.sym_aliasstate = []
-        self.sym_externvars = []
+        # self.sym_extern = []
+        # self.sym_aliasalgeb = []
+        # self.sym_externstate = []
+        # self.sym_aliasstate = []
+        # self.sym_externvars = []
 
         # Symbolic Equations
         self.f_list = []
@@ -72,15 +73,15 @@ class SymProcess:
         # Define symbolic parameters
         self.sym_num_params = [sp.Symbol(param.symbol) for param in self.model_storage.numdynParam]
         self.sym_idx_params = [sp.Symbol(param.symbol) for param in self.model_storage.idxdynParam]
-        self.sym_ext_params = [sp.Symbol(param.symbol) for param in self.model_storage.extdynParam]
+        # self.sym_ext_params = [sp.Symbol(param.symbol) for param in self.model_storage.extdynParam]
 
         # Define symbolic variables
         self.sym_state = [sp.Symbol(v.symbol) for v in self.model_storage.stats]
         self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model_storage.algebs]
-        self.sym_aliasalgeb = [sp.Symbol(v.symbol) for v in self.model_storage.aliasAlgebs]
-        self.sym_externstate = [sp.Symbol(v.symbol) for v in self.model_storage.externStates]
-        self.sym_aliasstate = [sp.Symbol(v.symbol) for v in self.model_storage.aliasStats]
-        self.sym_externvars = [sp.Symbol(v.symbol) for v in self.model_storage.externVars]
+        # self.sym_aliasalgeb = [sp.Symbol(v.symbol) for v in self.model_storage.aliasAlgebs]
+        # self.sym_externstate = [sp.Symbol(v.symbol) for v in self.model_storage.externStates]
+        # self.sym_aliasstate = [sp.Symbol(v.symbol) for v in self.model_storage.aliasStats]
+        # self.sym_externvars = [sp.Symbol(v.symbol) for v in self.model_storage.externVars]
 
     def generate_equations(self):
         """

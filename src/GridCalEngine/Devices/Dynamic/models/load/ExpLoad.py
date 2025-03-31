@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+
 from typing import Union
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
@@ -23,13 +24,17 @@ class ExpLoad(DynamicModelTemplate):
                                 info='Load bus',
                                 id=[])
 
-        self.alfa = NumDynParam(symbol='alfa',
+        self.coeff_alfa = NumDynParam(symbol='coeff_alfa',
                                 info='Active power load exponential coefficient.',
                                 value=[])
         
-        self.beta = NumDynParam(symbol='beta',
-                                info='Reactive Power load exponential coefficient.',
+        self.coeff_beta = NumDynParam(symbol='coeff_beta',
+                                info='Active power load exponential coefficient.',
                                 value=[])
+        
+        # self.beta = NumDynParam(symbol='beta',
+        #                         info='Reactive Power load exponential coefficient.',
+        #                         value=[])
         
         self.Pl0 = NumDynParam(symbol='Pl0',
                                 info='Active Power load base.',
@@ -48,11 +53,11 @@ class ExpLoad(DynamicModelTemplate):
                              src='a',
                              indexer=self.bus, 
                              init_eq='', 
-                             eq='u * Pl0 * v ** alfa')  
+                             eq='Pl0 * v ** coeff_alfa')  
         
         self.v = ExternAlgeb(name='v',
-                             symbol = 'v',  
+                             symbol = 'v',
                              src='v',
-                             indexer=self.bus,  
-                             init_eq='', 
-                             eq='u * Ql0 * v ** beta')
+                             indexer=self.bus,
+                             init_eq='',
+                             eq='Ql0 * v ** coeff_beta')
