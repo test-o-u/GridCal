@@ -196,11 +196,10 @@ class System:
                 if isinstance(var_list, ExternAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
 
-                    print(f"{model_instance} Extrernal Algeb: {var_list}") 
                     if key not in algeb_ref_map:
                         raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.algeb_idx")
-                    print(f"{model_instance} is ok") 
-                    parent_idx = algeb_ref_map[key]  # Retrieve index from cache
+
+                    parent_idx = algeb_ref_map[key]  
 
                     # Store in extalgeb_idx using src as the key (grouping multiple references)
                     if var_list.name not in model_instance.extalgeb_idx:
@@ -210,8 +209,8 @@ class System:
 
     def update_jacobian(self):
         all_triplets = {}
-        for model in self.models.values():
-            if model.name != 'Bus':
+        for model in self.devices.values():
+            if model.name == 'ACLine':
                 # Get the function type and var type info and the local jacobians
                 jacobian_info, local_jacobians = model.calc_local_jacs()
                 var_addresses = model.extalgeb_idx
