@@ -39,16 +39,10 @@ class ModelStorage:
         self.g = []
 
         # Collections of variables
-        self.all_vars = []
         self.stats = []
         self.algebs = []
 
-        self.stats_symb = []
-        self.algebs_symb = []
-
         # Categorized variable types
-        self.statVars = []
-        self.algebVars = []
         self.externVars = []
         self.externStates = []
         self.externAlgebs = []
@@ -64,20 +58,14 @@ class ModelStorage:
         """
         Add a state variable (differential equation).
         """
-        self.all_vars.append(expr)
-        self.stats_symb.append(expr.symbol)
         self.stats.append(expr)
-        self.statVars.append(expr)
         self.f.append(expr.eq)
 
     def add_algebvars(self, expr):
         """
         Add an algebraic variable (algebraic equation).
         """
-        self.all_vars.append(expr)
-        self.algebs_symb.append(expr.symbol)
         self.algebs.append(expr)
-        self.algebVars.append(expr)
         self.g.append(expr.eq)
 
     def add_externvars(self, expr):
@@ -90,7 +78,6 @@ class ModelStorage:
         """
         Add an external state variable (state variable defined externally).
         """
-        self.stats_symb.append(expr.symbol)
         self.stats.append(expr)
         self.externStates.append(expr)
         self.f.append(expr.eq)
@@ -99,7 +86,6 @@ class ModelStorage:
         """
         Add an external algebraic variable (algebraic variable defined externally).
         """
-        self.algebs_symb.append(expr.symbol)
         self.algebs.append(expr)
         self.externAlgebs.append(expr)
         self.g.append(expr.eq)
@@ -108,7 +94,6 @@ class ModelStorage:
         """
         Add an alias algebraic variable (reference to another algebraic variable).
         """
-        self.all_vars.append(expr)
         self.aliasAlgebs.append(expr)
         self.g.append(expr.eq)
 
@@ -116,7 +101,6 @@ class ModelStorage:
         """
         Add an alias state variable (reference to another state variable).
         """
-        self.all_vars.append(expr)
         self.aliasStats.append(expr)
         self.f.append(expr.eq)
 

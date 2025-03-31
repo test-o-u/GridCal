@@ -77,7 +77,6 @@ class SymProcess:
         # Define symbolic variables
         self.sym_state = [sp.Symbol(v.symbol) for v in self.model_storage.stats]
         self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model_storage.algebs]
-        self.sym_extern = [sp.Symbol(v.symbol) for v in self.model_storage.externAlgebs]
         self.sym_aliasalgeb = [sp.Symbol(v.symbol) for v in self.model_storage.aliasAlgebs]
         self.sym_externstate = [sp.Symbol(v.symbol) for v in self.model_storage.externStates]
         self.sym_aliasstate = [sp.Symbol(v.symbol) for v in self.model_storage.aliasStats]

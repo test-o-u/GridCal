@@ -206,7 +206,7 @@ class System:
     def update_jacobian(self):
         all_triplets = {}
         for model in self.models.values():
-            if model.name == 'ACLine':
+            if model.name != 'Bus':
                 # Get the function type and var type info and the local jacobians
                 jacobian_info, local_jacobians = model.calc_local_jacs()
                 var_addresses = model.extalgeb_idx
