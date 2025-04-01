@@ -15,7 +15,8 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 # 'GridCalEngine/Devices/Dynamic/test.json'
 # 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
 # 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
+# datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
+datafile = 'src/GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
 
 def main():
     """
