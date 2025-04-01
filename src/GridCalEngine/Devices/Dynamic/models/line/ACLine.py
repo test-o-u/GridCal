@@ -70,15 +70,15 @@ class ACLine(DynamicModelTemplate):
                               src='a',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='(v2 ** 2 * g21  - \
-                                    v2 * v1 * (g21 * cos(a2 - a1) + \
-                                        b21 * sin(a2 - a1)))')  
+                              eq='(v2 ** 2 * g  - \
+                                    v2 * v1 * (g * cos(a2 - a1) + \
+                                        b * sin(a2 - a1)))')
         
         self.v2 = ExternAlgeb(name='v2',
                               symbol = 'v2',
                               src='v',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='(- v2 ** 2 * (b21 + bsh / 2) - \
-                                    v2 * v1 * (g21 * sin(a2 - a1) - \
-                                        b21 * cos(a2 - a1)))')  
+                              eq='(- v2 ** 2 * (b + bsh / 2) - \
+                                    v2 * v1 * (g * sin(a2 - a1) - \
+                                        b * cos(a2 - a1)))')

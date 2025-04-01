@@ -99,28 +99,18 @@ class DynamicModelTemplate(EditableDevice):
 
 ####################### TO CLEAN ################################
 
-    def calc_local_jacs(self):
+    def calc_local_jacs(self, input_values):
         jacobians = []
-        #input values come from the previous iteration and will be stores in the model
-        a1 = 1
-        g21 = 2
-        a2 = 3
-        u = 4
-        v1 = 5
-        b = 6
-        g = 7
-        v2 =8
-        bsh = 9
-        b21 = 10
+
+        print(input_values)
         pycode_module = importlib.import_module('pycode')
         pycode_code = getattr(pycode_module, self.name)
         jacobian_info = pycode_code.jacobian_info
         for i in range(self.n):
-            local_jac = pycode_code.g_ia(a1, g21, a2, u, v1, b, g, v2, bsh, b21)
+            print(i)
+            local_jac = pycode_code.g_ia(*input_values[i])
             jacobians.append(local_jac)
         return jacobian_info, jacobians
-
-
 
 
 

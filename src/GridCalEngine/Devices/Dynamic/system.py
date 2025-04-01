@@ -8,12 +8,13 @@ import importlib
 import compileall
 import time  
 import pdb
+import sympy as sp
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
-
+from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
 
 class System:
     """
@@ -53,9 +54,10 @@ class System:
 
         self.import_models()
         self.system_prepare()
+        self.store_params()
 
-        # self.update_jacobian()
-        # self.dae.finalize_jacobians()
+        self.update_jacobian()
+        self.dae.finalize_jacobians()
 
 
     def import_models(self):
@@ -149,6 +151,7 @@ class System:
                         elif isinstance(param, NumDynParam):
                             param.value.append(value)
 
+
     def finalize_pycode(self):
         """
         Generates an __init__.py file to later dynamically import compiled models.
@@ -165,13 +168,19 @@ class System:
         # Write import statements for dynamically generated model files
         with open(init_path, 'w') as f:
             for model_name in self.models.keys():
-                # Import each model dynamically
-                f.write(f"from . import {model_name}\n")  
+                #Import each model dynamically
+                f.write(f"from . import {model_name}\n")
 
         # Compile all generated Python code to bytecode (.pyc)
         compileall.compile_dir(pycode_path)
 
 ######################### TO CLEAN #######################################
+    def store_params(self):
+        for device in self.devices.values():
+            for param_name, param in device.dict.items():
+                if isinstance(param, NumDynParam):
+                    self.dae.params_dict[device.name][param.symbol] = param.value
+
 
     def set_addresses(self):
         self.global_id = 0
@@ -207,22 +216,45 @@ class System:
 
                     model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
+    def get_input_values(self, device):
+
+        #get parameters and residuals from "dae"
+        parameters= self.dae.params_dict[device.name]
+        residuals = INITIAL_CONDITIONS[device.name]
+        parameters.update(residuals)
+        # get jacobian arguments from pycode
+        pycode_module = importlib.import_module('pycode')
+        pycode_code = getattr(pycode_module, device.name)
+        arguments = pycode_code.g_jac_args
+
+        # create input values list
+
+        input_values = [parameters[argument] for argument in arguments]
+        input_values = list(zip(*input_values))
+
+        return input_values
+
+
+
+
     def update_jacobian(self):
         all_triplets = {}
-        for model in self.devices.values():
-            if model.name == 'ACLine':
+        for device in self.devices.values():
+            input_values = self.get_input_values(device)
+
                 # Get the function type and var type info and the local jacobians
-                jacobian_info, local_jacobians = model.calc_local_jacs()
-                var_addresses = model.extalgeb_idx
-                var_addresses.update(model.algeb_idx)
+            if device.name != 'Bus':
+                jacobian_info, local_jacobians = device.calc_local_jacs(input_values)
+                var_addresses = device.extalgeb_idx
+                var_addresses.update(device.algeb_idx)
 
                 for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
                     if jac_type == 'dgy':
-                        triplets = self.assign_positions(model, local_jacobians, jac_type, positions, var_addresses)
+                        triplets = self.assign_positions(device, local_jacobians, jac_type, positions, var_addresses)
                         all_triplets[jac_type] = triplets
-
                         for row, col, val in triplets:
-                            self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)                     
+                            self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
+
         return all_triplets
 
 

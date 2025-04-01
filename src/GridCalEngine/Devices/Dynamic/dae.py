@@ -1,16 +1,16 @@
 from scipy.sparse import coo_matrix
+from collections import defaultdict
 
-
-class DAE: 
+class DAE:
     def __init__(self):
 
         self.nx = 0
-        self.ny = 0 
+        self.ny = 0
 
         self.x = None
         self.y = {}
         self.f = None
-        self.g = None 
+        self.g = None
 
         # Dictionaries to accumulate Jacobian values
         self.dfx = {}
@@ -24,12 +24,18 @@ class DAE:
         self.sparsity_gx = set()
         self.sparsity_gy = set()
 
+        # Dictionary with all the parameters
+        self.params_dict = defaultdict(dict)
+
+        # Dictionary with all the residuals for updating jacobian
+        self.residuals_dict = defaultdict(list)
+
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
         Accumulate values and track sparsity pattern.
         """
         if (row, col) in jac_dict:
-            jac_dict[(row, col)] += value 
+            jac_dict[(row, col)] += value
         else:
             jac_dict[(row, col)] = value  # First assignment
             sparsity_set.add((row, col))  # Store pattern
