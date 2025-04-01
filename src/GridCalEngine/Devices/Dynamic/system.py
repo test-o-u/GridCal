@@ -260,6 +260,7 @@ class System:
 
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
+        print(model.vars_index)
         for i in range(model.n): 
             for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][j]
