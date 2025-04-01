@@ -6,6 +6,7 @@
 import os
 import sympy as sp
 import inspect
+import pprint
 import pdb
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
@@ -98,7 +99,7 @@ class SymProcess:
         for variables, equations, eq_type in zip(variables_f_g, equations_f_g, equation_type):
             symbolic_eqs = []
             symbolic_vars = []
-            #create a list with all symbolic equations (symb_expr) and a list with all symbols in equations (var_symb)
+            #create a list with all symbolic equations (symbolic_expr) and a list with all symbols in equations (symbols_in_equ)
             for var in variables:
                 if var.eq:
                     symbolic_expr = sp.sympify(var.eq)
@@ -112,13 +113,13 @@ class SymProcess:
                             symbolic_vars.append(symb)
 
             symbolic_args = sorted(symbolic_vars, key=lambda s: s.name)
-            if eq_type == 'f':
-                self.f_args = symbolic_args
-            else:
-                self.g_args = symbolic_args
+            #if eq_type == 'f':
+             #   self.f_args = symbolic_args
+            #else:
+             #   self.g_args = symbolic_args
 
             # Lambdify numerical evaluation functions
-            self.lambda_equations[eq_type] = lambdify(symbolic_vars, sp.Matrix(symbolic_eqs), modules='numpy')
+            self.lambda_equations[eq_type] = lambdify(symbolic_args, sp.Matrix(symbolic_eqs), modules='numpy')
 
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
@@ -150,7 +151,14 @@ class SymProcess:
                 self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
 
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
+        # store arguments for f_jacobian
+        for arg in f_jac_args:
+            self.model_storage.f_jacobian_args.append(str(arg))
+
         g_jac_args = sorted(g_jac_symbols, key=lambda s: s.name)
+        # store arguments for g_jacobian
+        for arg in g_jac_args:
+            self.model_storage.g_jacobian_args.append(str(arg))
         self.f_jac_args = f_jac_args
         self.g_jac_args = g_jac_args
 
@@ -195,10 +203,16 @@ class SymProcess:
                 py_expr = self._rename_func(self.lambda_equations.get(eq_type), func_name)
                 f.write(f"{py_expr}\n")
 
+            f.write(f"f_args =" + pprint.pformat(sorted(self.model_storage.f_args)) + '\n')
+            f.write(f"g_args =" + pprint.pformat(sorted(self.model_storage.g_args)) + '\n')
+
             for name, func in [('f', self.jacob_states), ('g', self.jacob_algebs)]:
                 py_expr = self._rename_func(func, f"{name}_ia")
                 f.write(f"{py_expr}\n")
 
-            f.write(f"jacobian_info = {self.jacobian_store_info}\n")
+            f.write(f"f_jac_args ="+ pprint.pformat(self.model_storage.f_jacobian_args)+'\n')
+            f.write(f"g_jac_args ="+ pprint.pformat(self.model_storage.g_jacobian_args) + '\n')
+
+            f.write(f"jacobian_info = {self.jacobian_store_info}")
 
         return file_path

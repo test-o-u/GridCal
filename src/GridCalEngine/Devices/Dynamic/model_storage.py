@@ -41,6 +41,11 @@ class ModelStorage:
         # Collections of variables
         self.stats = []
         self.algebs = []
+        self.f_args = []
+        self.g_args = []
+        self.f_jacobian_args = []
+        self.g_jacobian_args= []
+
 
         # Categorized variable types
         self.externVars = []
@@ -60,6 +65,7 @@ class ModelStorage:
         """
         self.stats.append(expr)
         self.f.append(expr.eq)
+        self.f_args.append(expr.name)
 
     def add_algebvars(self, expr):
         """
@@ -67,6 +73,7 @@ class ModelStorage:
         """
         self.algebs.append(expr)
         self.g.append(expr.eq)
+        self.g_args.append(expr.name)
 
     def add_externvars(self, expr):
         """
@@ -81,6 +88,7 @@ class ModelStorage:
         self.stats.append(expr)
         self.externStates.append(expr)
         self.f.append(expr.eq)
+        self.f_args.append(expr.name)
 
     def add_externalgebs(self, expr):
         """
@@ -89,6 +97,7 @@ class ModelStorage:
         self.algebs.append(expr)
         self.externAlgebs.append(expr)
         self.g.append(expr.eq)
+        self.g_args.append(expr.name)
 
     def add_aliasalgebs(self, expr):
         """
