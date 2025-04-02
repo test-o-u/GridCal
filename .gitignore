@@ -33,4 +33,5 @@ demo_5_node.json
 /src/tests/data/output/raw_to_cgmes_export_results/
 
 
+/src/GridCalEngine/Devices/Dynamic/pycode
 /src/pycode
