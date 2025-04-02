@@ -15,7 +15,7 @@ from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
-
+from GridCalEngine.Devices.Dynamic.model_list import DAEY
 
 class System:
     """
@@ -56,6 +56,7 @@ class System:
         self.import_models()
         self.system_prepare()
         self.store_params()
+
 
         self.update_jacobian()
         self.dae.finalize_jacobians()
@@ -217,7 +218,22 @@ class System:
 
                     model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
+    def build_input_dict(self):
+        values_array = DAEY
+        index1 = 0
+        for model_instance in self.devices.values():
+            nr_components = model_instance.n
+            for variable in model_instance.variables_list:
+                values = (values_array[index1:index1+nr_components]).tolist()
+                self.dae.residuals_dict[model_instance.name][variable] = values
+                index1 += nr_components
+        return self.dae.residuals_dict
+
+
     def get_input_values(self, device):
+
+        #residuals = self.build_input_dict()
+        #print(residuals)
 
         #get parameters and residuals from "dae"
         parameters= self.dae.params_dict[device.name]
@@ -225,7 +241,6 @@ class System:
         parameters.update(residuals)
         # get jacobian arguments from pycode
         pycode_path = get_pycode_path()
-        print(pycode_path)
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
 
         pycode_code = getattr(pycode_module, device.name)
@@ -245,12 +260,14 @@ class System:
         all_triplets = {}
         for device in self.devices.values():
             input_values = self.get_input_values(device)
+            print(input_values)
 
-                # Get the function type and var type info and the local jacobians
+                # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
                 jacobian_info, local_jacobians = device.calc_local_jacs(input_values)
                 var_addresses = device.extalgeb_idx
                 var_addresses.update(device.algeb_idx)
+                print(var_addresses)
 
                 for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
                     if jac_type == 'dgy':
@@ -264,6 +281,7 @@ class System:
 
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
+        print(positions)
         print(model.vars_index)
         for i in range(model.n): 
             for j, (func_index, var_index) in enumerate(positions):

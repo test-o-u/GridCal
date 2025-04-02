@@ -28,7 +28,7 @@ class DAE:
         self.params_dict = defaultdict(dict)
 
         # Dictionary with all the residuals for updating jacobian
-        self.residuals_dict = defaultdict(list)
+        self.residuals_dict = defaultdict(dict)
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
@@ -56,3 +56,5 @@ class DAE:
         # self.dfy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.nx, self.ny))
         # self.dgx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
         self.dgy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))
+
+

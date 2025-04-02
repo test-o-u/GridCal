@@ -48,9 +48,13 @@ class DynamicModelTemplate(EditableDevice):
         # Symbolic processing engine
         self.sym = SymProcess(self)
 
-        # Address mapping for algebraic variables
-        # set index of the variable
+        # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = {}
+
+        # list containing all the symbols of the variables in the model
+        self.variables_list = []
+
+        # Address mapping for algebraic variables
 
         # Set address function
         self.n = 0
@@ -68,12 +72,15 @@ class DynamicModelTemplate(EditableDevice):
         Stores different types of variables and parameters in the model storage.
         This method categorizes each instance variable and adds it to the corresponding 
         storage structure.
+
+        Also, it saves a list with all the variables of a model and creates a dictionary with an index as key and the variable name as value
         """
 
         index = 0
         for key, elem in self.dict.items():
             # assign an index to every variable:
             if isinstance(elem, DynVar):
+                self.variables_list.append(elem.symbol)
                 self.vars_index[index] = elem.symbol
                 index += 1
 
@@ -102,15 +109,13 @@ class DynamicModelTemplate(EditableDevice):
 
     def calc_local_jacs(self, input_values):
         jacobians = []
-
-        print(input_values)
         pycode_path = get_pycode_path()
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
         pycode_code = getattr(pycode_module, self.name)
         jacobian_info = pycode_code.jacobian_info
         for i in range(self.n):
-            print(i)
             local_jac = pycode_code.g_ia(*input_values[i])
+            print(local_jac)
             jacobians.append(local_jac)
         return jacobian_info, jacobians
 

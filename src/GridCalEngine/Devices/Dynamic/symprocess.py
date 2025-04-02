@@ -113,10 +113,13 @@ class SymProcess:
                             symbolic_vars.append(symb)
 
             symbolic_args = sorted(symbolic_vars, key=lambda s: s.name)
-            #if eq_type == 'f':
-             #   self.f_args = symbolic_args
-            #else:
-             #   self.g_args = symbolic_args
+
+            # store arguments for f and g functions
+            for arg in symbolic_args:
+                if eq_type == 'f':
+                    self.model_storage.f_args.append(str(arg))
+                else:
+                    self.model_storage.g_args.append(str(arg))
 
             # Lambdify numerical evaluation functions
             self.lambda_equations[eq_type] = lambdify(symbolic_args, sp.Matrix(symbolic_eqs), modules='numpy')
@@ -134,6 +137,8 @@ class SymProcess:
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
         g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
+
+        print(g_jacobian_symbolic)
 
         # Extract unique symbols
         f_jac_symbols = list(f_jacobian_symbolic.free_symbols)

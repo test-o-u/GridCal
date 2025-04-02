@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+import numpy as np
 """
 This module defines the power system models organized in categories.
 
@@ -30,3 +30,7 @@ INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
 #                                 'a2':[5],
 #                                 'v1':[6],
 #                                 'v2':[7]}}
+
+
+DAEX = np.array([])
+DAEY = np.array([0, 1, 0, 1, 2, 2, 3, 4, 3, 4, 5, 5])
