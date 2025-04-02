@@ -52,7 +52,7 @@ class ACLine(DynamicModelTemplate):
                               src='a',
                               indexer=self.bus1, 
                               init_eq='', 
-                              eq='-(v1 ** 2 * g  - \
+                              eq='(v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
         
@@ -71,7 +71,7 @@ class ACLine(DynamicModelTemplate):
                               src='v',
                               indexer=self.bus1,
                               init_eq='',
-                              eq='-(- v1 ** 2 * (b + bsh / 2) - \
+                              eq='(- v1 ** 2 * (b + bsh / 2) - \
                                             v1 * v2 * (g * sin(a1 - a2) - \
                                                 b * cos(a1 - a2)))')
         
