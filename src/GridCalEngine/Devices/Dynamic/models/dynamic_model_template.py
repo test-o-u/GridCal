@@ -7,6 +7,7 @@ import importlib
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
+from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.model_storage import ModelStorage
 from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
 from GridCalEngine.Utils.dyn_param import NumDynParam
@@ -103,7 +104,8 @@ class DynamicModelTemplate(EditableDevice):
         jacobians = []
 
         print(input_values)
-        pycode_module = importlib.import_module('pycode')
+        pycode_path = get_pycode_path()
+        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
         pycode_code = getattr(pycode_module, self.name)
         jacobian_info = pycode_code.jacobian_info
         for i in range(self.n):

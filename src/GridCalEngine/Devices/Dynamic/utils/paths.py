@@ -11,7 +11,7 @@ def get_pycode_path(pycode_path=None, mkdir=True):
     """
 
     if pycode_path is None:
-        pycode_path = 'src/GridCalEngine/Devices/Dynamic/pycode'
+        pycode_path = 'GridCalEngine/Devices/Dynamic/pycode'
 
 
     if mkdir is True:

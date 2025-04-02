@@ -16,6 +16,7 @@ from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
 
+
 class System:
     """
     This class represents a power system containing various models and devices.
@@ -223,7 +224,10 @@ class System:
         residuals = INITIAL_CONDITIONS[device.name]
         parameters.update(residuals)
         # get jacobian arguments from pycode
-        pycode_module = importlib.import_module('pycode')
+        pycode_path = get_pycode_path()
+        print(pycode_path)
+        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
+
         pycode_code = getattr(pycode_module, device.name)
         arguments = pycode_code.g_jac_args
 
