@@ -11,6 +11,7 @@ import pdb
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 
+
 class SymProcess:
     """
     Handles symbolic processing for dynamic models.
@@ -99,7 +100,7 @@ class SymProcess:
         for variables, equations, eq_type in zip(variables_f_g, equations_f_g, equation_type):
             symbolic_eqs = []
             symbolic_vars = []
-            #create a list with all symbolic equations (symbolic_expr) and a list with all symbols in equations (symbols_in_equ)
+            # create a list with all symbolic equations (symbolic_expr) and a list with all symbols in equations (symbols_in_equ)
             for var in variables:
                 if var.eq:
                     symbolic_expr = sp.sympify(var.eq)
@@ -137,8 +138,6 @@ class SymProcess:
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
         g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
-
-        print(g_jacobian_symbolic)
 
         # Extract unique symbols
         f_jac_symbols = list(f_jacobian_symbolic.free_symbols)
@@ -215,8 +214,8 @@ class SymProcess:
                 py_expr = self._rename_func(func, f"{name}_ia")
                 f.write(f"{py_expr}\n")
 
-            f.write(f"f_jac_args ="+ pprint.pformat(self.model_storage.f_jacobian_args)+'\n')
-            f.write(f"g_jac_args ="+ pprint.pformat(self.model_storage.g_jacobian_args) + '\n')
+            f.write(f"f_jac_args =" + pprint.pformat(self.model_storage.f_jacobian_args) + '\n')
+            f.write(f"g_jac_args =" + pprint.pformat(self.model_storage.g_jacobian_args) + '\n')
 
             f.write(f"jacobian_info = {self.jacobian_store_info}")
 

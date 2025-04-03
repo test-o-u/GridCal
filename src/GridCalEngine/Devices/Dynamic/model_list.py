@@ -17,12 +17,12 @@ MODELS = list([
     ('syngen', ['GENCLS'])
 ])
 
-INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
-                             'v':[3, 4, 5]},
-                      'ACLine':{'a1':[0, 1, 0],
-                                'a2':[1, 2, 2],
-                                'v1':[3, 4, 3],
-                                'v2':[4, 5, 5]}}
+#INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
+ #                            'v':[3, 4, 5]},
+  #                    'ACLine':{'a1':[0, 1, 0],
+   #                             'a2':[1, 2, 2],
+    #                            'v1':[3, 4, 3],
+     #                           'v2':[4, 5, 5]}}
 
 # INITIAL_CONDITIONS = {'Bus':{'a':[0, 1],
 #                              'v':[2, 3]},
@@ -30,6 +30,13 @@ INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
 #                                 'a2':[5],
 #                                 'v1':[6],
 #                                 'v2':[7]}}
+
+INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
+                             'v':[3, 4, 5]},
+                      'ACLine':{'a1':[0, 1, 0],
+                                'a2':[1, 2, 2],
+                                'v1':[3, 4, 3],
+                                'v2':[4, 5, 5]}}
 
 
 DAEX = np.array([])

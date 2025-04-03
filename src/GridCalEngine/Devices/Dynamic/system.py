@@ -227,27 +227,23 @@ class System:
                 values = (values_array[index1:index1+nr_components]).tolist()
                 self.dae.residuals_dict[model_instance.name][variable] = values
                 index1 += nr_components
-        return self.dae.residuals_dict
 
 
     def get_input_values(self, device):
 
-        #residuals = self.build_input_dict()
-        #print(residuals)
-
         #get parameters and residuals from "dae"
+        self.build_input_dict()
+        residuals = self.dae.residuals_dict[device.name]
         parameters= self.dae.params_dict[device.name]
-        residuals = INITIAL_CONDITIONS[device.name]
         parameters.update(residuals)
+
         # get jacobian arguments from pycode
         pycode_path = get_pycode_path()
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-
         pycode_code = getattr(pycode_module, device.name)
         arguments = pycode_code.g_jac_args
 
         # create input values list
-
         input_values = [parameters[argument] for argument in arguments]
         input_values = list(zip(*input_values))
 
@@ -260,15 +256,12 @@ class System:
         all_triplets = {}
         for device in self.devices.values():
             input_values = self.get_input_values(device)
-            print(input_values)
 
                 # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
                 jacobian_info, local_jacobians = device.calc_local_jacs(input_values)
                 var_addresses = device.extalgeb_idx
                 var_addresses.update(device.algeb_idx)
-                print(var_addresses)
-
                 for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
                     if jac_type == 'dgy':
                         triplets = self.assign_positions(device, local_jacobians, jac_type, positions, var_addresses)
@@ -281,8 +274,6 @@ class System:
 
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
-        print(positions)
-        print(model.vars_index)
         for i in range(model.n): 
             for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][j]

@@ -115,7 +115,6 @@ class DynamicModelTemplate(EditableDevice):
         jacobian_info = pycode_code.jacobian_info
         for i in range(self.n):
             local_jac = pycode_code.g_ia(*input_values[i])
-            print(local_jac)
             jacobians.append(local_jac)
         return jacobian_info, jacobians
 
