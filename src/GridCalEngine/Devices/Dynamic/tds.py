@@ -1,5 +1,6 @@
 from GridCalEngine.Devices.Dynamic.integration import method_map
 
+
 class TDS():
     """
     Time domain simulation class.

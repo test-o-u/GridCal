@@ -15,7 +15,6 @@ from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
-from GridCalEngine.Devices.Dynamic.model_list import DAEY
 
 class System:
     """
@@ -45,6 +44,7 @@ class System:
         """
 
         self.models_list = models_list
+        self.values_array = INITIAL_CONDITIONS
 
         self.models = {}
         self.devices = {}
@@ -55,6 +55,8 @@ class System:
 
         self.import_models()
         self.system_prepare()
+
+        self.initialize_numeric()
 
         self.update_jacobian()
         self.dae.finalize_jacobians()
@@ -255,13 +257,13 @@ class System:
 
 
     def build_input_dict(self):
-        values_array = DAEY
+        
         index1 = 0
         for model_instance in self.devices.values():
             if model_instance.name != 'Bus':
                 nr_components = model_instance.n
                 for variable in model_instance.variables_list:
-                    values = (values_array[index1:index1+nr_components]).tolist()
+                    values = (self.values_array[index1:index1+nr_components]).tolist()
                     self.dae.residuals_dict[model_instance.name][variable] = values
                     index1 += nr_components
 
@@ -387,3 +389,6 @@ class System:
                 triplets.append((address_func, address_var, val))
 
         return triplets
+    
+    def initialize_numeric(self):
+        self.dae.initilize_fg()
