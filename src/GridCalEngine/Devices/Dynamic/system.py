@@ -55,8 +55,6 @@ class System:
 
         self.import_models()
         self.system_prepare()
-        self.store_params()
-
 
         self.update_jacobian()
         self.dae.finalize_jacobians()
@@ -119,6 +117,9 @@ class System:
         self.set_addresses()
         add_end = time.perf_counter()
         self.add_time = add_end - add_st  # Store addressing time
+
+        # STEP 4: Store parameters in teh DAE
+        self.store_params()
 
     def create_devices(self, data):
         """
@@ -187,6 +188,37 @@ class System:
     def set_addresses(self):
         self.global_id = 0
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
+        states_ref_map = {}  # Cache: store states_idx references for quick lookup
+
+        # First loop: Process StatesVar
+        for model_instance in self.devices.values():
+            for var_list in model_instance.__dict__.values():
+                if isinstance(var_list, StatVar):
+                    indices = list(range(self.global_id, self.global_id + model_instance.n))
+                    model_instance.states_idx[var_list.name] = indices
+                    self.global_id += model_instance.n  # Move global index forward
+
+                    # Cache reference for faster lookup
+                    states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+
+                    self.dae.nx += model_instance.n
+
+        # Second loop: Process ExternStates
+        for model_instance in self.devices.values():
+            for var_list in model_instance.__dict__.values():
+                if isinstance(var_list, ExternState):
+                    key = (var_list.indexer.symbol, var_list.src)
+
+                    if key not in states_ref_map:
+                        raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.algeb_idx")
+
+                    parent_idx = states_ref_map[key]
+
+                    # Store in extstates_idx using src as the key (grouping multiple references)
+                    if var_list.name not in model_instance.extstates_idx:
+                        model_instance.extstates_idx[var_list.name] = []  # Initialize as a list of lists
+
+                    model_instance.extstates_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
         # First loop: Process AlgebVar
         for model_instance in self.devices.values():
@@ -218,39 +250,50 @@ class System:
 
                     model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
+        states_ref_map = {}  # Cache: store algeb_idx references for quick lookup
+
+
+
     def build_input_dict(self):
         values_array = DAEY
         index1 = 0
         for model_instance in self.devices.values():
-            nr_components = model_instance.n
-            for variable in model_instance.variables_list:
-                values = (values_array[index1:index1+nr_components]).tolist()
-                self.dae.residuals_dict[model_instance.name][variable] = values
-                index1 += nr_components
+            if model_instance.name != 'Bus':
+                nr_components = model_instance.n
+                for variable in model_instance.variables_list:
+                    values = (values_array[index1:index1+nr_components]).tolist()
+                    self.dae.residuals_dict[model_instance.name][variable] = values
+                    index1 += nr_components
 
 
     def get_input_values(self, device):
 
         #get parameters and residuals from "dae"
         self.build_input_dict()
+
         residuals = self.dae.residuals_dict[device.name]
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
+
 
         # get jacobian arguments from pycode
         pycode_path = get_pycode_path()
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
         pycode_code = getattr(pycode_module, device.name)
-        arguments = pycode_code.g_jac_args
+        f_arguments = pycode_code.f_jac_args
+        g_arguments = pycode_code.g_jac_args
 
-        # create input values list
-        input_values = [parameters[argument] for argument in arguments]
-        input_values = list(zip(*input_values))
+        # create input values lists
+        f_input_values = [parameters[argument] for argument in f_arguments]
+        g_input_values = [parameters[argument] for argument in g_arguments]
+        f_input_values = list(zip(*f_input_values))
+        g_input_values = list(zip(*g_input_values))
 
-        return input_values
+        return f_input_values, g_input_values
     
     ############
     def get_input_g_values(self, device):
+        
 
         #get parameters and residuals from "dae"
         self.build_input_dict()
@@ -274,36 +317,73 @@ class System:
     def update_jacobian(self):
         all_triplets = {}
         for device in self.devices.values():
-            input_values_jac = self.get_input_values(device)
-            #######
-            input_g_values = self.get_input_g_values(device)
-            #######
+            f_input_values, g_input_values = self.get_input_values(device)
+            # #######
+            # input_g_values = self.get_input_g_values(device)
+            # #######
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
-                jacobian_info, local_jacobians = device.calc_local_jacs(input_values_jac)
-                var_addresses = device.extalgeb_idx
-                var_addresses.update(device.algeb_idx)
-                for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
-                    if jac_type == 'dgy':
-                        triplets = self.assign_positions(device, local_jacobians, jac_type, positions, var_addresses)
-                        all_triplets[jac_type] = triplets
-                        for row, col, val in triplets:
-                            self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
                 
-                #########
-                g = device.calc_local_g(input_g_values)
-                #########
+                # #########
+                # g = device.calc_local_g(input_g_values)
+                # #########
+                # get local jacobians info and values
+                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_input_values, g_input_values)
+
+                # get variable addresses
+                g_var_addresses = device.extalgeb_idx
+                g_var_addresses.update(device.algeb_idx)
+
+                f_var_addresses = device.extstates_idx
+                f_var_addresses.update(device.states_idx)
+
+                f_var_addresses.update(g_var_addresses)
+                var_addresses = f_var_addresses
+
+                # calc dfx
+                jac_type = 'dfx'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
+                all_triplets[jac_type] = triplets
+                for row, col, val in triplets:
+                    self.dae.add_to_jacobian(self.dae.dfx, self.dae.sparsity_fx, row, col, val)
+
+                # calc dfy
+                jac_type = 'dfy'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
+                all_triplets[jac_type] = triplets
+                for row, col, val in triplets:
+                    self.dae.add_to_jacobian(self.dae.dfy, self.dae.sparsity_fy, row, col, val)
+
+                # calc dgx
+                jac_type = 'dgx'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
+                all_triplets[jac_type] = triplets
+                for row, col, val in triplets:
+                    self.dae.add_to_jacobian(self.dae.dgx, self.dae.sparsity_gx, row, col, val)
+
+                # calc dgy
+                jac_type = 'dgy'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
+                all_triplets[jac_type] = triplets
+                for row, col, val in triplets:
+                    self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
 
         return all_triplets
 
 
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
-        for i in range(model.n): 
+        for i in range(model.n):
+
             for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][j]
                 address_func = var_addresses[model.vars_index[func_index]][i]
                 address_var = var_addresses[model.vars_index[var_index]][i]
                 triplets.append((address_func, address_var, val))
+
         return triplets

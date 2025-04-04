@@ -49,7 +49,7 @@ class ExpLoad(DynamicModelTemplate):
         # - check if naming make sense 
         # - indexing is missing 
         self.a = ExternAlgeb(name='a',
-                             symbol = 'a', 
+                             symbol = 'a',
                              src='a',
                              indexer=self.bus, 
                              init_eq='', 

@@ -24,10 +24,10 @@ class DAE:
         self.dgy = {}
 
         # Sets to store sparsity pattern
-        self.sparsity_fx = set()
-        self.sparsity_fy = set()
-        self.sparsity_gx = set()
-        self.sparsity_gy = set()
+        self.sparsity_fx = list()
+        self.sparsity_fy = list()
+        self.sparsity_gx = list()
+        self.sparsity_gy = list()
 
         # Dictionary with all the parameters
         self.params_dict = defaultdict(dict)
@@ -43,7 +43,7 @@ class DAE:
             jac_dict[(row, col)] += value
         else:
             jac_dict[(row, col)] = value  # First assignment
-            sparsity_set.add((row, col))  # Store pattern
+            sparsity_set.append((row, col))  # Store pattern
 
     def build_sparse_matrix(self, jac_dict, sparsity_set, shape):
         """
@@ -51,16 +51,31 @@ class DAE:
         """
         rows, cols = zip(*sparsity_set) if sparsity_set else ([], [])
         values = [jac_dict.get((r, c), 0) for r, c in sparsity_set]
+
         return coo_matrix((values, (rows, cols)), shape=shape)
 
     def finalize_jacobians(self):
         """
         Builds all Jacobian matrices from stored triplets and sparsity patterns.
         """
-        # self.dfx = self.build_sparse_matrix(self.dfx, self.sparsity_fx, (self.nx, self.nx))
-        # self.dfy = self.build_sparse_matrix(self.dfy, self.sparsity_fy, (self.nx, self.ny))
-        # self.dgx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
-        self.dgy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))
+
+
+        self.dfx = self.build_sparse_matrix(self.dfx,
+                                            [(row, col) for row, col in self.sparsity_fx],
+                                            (self.nx, self.nx))
+
+        self.dfy = self.build_sparse_matrix(self.dfy,
+                                            [(row, col - self.nx) for row, col in self.sparsity_fy],
+                                            (self.nx, self.ny))
+
+        self.dgx = self.build_sparse_matrix(self.dgx,
+                                            [(row - self.nx, col) for row, col in self.sparsity_gx],
+                                            (self.ny, self.nx))
+
+        self.dgy = self.build_sparse_matrix(self.dgy,
+                                            [(row - self.nx, col - self.nx) for row, col in self.sparsity_gy],
+                                            (self.ny, self.ny))
+
 
     def initilize_fg(self):
         self.f = None

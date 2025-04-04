@@ -35,7 +35,7 @@ class GENCLS(DynamicModelTemplate):
         self.M  = NumDynParam(symbol='M',
                               info='machine start up time (2H)',
                               value=[])
-        
+
         self.ra = NumDynParam(symbol='ra', 
                               info='armature resistance',
                               value=[])
@@ -53,6 +53,7 @@ class GENCLS(DynamicModelTemplate):
                               value=[]) 
 
         # state variables
+
         self.delta = StatVar(name='delta', 
                              symbol='delta', 
                              init_eq='delta0', 
@@ -77,12 +78,12 @@ class GENCLS(DynamicModelTemplate):
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
                            init_eq='i_d0', 
-                           eq='psid + xq * i_d - vf')    
+                           eq='psid + vd * i_d - vf')
                                                          
         self.i_q = AlgebVar(name='i_q', 
                            symbol='i_q', 
                            init_eq='i_q0', 
-                           eq='psiq + xq * i_q')       
+                           eq='psiq + vd * i_q')
                                                      
         self.vd = AlgebVar(name='vd', 
                            symbol='vd', 
@@ -99,7 +100,7 @@ class GENCLS(DynamicModelTemplate):
                            init_eq='tm', 
                            eq='(psid * i_q - psiq * i_d) - te')   
                      
-        self.Pe = AlgebVar(name='Pe', 
+        self.Pe = AlgebVar(name='Pe',
                            symbol='Pe', 
                            init_eq='(vd0 * i_d0 + vq0 * i_q0)', 
                            eq='(vd * i_d + vq * i_q) - Pe')       
@@ -107,22 +108,24 @@ class GENCLS(DynamicModelTemplate):
         self.Qe = AlgebVar(name='Qe', 
                            symbol='Qe', 
                            init_eq='(vq0 * i_d0 - vd0 * i_q0)', 
-                           eq='(vq * i_d - vd * i_q) - Qe')                            
+                           eq='(vq * i_d - vd * i_q) - Qe')
+
+        self.a = ExternAlgeb(name='a',
+                             symbol='a',
+                             src='a',
+                             indexer=self.bus,
+                             init_eq='',
+                             eq='(vd * i_d + vq * i_q)')
+
+        self.v = ExternAlgeb(name='v',
+                             symbol='v',
+                             src='v',
+                             indexer=self.bus,
+                             init_eq='',
+                             eq='(vq * i_d - vd * i_q)')
+
 
         # network algebraic variables 
         # TODO: 
         # -check naming
         # -check how they are exported
-        self.a = ExternAlgeb(name='a', 
-                             symbol = 'a',
-                             src='a',
-                             indexer=self.bus, 
-                             init_eq='', 
-                             eq='(vd * i_d + vq * i_q)')  
-                                       
-        self.v = ExternAlgeb(name='v', 
-                             symbol = 'v',
-                             src='v', 
-                             indexer=self.bus,
-                             init_eq='', 
-                             eq='(vq * i_d - vd * i_q)')                                

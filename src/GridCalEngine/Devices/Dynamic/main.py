@@ -19,10 +19,7 @@ performance = True
 # 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
 # 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
 # datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-### Configure simulation ###
-
-
+datafile = 'GridCalEngine/Devices/Dynamic/test.json'
 
 def main():
     """

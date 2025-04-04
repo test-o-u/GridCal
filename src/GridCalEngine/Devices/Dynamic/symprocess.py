@@ -50,8 +50,10 @@ class SymProcess:
         # Symbolic Equations
         self.f_list = []
         self.g_list = []
+        self.equ_list = []
         self.f_matrix = ()
         self.g_matrix = ()
+        self.equ_matrix = ()
         self.lambda_equations = {}
 
         # Jacobians
@@ -119,12 +121,15 @@ class SymProcess:
             for arg in symbolic_args:
                 if eq_type == 'f':
                     self.model_storage.f_args.append(str(arg))
+
                 else:
                     self.model_storage.g_args.append(str(arg))
 
             # Lambdify numerical evaluation functions
             self.lambda_equations[eq_type] = lambdify(symbolic_args, sp.Matrix(symbolic_eqs), modules='numpy')
-
+        #self.f_list.append(self.g_list)
+        #self.equ_list = self.f_list
+        #self.equ_matrix = sp.Matrix(self.equ_list)
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
 
@@ -138,22 +143,35 @@ class SymProcess:
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
         g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
+        #equ_jacobian_symbolic = self.equ_matrix.jacobian(sym_variables) if len(self.equ_matrix) > 0 else sp.Matrix([])
+
 
         # Extract unique symbols
         f_jac_symbols = list(f_jacobian_symbolic.free_symbols)
         g_jac_symbols = list(g_jacobian_symbolic.free_symbols)
+        #equ_jac_symbols = list(equ_jacobian_symbolic.free_symbols)
 
         # Convert to sparse matrices
         f_jacob_symbolic_spa = sp.SparseMatrix(f_jacobian_symbolic)
         g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
+        #equ_jacob_symbolic_spa = sp.SparseMatrix(equ_jacobian_symbolic)
 
         # Store Jacobian information
+        count = 0
         for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
             for e_idx, v_idx, e_symbolic in eq_sparse.row_list():
                 var_type = all_variables[v_idx].var_type
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
-                self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
+                if idx == 0:
+                    self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
 
+                    if var_type == 'x':
+                        count += 1
+                else:
+                    self.jacobian_store_info[eq_var_code].append((e_idx + count, v_idx))
+
+
+        #pdb.set_trace()
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
         # store arguments for f_jacobian
         for arg in f_jac_args:

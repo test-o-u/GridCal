@@ -60,6 +60,8 @@ class DynamicModelTemplate(EditableDevice):
         self.n = 0
         self.algeb_idx = {}     # Dictionary for algebraic variable indexing
         self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
+        self.states_idx = {}
+        self.extstates_idx = {}
 
     def process_symbolic(self):
         """
@@ -78,7 +80,7 @@ class DynamicModelTemplate(EditableDevice):
 
         index = 0
         for key, elem in self.dict.items():
-            # assign an index to every variable:
+            # assign an index to every variable in the model populating vars_index dictionary
             if isinstance(elem, DynVar):
                 self.variables_list.append(elem.symbol)
                 self.vars_index[index] = elem.symbol
@@ -94,29 +96,31 @@ class DynamicModelTemplate(EditableDevice):
                 self.model_storage.add_externstates(elem)
             if isinstance(elem, ExternAlgeb):
                 self.model_storage.add_externalgebs(elem)
-            if isinstance(elem, AliasAlgeb):
-                self.model_storage.add_aliasalgebs(elem)
-            if isinstance(elem, AliasState):
-                self.model_storage.add_aliastats(elem)
-            if isinstance(elem, NumDynParam):
-                self.model_storage.add_numdynparam(elem)
-            if isinstance(elem, IdxDynParam):
-                self.model_storage.add_idxdynparam(elem)
-            if isinstance(elem, ExtParam):
-                self.model_storage.add_extparam(elem)
+
+            #if isinstance(elem, NumDynParam):
+             #   self.dae.params_dict[self.name][elem.symbol] = elem.value
+            #if isinstance(elem, IdxDynParam):
+             #   self.model_storage.add_idxdynparam(elem)
+            #if isinstance(elem, ExtParam):
+             #   self.model_storage.add_extparam(elem)
 
 ####################### TO CLEAN ################################
 
-    def calc_local_jacs(self, input_values):
-        jacobians = []
+    def calc_local_jacs(self, f_input_values, g_input_values):
         pycode_path = get_pycode_path()
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
         pycode_code = getattr(pycode_module, self.name)
         jacobian_info = pycode_code.jacobian_info
+        f_jacobians = []
+        g_jacobians = []
         for i in range(self.n):
-            local_jac = pycode_code.g_ia(*input_values[i])
-            jacobians.append(local_jac)
-        return jacobian_info, jacobians
+            if f_input_values:
+                local_f_jac = pycode_code.f_ia(*f_input_values[i])
+                f_jacobians.append(local_f_jac)
+            if g_input_values:
+                local_g_jac = pycode_code.g_ia(*g_input_values[i])
+                g_jacobians.append(local_g_jac)
+        return f_jacobians, g_jacobians, jacobian_info
     
     def calc_local_g(self, input_values):
         g = []
@@ -127,6 +131,7 @@ class DynamicModelTemplate(EditableDevice):
             local_g = pycode_code.g_update(*input_values[i])
             g.append(local_g)
         return g
+            
 
 
 

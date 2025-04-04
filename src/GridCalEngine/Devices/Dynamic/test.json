@@ -40,7 +40,11 @@
       "name": "Load 1",
       "coeff_alfa": 0.1,
       "coeff_beta": 0.2,
+      "Pl0": 0.2,
+      "Ql0": 0.3,
       "bus" : 1
     }
   ]
+
 }
+
