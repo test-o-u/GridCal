@@ -15,11 +15,8 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
-from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
-<<<<<<< HEAD
-=======
+# from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
 from GridCalEngine.Devices.Dynamic.model_list import DAEXY
->>>>>>> 5242ec2b27fdec457167c41ecfd8f41f8722e2f4
 
 class System:
     """
@@ -49,7 +46,7 @@ class System:
         """
 
         self.models_list = models_list
-        self.values_array = INITIAL_CONDITIONS
+        self.values_array = DAEXY
 
         self.models = {}
         self.devices = {}
@@ -262,11 +259,7 @@ class System:
 
 
     def build_input_dict(self):
-<<<<<<< HEAD
         
-=======
-        values_array = DAEXY
->>>>>>> 5242ec2b27fdec457167c41ecfd8f41f8722e2f4
         index1 = 0
         for model_instance in self.devices.values():
             if model_instance.name != 'Bus':
