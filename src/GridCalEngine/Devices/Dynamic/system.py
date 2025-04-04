@@ -8,6 +8,7 @@ import importlib
 import compileall
 import time  
 import pdb
+import numpy as np
 import sympy as sp
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
@@ -15,7 +16,7 @@ from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
-from GridCalEngine.Devices.Dynamic.model_list import DAEY
+from GridCalEngine.Devices.Dynamic.model_list import DAEXY
 
 class System:
     """
@@ -255,7 +256,7 @@ class System:
 
 
     def build_input_dict(self):
-        values_array = DAEY
+        values_array = DAEXY
         index1 = 0
         for model_instance in self.devices.values():
             if model_instance.name != 'Bus':
@@ -275,13 +276,12 @@ class System:
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
 
+        pycode_code = device.import_pycode()
+        f_jac_arguments = pycode_code.f_jac_args
+        g_jac_arguments = pycode_code.g_jac_args
 
-        # get jacobian arguments from pycode
-        pycode_path = get_pycode_path()
-        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-        pycode_code = getattr(pycode_module, device.name)
-        f_arguments = pycode_code.f_jac_args
-        g_arguments = pycode_code.g_jac_args
+        f_arguments = pycode_code.f_args
+        g_arguments = pycode_code.g_args
 
         # create input values lists
         f_input_values = [parameters[argument] for argument in f_arguments]
@@ -289,47 +289,33 @@ class System:
         f_input_values = list(zip(*f_input_values))
         g_input_values = list(zip(*g_input_values))
 
-        return f_input_values, g_input_values
+        f_jac_input_values = [parameters[argument] for argument in f_jac_arguments]
+        g_jac_input_values = [parameters[argument] for argument in g_jac_arguments]
+        f_jac_input_values = list(zip(*f_jac_input_values))
+        g_jac_input_values = list(zip(*g_jac_input_values))
+
+
+        return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
     
-    # ############
-    # def get_input_g_values(self, device):
-        
-
-    #     #get parameters and residuals from "dae"
-    #     self.build_input_dict()
-    #     residuals = self.dae.residuals_dict[device.name]
-    #     parameters= self.dae.params_dict[device.name]
-    #     parameters.update(residuals)
-
-    #     # get jacobian arguments from pycode
-    #     pycode_path = get_pycode_path()
-    #     pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-    #     pycode_code = getattr(pycode_module, device.name)
-    #     arguments = pycode_code.g_args
-
-    #     # create input values list
-    #     input_values = [parameters[argument] for argument in arguments]
-    #     input_values = list(zip(*input_values))
-
-    #     return input_values
-    # #############
 
     def update_jacobian(self):
         all_triplets = {}
+        f_values_list = []
+        g_values_list = []
+        #all_f_g_values = []
         for device in self.devices.values():
-            f_input_values, g_input_values = self.get_input_values(device)
-            # #######
-            # input_g_values = self.get_input_g_values(device)
-            # #######
+            f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
-                
-                # #########
-                # g = device.calc_local_g(input_g_values)
-                # #########
+                # get f and g update
+                f_values, g_values = device.calc_f_g_functions(f_input_values, g_input_values)
+                f_values_list.append(f_values)
+                g_values_list.append(g_values)
+
+
                 # get local jacobians info and values
-                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_input_values, g_input_values)
+                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_jac_input_values, g_jac_input_values)
 
                 # get variable addresses
                 g_var_addresses = device.extalgeb_idx
@@ -372,6 +358,16 @@ class System:
                 all_triplets[jac_type] = triplets
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
+        #all_f_g_values = [f_values_list, g_values_list]
+
+        f_value_list_flat = [val for model in f_values_list for val in model]
+        g_value_list_flat = [val for model in g_values_list for val in model]
+
+        f_array = np.array(f_value_list_flat)
+        g_array = np.array(g_value_list_flat)
+
+        self.dae.f = f_array
+        self.dae.g = g_array
 
         return all_triplets
 

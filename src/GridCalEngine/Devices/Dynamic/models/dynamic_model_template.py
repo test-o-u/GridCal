@@ -105,21 +105,46 @@ class DynamicModelTemplate(EditableDevice):
              #   self.model_storage.add_extparam(elem)
 
 ####################### TO CLEAN ################################
-
-    def calc_local_jacs(self, f_input_values, g_input_values):
+    def import_pycode(self):
         pycode_path = get_pycode_path()
         pycode_module = importlib.import_module(pycode_path.replace("/", "."))
         pycode_code = getattr(pycode_module, self.name)
+
+        return pycode_code
+
+    def calc_f_g_functions(self, f_input_values, g_input_values):
+        pycode_code = self.import_pycode()
+        f_values_device = []
+        g_values_device = []
+
+        for i in range(self.n):
+            # get f values
+            if f_input_values:
+                f_values = pycode_code.f_update(*f_input_values[i])
+                f_values_device.append(f_values)
+            #get g values
+            if g_input_values:
+                g_values = pycode_code.g_update(*g_input_values[i])
+                g_values_device.append(g_values)
+        f_values_device_flat = [val for component in f_values_device for val in component]
+        g_values_device_flat = [val for component in g_values_device for val in component]
+        return f_values_device_flat, g_values_device_flat
+
+
+
+
+    def calc_local_jacs(self, f_input_values, g_input_values):
+        pycode_code = self.import_pycode()
         jacobian_info = pycode_code.jacobian_info
         f_jacobians = []
         g_jacobians = []
         for i in range(self.n):
             if f_input_values:
-                local_f_jac = pycode_code.f_ia(*f_input_values[i])
-                f_jacobians.append(local_f_jac)
+                local_jac_f = pycode_code.f_ia(*f_input_values[i])
+                f_jacobians.append(local_jac_f)
             if g_input_values:
-                local_g_jac = pycode_code.g_ia(*g_input_values[i])
-                g_jacobians.append(local_g_jac)
+                local_jac_g = pycode_code.g_ia(*g_input_values[i])
+                g_jacobians.append(local_jac_g)
         return f_jacobians, g_jacobians, jacobian_info
     
     def calc_local_g(self, input_values):
