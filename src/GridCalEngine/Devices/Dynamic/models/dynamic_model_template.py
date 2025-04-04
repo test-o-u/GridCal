@@ -117,6 +117,16 @@ class DynamicModelTemplate(EditableDevice):
             local_jac = pycode_code.g_ia(*input_values[i])
             jacobians.append(local_jac)
         return jacobian_info, jacobians
+    
+    def calc_local_g(self, input_values):
+        g = []
+        pycode_path = get_pycode_path()
+        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
+        pycode_code = getattr(pycode_module, self.name)
+        for i in range(self.n):
+            local_g = pycode_code.g_update(*input_values[i])
+            g.append(local_g)
+        return g
 
 
 

@@ -1,13 +1,23 @@
-# from GridCalEngine.Devices.Dynamic import Integration
+from GridCalEngine.Devices.Dynamic.integration import method_map
 
 class TDS():
-
-    def __init__(self, system, dt=0.01, t_final=10.0, method="backward_euler"):
+    """
+    Time domain simulation class.
+    """
+    def __init__(self, system, dt=0.01, t_final=0.01, method="trapezoid"):
         self.system = system
         self.dt = dt
         self.t_final = t_final
         self.method = method
-        self.results = []  # Stores simulation results
+        self.results = []
+
+        # Get integration method
+        if method not in method_map:
+            raise ValueError(f"Unknown integration method: {method}")
+        self.integrator = method_map[method]
+
+        # Run simulation
+        self.run()
 
     def run(self):
         """
@@ -15,7 +25,11 @@ class TDS():
         """
         t = 0
         while t < self.t_final:
-            # Solve DAE at current time step
-            self.step()
+            # Solve DAE step
+            converged = self.integrator.step(dae=self.system.dae, dt=self.dt)
+
+            if not converged:
+                raise RuntimeError("Integration step did not converge")
+            
             t += self.dt
             self.results.append((t, self.system.dae.x.copy(), self.system.dae.y.copy()))

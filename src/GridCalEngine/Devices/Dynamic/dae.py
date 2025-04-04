@@ -1,14 +1,19 @@
+import numpy as np
 from scipy.sparse import coo_matrix
 from collections import defaultdict
 
+
 class DAE:
+    """
+    DAE class to store numerical paramter, state and algebraic variable, jacobian and residual values.
+    """
     def __init__(self):
 
         self.nx = 0
         self.ny = 0
 
         self.x = None
-        self.y = {}
+        self.y = None
         self.f = None
         self.g = None
 
@@ -57,4 +62,10 @@ class DAE:
         # self.dgx = self.build_sparse_matrix(self.dgx, self.sparsity_gx, (self.ny, self.nx))
         self.dgy = self.build_sparse_matrix(self.dgy, self.sparsity_gy, (self.ny, self.ny))
 
+    def initilize_fg(self):
+        self.f = None
+        self.g = None
 
+    def update_fg(self):
+        self.f = None
+        self.g = None

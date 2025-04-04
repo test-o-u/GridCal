@@ -248,18 +248,40 @@ class System:
         input_values = list(zip(*input_values))
 
         return input_values
+    
+    ############
+    def get_input_g_values(self, device):
 
+        #get parameters and residuals from "dae"
+        self.build_input_dict()
+        residuals = self.dae.residuals_dict[device.name]
+        parameters= self.dae.params_dict[device.name]
+        parameters.update(residuals)
 
+        # get jacobian arguments from pycode
+        pycode_path = get_pycode_path()
+        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
+        pycode_code = getattr(pycode_module, device.name)
+        arguments = pycode_code.g_args
 
+        # create input values list
+        input_values = [parameters[argument] for argument in arguments]
+        input_values = list(zip(*input_values))
+
+        return input_values
+    #############
 
     def update_jacobian(self):
         all_triplets = {}
         for device in self.devices.values():
-            input_values = self.get_input_values(device)
+            input_values_jac = self.get_input_values(device)
+            #######
+            input_g_values = self.get_input_g_values(device)
+            #######
 
-                # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
+            # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
-                jacobian_info, local_jacobians = device.calc_local_jacs(input_values)
+                jacobian_info, local_jacobians = device.calc_local_jacs(input_values_jac)
                 var_addresses = device.extalgeb_idx
                 var_addresses.update(device.algeb_idx)
                 for jac_type, positions in zip(jacobian_info.keys(), jacobian_info.values()):
@@ -268,6 +290,10 @@ class System:
                         all_triplets[jac_type] = triplets
                         for row, col, val in triplets:
                             self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
+                
+                #########
+                g = device.calc_local_g(input_g_values)
+                #########
 
         return all_triplets
 
