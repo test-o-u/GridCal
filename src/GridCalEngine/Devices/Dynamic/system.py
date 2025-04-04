@@ -291,28 +291,28 @@ class System:
 
         return f_input_values, g_input_values
     
-    ############
-    def get_input_g_values(self, device):
+    # ############
+    # def get_input_g_values(self, device):
         
 
-        #get parameters and residuals from "dae"
-        self.build_input_dict()
-        residuals = self.dae.residuals_dict[device.name]
-        parameters= self.dae.params_dict[device.name]
-        parameters.update(residuals)
+    #     #get parameters and residuals from "dae"
+    #     self.build_input_dict()
+    #     residuals = self.dae.residuals_dict[device.name]
+    #     parameters= self.dae.params_dict[device.name]
+    #     parameters.update(residuals)
 
-        # get jacobian arguments from pycode
-        pycode_path = get_pycode_path()
-        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-        pycode_code = getattr(pycode_module, device.name)
-        arguments = pycode_code.g_args
+    #     # get jacobian arguments from pycode
+    #     pycode_path = get_pycode_path()
+    #     pycode_module = importlib.import_module(pycode_path.replace("/", "."))
+    #     pycode_code = getattr(pycode_module, device.name)
+    #     arguments = pycode_code.g_args
 
-        # create input values list
-        input_values = [parameters[argument] for argument in arguments]
-        input_values = list(zip(*input_values))
+    #     # create input values list
+    #     input_values = [parameters[argument] for argument in arguments]
+    #     input_values = list(zip(*input_values))
 
-        return input_values
-    #############
+    #     return input_values
+    # #############
 
     def update_jacobian(self):
         all_triplets = {}

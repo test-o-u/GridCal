@@ -28,10 +28,10 @@ def main():
     try:
         # Initialize and simulate the system
         system = initialize_system()
-        sim = simulate_system(system)
+        # # sim = simulate_system(system)
 
-        # Print results
-        print(sim.resutls)
+        # # Print results
+        # print(sim.resutls)
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
