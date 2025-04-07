@@ -63,12 +63,20 @@ class DAE:
             jac_dict[(row, col)] = value  # First assignment
             sparsity_set.append((row, col))  # Store pattern
 
-    def build_sparse_matrix(self, jac_dict, sparsity_set, shape):
+    def build_sparse_matrix(self, jac_dict, sparsity_set, shape, jac_type):
         """
         Convert accumulated values into a sparse matrix using the precomputed pattern.
         """
+
         rows, cols = zip(*sparsity_set) if sparsity_set else ([], [])
-        values = [jac_dict.get((r, c), 0) for r, c in sparsity_set]
+        if jac_type == 'dfx':
+            values = [jac_dict.get((r, c), 0) for r, c in sparsity_set]
+        if jac_type == 'dfy':
+            values = [jac_dict.get((r, c + self.nx), 0) for r, c in sparsity_set]
+        if jac_type == 'dgx':
+            values = [jac_dict.get((r + self.nx, c), 0) for r, c in sparsity_set]
+        if jac_type == 'dgy':
+            values = [jac_dict.get((r + self.nx, c + self.nx), 0) for r, c in sparsity_set]
 
         return coo_matrix((values, (rows, cols)), shape=shape)
 
@@ -80,19 +88,19 @@ class DAE:
 
         self.dfx = self.build_sparse_matrix(self._dfx_dict,
                                             [(row, col) for row, col in self.sparsity_fx],
-                                            (self.nx, self.nx))
+                                            (self.nx, self.nx), 'dfx')
 
         self.dfy = self.build_sparse_matrix(self._dfy_dict,
                                             [(row, col - self.nx) for row, col in self.sparsity_fy],
-                                            (self.nx, self.ny))
+                                            (self.nx, self.ny), 'dfy')
 
         self.dgx = self.build_sparse_matrix(self._dgx_dict,
                                             [(row - self.nx, col) for row, col in self.sparsity_gx],
-                                            (self.ny, self.nx))
+                                            (self.ny, self.nx), 'dgx')
 
         self.dgy = self.build_sparse_matrix(self._dgy_dict,
                                             [(row - self.nx, col - self.nx) for row, col in self.sparsity_gy],
-                                            (self.ny, self.ny))
+                                            (self.ny, self.ny), 'dgy')
 
     def initilize_fg(self):
         self.concatenate()
