@@ -1,27 +1,42 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 from collections import defaultdict
+from GridCalEngine.Devices.Dynamic.model_list import DAEX, DAEY
 
 
 class DAE:
     """
     DAE class to store numerical paramter, state and algebraic variable, jacobian and residual values.
     """
-    def __init__(self):
+    def __init__(self, system):
+
+        self.system = system
+
+        self.xy_addr = list()
+        self.x_addr = list()
+        self.y_addr = list()
 
         self.nx = 0
         self.ny = 0
 
-        self.x = None
-        self.y = None
+        self.x = DAEX
+        self.y = DAEY
+        self.xy = None
         self.f = None
         self.g = None
 
         # Dictionaries to accumulate Jacobian values
-        self.dfx = {}
-        self.dfy = {}
-        self.dgx = {}
-        self.dgy = {}
+        self._dfx_dict  = {}
+        self._dfy_dict  = {}
+        self._dgx_dict  = {}
+        self._dgy_dict  = {}
+
+        # Sparse Jacobian values
+        self.dfx = None
+        self.dfy = None
+        self.dgx = None
+        self.dgy = None
+
 
         # Sets to store sparsity pattern
         self.sparsity_fx = list()
@@ -34,6 +49,9 @@ class DAE:
 
         # Dictionary with all the residuals for updating jacobian
         self.residuals_dict = defaultdict(dict)
+
+        # NOTE: change
+        self.Tf = 2
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
@@ -60,27 +78,44 @@ class DAE:
         """
 
 
-        self.dfx = self.build_sparse_matrix(self.dfx,
+        self.dfx = self.build_sparse_matrix(self._dfx_dict,
                                             [(row, col) for row, col in self.sparsity_fx],
                                             (self.nx, self.nx))
 
-        self.dfy = self.build_sparse_matrix(self.dfy,
+        self.dfy = self.build_sparse_matrix(self._dfy_dict,
                                             [(row, col - self.nx) for row, col in self.sparsity_fy],
                                             (self.nx, self.ny))
 
-        self.dgx = self.build_sparse_matrix(self.dgx,
+        self.dgx = self.build_sparse_matrix(self._dgx_dict,
                                             [(row - self.nx, col) for row, col in self.sparsity_gx],
                                             (self.ny, self.nx))
 
-        self.dgy = self.build_sparse_matrix(self.dgy,
+        self.dgy = self.build_sparse_matrix(self._dgy_dict,
                                             [(row - self.nx, col - self.nx) for row, col in self.sparsity_gy],
                                             (self.ny, self.ny))
 
-
     def initilize_fg(self):
-        self.f = None
-        self.g = None
+        self.concatenate()
+        self.build_xy()
+        self.system.values_array = self.xy
+        self.system.update_jacobian()
+        self.finalize_jacobians()
 
     def update_fg(self):
-        self.f = None
-        self.g = None
+        self.concatenate()
+        self.build_xy()
+        self.system.values_array = self.xy
+        self.system.update_jacobian()
+        self.finalize_jacobians()
+
+    def concatenate(self):
+        self.xy = np.hstack((self.x, self.y))
+    
+    def build_xy(self):
+        self.xy = []  
+        for addr in self.xy_addr:
+            if addr < self.nx:
+                self.xy.append(self.x[addr])
+            else:
+                self.xy.append(self.y[addr - self.nx])
+        return np.array(self.xy)

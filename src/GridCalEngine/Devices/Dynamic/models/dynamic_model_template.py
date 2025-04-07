@@ -58,11 +58,11 @@ class DynamicModelTemplate(EditableDevice):
 
         # Set address function
         self.n = 0
-        self.algeb_idx = {}     # Dictionary for algebraic variable indexing
-        self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
         self.states_idx = {}
         self.extstates_idx = {}
-
+        self.algeb_idx = {}     # Dictionary for algebraic variable indexing
+        self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
+        
     def process_symbolic(self):
         """
         Generates symbolic equations and Jacobians for the dynamic model.
@@ -130,9 +130,6 @@ class DynamicModelTemplate(EditableDevice):
         g_values_device_flat = [val for component in g_values_device for val in component]
         return f_values_device_flat, g_values_device_flat
 
-
-
-
     def calc_local_jacs(self, f_input_values, g_input_values):
         pycode_code = self.import_pycode()
         jacobian_info = pycode_code.jacobian_info
@@ -146,16 +143,6 @@ class DynamicModelTemplate(EditableDevice):
                 local_jac_g = pycode_code.g_ia(*g_input_values[i])
                 g_jacobians.append(local_jac_g)
         return f_jacobians, g_jacobians, jacobian_info
-    
-    def calc_local_g(self, input_values):
-        g = []
-        pycode_path = get_pycode_path()
-        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-        pycode_code = getattr(pycode_module, self.name)
-        for i in range(self.n):
-            local_g = pycode_code.g_update(*input_values[i])
-            g.append(local_g)
-        return g
             
 
 

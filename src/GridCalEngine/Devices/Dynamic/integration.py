@@ -1,7 +1,7 @@
 import numpy as np
+import pdb
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
-
 class Integration:
     """
     Base class for implicit iterative methods.
@@ -15,24 +15,25 @@ class Integration:
         pass
     
     @staticmethod
-    def step(dae, dt, tol=1e-6, max_iter=10):
+    def step(dae, dt, method, tol=1e-6, max_iter=10):
         """
         Perform an implicit integration step with Newton-Raphson.
         """
         x0, y0, f0 = dae.x.copy(), dae.y.copy(), dae.f.copy()
         
         for iteration in range(max_iter):
-            jac = dae.method.calc_jac(dae, dt)
-            qg = dae.method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
-            qg[dae.nx:] += dae.g  # Include algebraic residuals
-            
+            jac = method.calc_jac(dae, dt)
+            qg = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
+            qg = np.vstack((dae.f, dae.g.reshape(-1, 1)))  # Include algebraic residuals
+
             # Solve linear system
             inc = spsolve(jac, -qg)
             
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
-            
+            dae.concatenate()
+
             # Recompute f and g
             dae.update_fg()
             
@@ -50,8 +51,8 @@ class BackEuler(Integration):
     """
     @staticmethod
     def calc_jac(dae, dt):
-        return bmat([[identity(dae.nx) - dt * dae.dfx, dae.dgx],
-                     [-dt * dae.dfy, dae.dgy]], format='csr')
+        return bmat([[identity(dae.nx) - dt * dae.dfx, -dt * dae.dfy],
+                     [dae.dgx, dae.dgy]], format='csr')
     
     @staticmethod
     def calc_q(x, f, Tf, dt, x0, f0):
@@ -63,8 +64,8 @@ class Trapezoid(Integration):
     """
     @staticmethod
     def calc_jac(dae, dt):
-        return bmat([[identity(dae.nx) - 0.5 * dt * dae.dfx, dae.dgx],
-                     [-0.5 * dt * dae.dfy, dae.dgy]], format='csr')
+        return bmat([[identity(dae.nx) - 0.5 * dt * dae.dfx, -0.5 * dt * dae.dfy],
+                     [dae.dgx, dae.dgy]], format='csr')
     
     @staticmethod
     def calc_q(x, f, Tf, dt, x0, f0):

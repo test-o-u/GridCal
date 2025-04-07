@@ -12,7 +12,7 @@ from GridCalEngine.Devices.Dynamic.model_list import MODELS
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 ### Configure time performance ###
-performance = True
+performance = False
 ### Configure test ###
 # NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'
@@ -28,10 +28,10 @@ def main():
     try:
         # Initialize and simulate the system
         system = initialize_system()
-        # # sim = simulate_system(system)
+        sim = simulate_system(system)
 
-        # # Print results
-        # print(sim.resutls)
+        # Print results
+        print(sim.results)
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -73,13 +73,13 @@ def initialize_system():
     return system   
     
 
-def simulate_system():
+def simulate_system(system):
     """
     System initialization function.
     """ 
     try:
         # Simulate the system
-        sim = TDS()
+        sim = TDS(system)
 
     except Exception as e:
         logging.error(f"An error occurred while simulating the system: {e}", exc_info=True)

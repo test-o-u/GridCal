@@ -5,7 +5,7 @@ class TDS():
     """
     Time domain simulation class.
     """
-    def __init__(self, system, dt=0.01, t_final=0.01, method="trapezoid"):
+    def __init__(self, system, dt=0.1, t_final=1.0, method="trapezoid"):
         self.system = system
         self.dt = dt
         self.t_final = t_final
@@ -18,6 +18,7 @@ class TDS():
         self.integrator = method_map[method]
 
         # Run simulation
+        self.system.dae.initilize_fg()
         self.run()
 
     def run(self):
@@ -27,7 +28,7 @@ class TDS():
         t = 0
         while t < self.t_final:
             # Solve DAE step
-            converged = self.integrator.step(dae=self.system.dae, dt=self.dt)
+            converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator)
 
             if not converged:
                 raise RuntimeError("Integration step did not converge")

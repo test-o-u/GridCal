@@ -15,8 +15,7 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
-# from GridCalEngine.Devices.Dynamic.model_list import INITIAL_CONDITIONS
-from GridCalEngine.Devices.Dynamic.model_list import DAEXY
+
 
 class System:
     """
@@ -46,22 +45,17 @@ class System:
         """
 
         self.models_list = models_list
-        self.values_array = DAEXY
+        self.values_array = None
 
         self.models = {}
         self.devices = {}
 
-        self.dae = DAE()
+        self.dae = DAE(self)
 
         self.data = readjson(datafile)
 
         self.import_models()
         self.system_prepare()
-
-        self.initialize_numeric()
-
-        self.update_jacobian()
-        self.dae.finalize_jacobians()
 
 
     def import_models(self):
@@ -188,7 +182,6 @@ class System:
                 if isinstance(param, NumDynParam):
                     self.dae.params_dict[device.name][param.symbol] = param.value
 
-
     def set_addresses(self):
         self.global_id = 0
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
@@ -204,6 +197,11 @@ class System:
 
                     # Cache reference for faster lookup
                     states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+
+                    # Store DAE addresses
+                    self.dae.xy_addr.extend(indices)
+                    if model_instance.name != 'Bus':
+                        self.dae.x_addr.extend(indices)
 
                     self.dae.nx += model_instance.n
 
@@ -224,6 +222,10 @@ class System:
 
                     model_instance.extstates_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
+                    # Store DAE addresses
+                    self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
+                    self.dae.x_addr.extend(model_instance.extalgeb_idx[var_list.name])
+
         # First loop: Process AlgebVar
         for model_instance in self.devices.values():
             for var_list in model_instance.__dict__.values():
@@ -234,6 +236,11 @@ class System:
                     
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+
+                    # Store DAE addresses
+                    self.dae.xy_addr.extend(indices)
+                    if model_instance.name != 'Bus':
+                        self.dae.y_addr.extend(indices)
 
                     self.dae.ny += model_instance.n  
          
@@ -254,9 +261,9 @@ class System:
 
                     model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
-        states_ref_map = {}  # Cache: store algeb_idx references for quick lookup
-
-
+                    # Store DAE addresses
+                    self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
+                    self.dae.y_addr.extend(model_instance.extalgeb_idx[var_list.name])
 
     def build_input_dict(self):
         
@@ -265,7 +272,7 @@ class System:
             if model_instance.name != 'Bus':
                 nr_components = model_instance.n
                 for variable in model_instance.variables_list:
-                    values = (self.values_array[index1:index1+nr_components]).tolist()
+                    values = (self.values_array[index1:index1+nr_components])
                     self.dae.residuals_dict[model_instance.name][variable] = values
                     index1 += nr_components
 
@@ -307,6 +314,7 @@ class System:
         g_values_list = []
         #all_f_g_values = []
         for device in self.devices.values():
+
             f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
@@ -315,7 +323,6 @@ class System:
                 f_values, g_values = device.calc_f_g_functions(f_input_values, g_input_values)
                 f_values_list.append(f_values)
                 g_values_list.append(g_values)
-
 
                 # get local jacobians info and values
                 f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_jac_input_values, g_jac_input_values)
@@ -336,7 +343,7 @@ class System:
                 triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
                 all_triplets[jac_type] = triplets
                 for row, col, val in triplets:
-                    self.dae.add_to_jacobian(self.dae.dfx, self.dae.sparsity_fx, row, col, val)
+                    self.dae.add_to_jacobian(self.dae._dfx_dict, self.dae.sparsity_fx, row, col, val)
 
                 # calc dfy
                 jac_type = 'dfy'
@@ -344,7 +351,7 @@ class System:
                 triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
                 all_triplets[jac_type] = triplets
                 for row, col, val in triplets:
-                    self.dae.add_to_jacobian(self.dae.dfy, self.dae.sparsity_fy, row, col, val)
+                    self.dae.add_to_jacobian(self.dae._dfy_dict, self.dae.sparsity_fy, row, col, val)
 
                 # calc dgx
                 jac_type = 'dgx'
@@ -352,7 +359,7 @@ class System:
                 triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
                 all_triplets[jac_type] = triplets
                 for row, col, val in triplets:
-                    self.dae.add_to_jacobian(self.dae.dgx, self.dae.sparsity_gx, row, col, val)
+                    self.dae.add_to_jacobian(self.dae._dgx_dict, self.dae.sparsity_gx, row, col, val)
 
                 # calc dgy
                 jac_type = 'dgy'
@@ -360,14 +367,18 @@ class System:
                 triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
                 all_triplets[jac_type] = triplets
                 for row, col, val in triplets:
-                    self.dae.add_to_jacobian(self.dae.dgy, self.dae.sparsity_gy, row, col, val)
+                    self.dae.add_to_jacobian(self.dae._dgy_dict, self.dae.sparsity_gy, row, col, val)
+            
         #all_f_g_values = [f_values_list, g_values_list]
 
+        # NOTE: necessary?
         f_value_list_flat = [val for model in f_values_list for val in model]
         g_value_list_flat = [val for model in g_values_list for val in model]
 
         f_array = np.array(f_value_list_flat)
-        g_array = np.array(g_value_list_flat)
+
+        # Residual power balance
+        g_array = self.sum_duplicate_values(g_value_list_flat)
 
         self.dae.f = f_array
         self.dae.g = g_array
@@ -380,6 +391,7 @@ class System:
         for i in range(model.n):
 
             for j, (func_index, var_index) in enumerate(positions):
+
                 val = local_jacobian[i][j]
                 address_func = var_addresses[model.vars_index[func_index]][i]
                 address_var = var_addresses[model.vars_index[var_index]][i]
@@ -387,5 +399,30 @@ class System:
 
         return triplets
     
-    def initialize_numeric(self):
-        self.dae.initilize_fg()
+    def sum_duplicate_values(self, g_value_list_flat):
+        """
+        Sum values with the same address, keeping only the first occurrence in order.
+        
+        Parameters:
+        - addresses: iterable of int
+        - values: iterable of float
+        
+        Returns:
+        - summed_values: list of float, same order as first appearance of each unique address
+        - unique_addresses: list of int, order preserved
+        """
+        addresses = np.array(self.dae.y_addr)
+        values = np.array(g_value_list_flat).flatten()
+
+        seen = {}
+        result = []
+        
+        for addr, val in zip(addresses, values):
+            if addr in seen:
+                result[seen[addr]] += val
+            else:
+                seen[addr] = len(result)
+                result.append(val)
+        
+        return np.array(result)
+

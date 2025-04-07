@@ -55,16 +55,6 @@ class ACLine(DynamicModelTemplate):
                               eq='(v1 ** 2 * g  - \
                                     v1 * v2 * (g * cos(a1 - a2) + \
                                         b * sin(a1 - a2)))')  
-        
-
-        self.a2 = ExternAlgeb(name='a2',
-                              symbol = 'a2',
-                              src='a',
-                              indexer=self.bus2, 
-                              init_eq='', 
-                              eq='(v2 ** 2 * g  - \
-                                    v2 * v1 * (g * cos(a2 - a1) + \
-                                        b * sin(a2 - a1)))')
 
         self.v1 = ExternAlgeb(name='v1',
                               symbol='v1',
@@ -74,6 +64,15 @@ class ACLine(DynamicModelTemplate):
                               eq='(- v1 ** 2 * (b + bsh / 2) - \
                                             v1 * v2 * (g * sin(a1 - a2) - \
                                                 b * cos(a1 - a2)))')
+        
+        self.a2 = ExternAlgeb(name='a2',
+                              symbol = 'a2',
+                              src='a',
+                              indexer=self.bus2, 
+                              init_eq='', 
+                              eq='(v2 ** 2 * g  - \
+                                    v2 * v1 * (g * cos(a2 - a1) + \
+                                        b * sin(a2 - a1)))')
         
         self.v2 = ExternAlgeb(name='v2',
                               symbol = 'v2',
