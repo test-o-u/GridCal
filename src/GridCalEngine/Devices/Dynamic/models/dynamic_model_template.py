@@ -53,6 +53,8 @@ class DynamicModelTemplate(EditableDevice):
 
         # list containing all the symbols of the variables in the model
         self.variables_list = []
+        self.state_vars_list = []
+        self.algeb_vars_list = []
 
         # Address mapping for algebraic variables
 
@@ -87,14 +89,18 @@ class DynamicModelTemplate(EditableDevice):
                 index += 1
 
             if isinstance(elem, AlgebVar):
+                self.algeb_vars_list.append(elem.symbol)
                 self.model_storage.add_algebvars(elem)
             if isinstance(elem, StatVar):
+                self.state_vars_list.append(elem.symbol)
                 self.model_storage.add_statvars(elem)
             if isinstance(elem, ExternVar):
                 self.model_storage.add_externvars(elem)
             if isinstance(elem, ExternState):
+                self.state_vars_list.append(elem.symbol)
                 self.model_storage.add_externstates(elem)
             if isinstance(elem, ExternAlgeb):
+                self.algeb_vars_list.append(elem.symbol)
                 self.model_storage.add_externalgebs(elem)
 
             #if isinstance(elem, NumDynParam):
@@ -130,21 +136,22 @@ class DynamicModelTemplate(EditableDevice):
         g_values_device_flat = [val for component in g_values_device for val in component]
         return f_values_device_flat, g_values_device_flat
 
-
-
-
     def calc_local_jacs(self, f_input_values, g_input_values):
         pycode_code = self.import_pycode()
         jacobian_info = pycode_code.jacobian_info
-        f_jacobians = []
-        g_jacobians = []
+        f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
+        g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
             if f_input_values:
                 local_jac_f = pycode_code.f_ia(*f_input_values[i])
-                f_jacobians.append(local_jac_f)
+                for j, funct in enumerate(self.state_vars_list):
+                    for k, var in enumerate(self.variables_list):
+                        f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
             if g_input_values:
                 local_jac_g = pycode_code.g_ia(*g_input_values[i])
-                g_jacobians.append(local_jac_g)
+                for j, funct in enumerate(self.algeb_vars_list):
+                    for k, var in enumerate(self.variables_list):
+                        g_jacobians[i][j+len(self.state_vars_list)][k] = local_jac_g[j*len(self.variables_list)+k]
         return f_jacobians, g_jacobians, jacobian_info
     
     def calc_local_g(self, input_values):

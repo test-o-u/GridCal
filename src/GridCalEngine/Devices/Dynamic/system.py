@@ -122,7 +122,7 @@ class System:
         add_end = time.perf_counter()
         self.add_time = add_end - add_st  # Store addressing time
 
-        # STEP 4: Store parameters in teh DAE
+        # STEP 4: Store parameters in the DAE
         self.store_params()
 
     def create_devices(self, data):
@@ -378,13 +378,11 @@ class System:
     def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
         triplets = []
         for i in range(model.n):
-
             for j, (func_index, var_index) in enumerate(positions):
-                val = local_jacobian[i][j]
+                val = local_jacobian[i][func_index][var_index]
                 address_func = var_addresses[model.vars_index[func_index]][i]
                 address_var = var_addresses[model.vars_index[var_index]][i]
                 triplets.append((address_func, address_var, val))
-
         return triplets
     
     def initialize_numeric(self):

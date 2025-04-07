@@ -5,6 +5,7 @@
 
 import logging
 import time
+import numpy as np
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.tds import TDS
 from GridCalEngine.Devices.Dynamic.model_list import MODELS
@@ -62,13 +63,28 @@ def initialize_system():
         logging.info(f"Bus a = {system.models['Bus'].algeb_idx}")
         logging.info(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
         logging.info(f"ExpLoad a = {system.models['ExpLoad'].extalgeb_idx}")
+        logging.info(f"GENCLS a = {system.models['GENCLS'].states_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].algeb_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].extalgeb_idx}")
+
+        logging.info(f"Bus a = {system.models['Bus'].vars_index}")
+        logging.info(f"ACLine a = {system.models['ACLine'].vars_index}")
+        logging.info(f"ExpLoad a = {system.models['ExpLoad'].vars_index}")
+        logging.info(f"GENCLS a = {system.models['GENCLS'].vars_index}")
+
+
+
         logging.info("===========================================")
         logging.info("=============== JACOBIANS ================")
-        logging.info(f"dgf = {system.dae.dgx}")
+        logging.info(f"dfx = {system.dae.dfx}")
+        logging.info(f"dfy = {system.dae.dfy}")
+        logging.info(f"dgx = {system.dae.dgx}")
         logging.info(f"dgy = {system.dae.dgy}")
-        logging.info("===========================================")  
+        logging.info("===========================================")
+    np.savetxt("jacobian_dfx.csv", (system.dae.dfx).toarray(), delimiter=",")
+    np.savetxt("jacobian_dfy.csv", (system.dae.dfy).toarray(), delimiter=",")
+    np.savetxt("jacobian_dgx.csv", (system.dae.dgx).toarray(), delimiter=",")
+    np.savetxt("jacobian_dgy.csv", (system.dae.dgy).toarray(), delimiter=",")
 
     return system   
     
