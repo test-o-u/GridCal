@@ -29,8 +29,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="dynamic variables class">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/integration.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynamic_model_template.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynamic_model_template.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/syngen/GENCLS.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/syngen/GENCLS.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -72,7 +75,7 @@
     </favorite-branches>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="339_Implement_basics_of_PyDyn" />
+        <entry key="$PROJECT_DIR$" value="340_Dynamics_first_implementations_backup" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -725,9 +728,9 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.ExecuteGridCal" />
       <item itemvalue="Python.test_power_flow" />
       <item itemvalue="Python.test_raw_cgmes_cross_roundtrip" />
+      <item itemvalue="Python.ExecuteGridCal" />
       <item itemvalue="Python.upload_to_pypi" />
       <item itemvalue="Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true" />
       <item itemvalue="Python tests.pytest for test_load_save_load.test_load_save_load2" />
@@ -735,11 +738,11 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ExecuteGridCal" />
-        <item itemvalue="Python.upload_to_pypi" />
         <item itemvalue="Python tests.pytest in tests" />
-        <item itemvalue="Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true" />
         <item itemvalue="Python tests.pytest for test_load_save_load.test_load_save_load2" />
+        <item itemvalue="Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true" />
+        <item itemvalue="Python.upload_to_pypi" />
+        <item itemvalue="Python.ExecuteGridCal" />
       </list>
     </recent_temporary>
   </component>
@@ -1870,7 +1873,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="618" />
+    <option name="localTasksCounter" value="620" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1892,11 +1895,17 @@
       <map>
         <entry key="922c884a-4636-4645-9229-9796b4c804ad" value="TOOL_WINDOW" />
         <entry key="cfa52b43-1630-4953-bd92-59a31c225f4a" value="TOOL_WINDOW" />
+        <entry key="5a044705-16eb-4c0e-91b8-f5531ee78a9c" value="TOOL_WINDOW" />
       </map>
     </option>
     <option name="TAB_STATES">
       <map>
         <entry key="1">
+          <value>
+            <State />
+          </value>
+        </entry>
+        <entry key="5a044705-16eb-4c0e-91b8-f5531ee78a9c">
           <value>
             <State />
           </value>
@@ -2283,7 +2292,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py</url>
-          <line>179</line>
+          <line>175</line>
           <option name="timeStamp" value="2454" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -2293,7 +2302,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/model_list.py</url>
-          <line>59</line>
+          <line>62</line>
           <option name="timeStamp" value="2458" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

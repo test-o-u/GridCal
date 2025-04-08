@@ -20,8 +20,7 @@ class TDS():
 
         # Run simulation
         self.system.dae.initilize_fg()
-        pdb.set_trace()
-        self.run()
+        # self.run()
 
     def run(self):
         """

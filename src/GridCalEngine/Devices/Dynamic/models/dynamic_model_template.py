@@ -63,7 +63,8 @@ class DynamicModelTemplate(EditableDevice):
         self.states_idx = {}
         self.extstates_idx = {}
         self.algeb_idx = {}     # Dictionary for algebraic variable indexing
-        self.extalgeb_idx = {}  # Dictionary for external algebraic variable indexing
+        self.extalgeb_idx = {}
+        self.addresses_dict = {**self.states_idx, **self.extstates_idx, **self.algeb_idx, **self.extalgeb_idx}# Dictionary for external algebraic variable indexing
         
     def process_symbolic(self):
         """
