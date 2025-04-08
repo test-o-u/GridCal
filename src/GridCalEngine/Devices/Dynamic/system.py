@@ -10,6 +10,7 @@ import time
 import pdb
 import numpy as np
 import sympy as sp
+from collections import defaultdict
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Devices.Dynamic.dae import DAE
@@ -57,7 +58,7 @@ class System:
         self.import_models()
         self.system_prepare()
         self.dae.concatenate()
-        self.dae.build_values_dict()
+        # self.dae.build_values_dict()
 
 
 
@@ -202,10 +203,11 @@ class System:
                     # Cache reference for faster lookup
                     states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
+                    self.dae.x_addr.extend(indices)
                     # Store DAE addresses
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
-                        self.dae.x_addr.extend(indices)
+                        
 
                     self.dae.nx += model_instance.n
 
@@ -242,9 +244,10 @@ class System:
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
                     # Store DAE addresses
+                    self.dae.y_addr.extend(indices)
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
-                        self.dae.y_addr.extend(indices)
+                        
 
                     self.dae.ny += model_instance.n  
          
@@ -283,7 +286,7 @@ class System:
     def get_input_values(self, device):
 
         #get parameters and residuals from "dae"
-        self.dae.build_values_dict()
+        self.dae.build_values_dict(device)
 
         residuals = self.dae.update_xy_dict[device.name]
         parameters= self.dae.params_dict[device.name]
@@ -404,29 +407,19 @@ class System:
         return triplets
     
     def sum_duplicate_values(self, g_value_list_flat):
-        """
-        Sum values with the same address, keeping only the first occurrence in order.
-        
-        Parameters:
-        - addresses: iterable of int
-        - values: iterable of float
-        
-        Returns:
-        - summed_values: list of float, same order as first appearance of each unique address
-        - unique_addresses: list of int, order preserved
-        """
-        addresses = np.array(self.dae.y_addr)
-        values = np.array(g_value_list_flat).flatten()
+        # We'll sum values by index
+        sum_dict = defaultdict(int)
 
-        seen = {}
+        for idx, val in zip(self.dae.y_addr, g_value_list_flat):
+            sum_dict[idx] += val
+
+        # Preserve the order of first appearance
+        seen = set()
         result = []
-        
-        for addr, val in zip(addresses, values):
-            if addr in seen:
-                result[seen[addr]] += val
-            else:
-                seen[addr] = len(result)
-                result.append(val)
-        
-        return np.array(result)
+        for idx in self.dae.y_addr:
+            if idx not in seen:
+                result.append(sum_dict[idx])
+                seen.add(idx)
+
+        return np.array([result])
 

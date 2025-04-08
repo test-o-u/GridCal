@@ -26,8 +26,6 @@ class Integration:
             qg = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
             qg = np.vstack((dae.f, dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
-            #pdb.set_trace()
-
             # Solve linear system
             inc = spsolve(jac, -qg)
             
@@ -41,9 +39,9 @@ class Integration:
 
             
             # Check convergence
-            error = np.linalg.norm(inc, np.inf)
-            print(error)
-            if error < tol:
+            residual_error = np.linalg.norm(qg, np.inf)
+            print(residual_error)
+            if residual_error < tol:
                 return True
         
         # Restore previous values if not converged

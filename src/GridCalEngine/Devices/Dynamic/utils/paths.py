@@ -17,5 +17,4 @@ def get_pycode_path(pycode_path=None, mkdir=True):
     if mkdir is True:
         os.makedirs(pycode_path, exist_ok=True)
 
-    print(f"pycode_path: {pycode_path}")
     return pycode_path

@@ -22,7 +22,8 @@ class DAE:
 
         self.x = dae_x0
         self.y = dae_y0
-        self.xy = None
+        self.xy_unique = None
+        self.xy_extended = None
         self.f = None
         self.g = None
 
@@ -106,41 +107,39 @@ class DAE:
     def initilize_fg(self):
         self.concatenate()
         self.build_xy()
-        self.system.values_array = self.xy
+        self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
 
     def update_fg(self):
         self.concatenate()
         self.build_xy()
-        self.system.values_array = self.xy
+        self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
 
     def concatenate(self):
-        self.xy = np.hstack((self.x, self.y))
+        self.xy_unique = np.hstack((self.x, self.y))
     
     def build_xy(self):
-        self.xy = []  
+        self.xy_extended = []  
         for addr in self.xy_addr:
             if addr < self.nx:
-                self.xy.append(self.x[addr])
+                self.xy_extended.append(self.x[addr])
             else:
-                self.xy.append(self.y[addr - self.nx])
-        return np.array(self.xy) #NOTE: wrong
+                self.xy_extended.append(self.y[addr - self.nx])
 
-    def build_values_dict(self):
+    def build_values_dict(self, device):
         states_idx = 0
         algebs_idx = 0
-        for device in self.system.devices.values():
-            if device.name != 'Bus':
-                addresses_dict = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
-                nr_components = device.n
-                for variable in device.variables_list:
-                    addresses = addresses_dict[variable]
-                    values = [self.xy[address] for address in addresses]
-                    self.update_xy_dict[device.name][variable] = values
-                    # pdb.set_trace()
+        # for device in self.system.devices.values():
+        #     if device.name != 'Bus':
+        addresses_dict = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
+        nr_components = device.n
+        for variable in device.variables_list:
+            addresses = addresses_dict[variable]
+            values = [self.xy_unique[address] for address in addresses]
+            self.update_xy_dict[device.name][variable] = values
 
 
 

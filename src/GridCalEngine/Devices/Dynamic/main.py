@@ -13,7 +13,7 @@ from GridCalEngine.Devices.Dynamic.model_list import MODELS
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 ### Configure time performance ###
-performance = True
+performance = False
 ### Configure test ###
 # NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'
@@ -66,22 +66,7 @@ def initialize_system():
         logging.info(f"GENCLS a = {system.models['GENCLS'].states_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].algeb_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].extalgeb_idx}")
-
-        logging.info(f"Bus a = {system.models['Bus'].vars_index}")
-        logging.info(f"ACLine a = {system.models['ACLine'].vars_index}")
-        logging.info(f"ExpLoad a = {system.models['ExpLoad'].vars_index}")
-        logging.info(f"GENCLS a = {system.models['GENCLS'].vars_index}")
-
-
-
         logging.info("===========================================")
-        logging.info("=============== JACOBIANS ================")
-        # logging.info(f"dfx = {system.dae.dfx}")
-        # logging.info(f"dfy = {system.dae.dfy}")
-        # logging.info(f"dgx = {system.dae.dgx}")
-        # logging.info(f"dgy = {system.dae.dgy}")
-        logging.info("===========================================")
-
     return system   
     
 
