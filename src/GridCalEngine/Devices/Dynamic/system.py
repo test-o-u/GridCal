@@ -289,7 +289,7 @@ class System:
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
 
-        print(parameters)
+        # print(parameters)
 
         pycode_code = device.import_pycode()
         f_jac_arguments = pycode_code.f_jac_args
@@ -303,7 +303,6 @@ class System:
         f_input_values = [parameters[argument] for argument in f_arguments]
         g_input_values = [parameters[argument] for argument in g_arguments]
 
-        #pdb.set_trace()
         f_input_values = list(zip(*f_input_values))
         g_input_values = list(zip(*g_input_values))
 
@@ -311,7 +310,6 @@ class System:
         g_jac_input_values = [parameters[argument] for argument in g_jac_arguments]
         f_jac_input_values = list(zip(*f_jac_input_values))
         g_jac_input_values = list(zip(*g_jac_input_values))
-
 
         return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
     

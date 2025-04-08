@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 from scipy.sparse import coo_matrix
 from collections import defaultdict
 from GridCalEngine.Devices.Dynamic.model_list import dae_x0, dae_y0
@@ -137,9 +138,9 @@ class DAE:
                 nr_components = device.n
                 for variable in device.variables_list:
                     addresses = addresses_dict[variable]
-                    for address in addresses:
-                        values = self.xy[address]
-                        self.update_xy_dict[device.name][variable] = values
+                    values = [self.xy[address] for address in addresses]
+                    self.update_xy_dict[device.name][variable] = values
+                    # pdb.set_trace()
 
 
 
