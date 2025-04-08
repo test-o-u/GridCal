@@ -13,7 +13,7 @@ from GridCalEngine.Devices.Dynamic.model_list import MODELS
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 ### Configure time performance ###
-performance = False
+performance = True
 ### Configure test ###
 # NOTE: Other tests
 # 'GridCalEngine/Devices/Dynamic/test.json'

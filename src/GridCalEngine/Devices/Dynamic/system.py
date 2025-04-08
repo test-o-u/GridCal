@@ -56,6 +56,10 @@ class System:
 
         self.import_models()
         self.system_prepare()
+        self.dae.concatenate()
+        self.dae.build_values_dict()
+
+
 
 
     def import_models(self):
@@ -265,26 +269,27 @@ class System:
                     self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
                     self.dae.y_addr.extend(model_instance.extalgeb_idx[var_list.name])
 
-    def build_input_dict(self):
-        
-        index1 = 0
-        for model_instance in self.devices.values():
-            if model_instance.name != 'Bus':
-                nr_components = model_instance.n
-                for variable in model_instance.variables_list:
-                    values = (self.values_array[index1:index1+nr_components])
-                    self.dae.residuals_dict[model_instance.name][variable] = values
-                    index1 += nr_components
-
+    # def build_input_dict(self):
+    #
+    #     index1 = 0
+    #     for model_instance in self.devices.values():
+    #         if model_instance.name != 'Bus':
+    #             nr_components = model_instance.n
+    #             for variable in model_instance.variables_list:
+    #                 values = (self.values_array[index1:index1+nr_components])
+    #                 self.dae.residuals_dict[model_instance.name][variable] = values
+    #                 index1 += nr_components
 
     def get_input_values(self, device):
 
         #get parameters and residuals from "dae"
-        self.build_input_dict()
+        self.dae.build_values_dict()
 
-        residuals = self.dae.residuals_dict[device.name]
+        residuals = self.dae.update_xy_dict[device.name]
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
+
+        print(parameters)
 
         pycode_code = device.import_pycode()
         f_jac_arguments = pycode_code.f_jac_args
@@ -294,8 +299,11 @@ class System:
         g_arguments = pycode_code.g_args
 
         # create input values lists
+
         f_input_values = [parameters[argument] for argument in f_arguments]
         g_input_values = [parameters[argument] for argument in g_arguments]
+
+        #pdb.set_trace()
         f_input_values = list(zip(*f_input_values))
         g_input_values = list(zip(*g_input_values))
 
@@ -314,8 +322,9 @@ class System:
         g_values_list = []
         #all_f_g_values = []
         for device in self.devices.values():
+            if device.name != 'Bus':
 
-            f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_input_values(device)
+                f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':

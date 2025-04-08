@@ -26,7 +26,7 @@ class Integration:
             qg = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
             qg = np.vstack((dae.f, dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
-            pdb.set_trace()
+            #pdb.set_trace()
 
             # Solve linear system
             inc = spsolve(jac, -qg)

@@ -72,7 +72,7 @@ class GENCLS(DynamicModelTemplate):
         self.psiq = AlgebVar(name='psiq',
                              symbol='psiq',
                              init_eq='psiq0',
-                             eq='(ra * i_d + vd) - psid')
+                             eq='(ra * i_d + vd) - psiq')
         
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 

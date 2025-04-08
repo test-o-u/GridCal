@@ -48,7 +48,7 @@ class DAE:
         self.params_dict = defaultdict(dict)
 
         # Dictionary with all the residuals for updating jacobian
-        self.residuals_dict = defaultdict(dict)
+        self.update_xy_dict = defaultdict(dict)
 
         # NOTE: To change!
         self.Tf = 2
@@ -127,3 +127,20 @@ class DAE:
             else:
                 self.xy.append(self.y[addr - self.nx])
         return np.array(self.xy) #NOTE: wrong
+
+    def build_values_dict(self):
+        states_idx = 0
+        algebs_idx = 0
+        for device in self.system.devices.values():
+            if device.name != 'Bus':
+                addresses_dict = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
+                nr_components = device.n
+                for variable in device.variables_list:
+                    addresses = addresses_dict[variable]
+                    for address in addresses:
+                        values = self.xy[address]
+                        self.update_xy_dict[device.name][variable] = values
+
+
+
+
