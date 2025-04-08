@@ -17,50 +17,36 @@ MODELS = list([
     ('syngen', ['GENCLS'])
 ])
 
-#INITIAL_CONDITIONS = {'Bus':{'a':[0, 1, 2],
- #                            'v':[3, 4, 5]},
-  #                    'ACLine':{'a1':[0, 1, 0],
-   #                             'a2':[1, 2, 2],
-    #                            'v1':[3, 4, 3],
-     #                           'v2':[4, 5, 5]}}
+x0 = {
+    'delta': 1.0,
+    'omega': 1.0,
+}
 
+y0 = {
+    'a1': 15 * (np.pi / 180),  # rotor angle (rad)
+    'a2': 10 * (np.pi / 180),  # angle of second bus, possibly infinite bus
+    'v1': 0.95,                # generator terminal voltage magnitude (pu)
+    'v2': 1.0,                 # remote bus voltage (pu)
 
+    # Stator dq axis flux linkages (GENCLS has no field circuit, so usually derived from voltage and current)
+    'psid': 1.0,               # flux linkage in d-axis (pu)
+    'psiq': 0.0,               # flux linkage in q-axis (pu)
 
-# INITIAL_CONDITIONS = {'Bus':{'a':[0, 1],
-#                              'v':[2, 3]},
-#                       'ACLine':{'a1':[4],
-#                                 'a2':[5],
-#                                 'v1':[6],
-#                                 'v2':[7]}}
+    # dq axis currents — assuming steady state power flow, estimated from power and voltage
+    'i_d': 0.1,                # d-axis stator current (pu)
+    'i_q': 0.8,                # q-axis stator current (pu)
 
-INITIAL_CONDITIONS = {'Bus':{'a':[0, 1],
-                             'v':[2, 3]},
-                      'ACLine':{'a1':[0],
-                                'a2':[1],
-                                'v1':[2],
-                                'v2':[3]},
-                      'GENCLS':{'delta':[4],
-                                'omega':[5],
-                                'psid':[6],
-                                'psiq':[7],
-                                'i_d':[8],
-                                'i_q':[9],
-                                'vd':[10],
-                                'vq':[11],
-                                'te':[12],
-                                'Pe':[13],
-                                'Qe':[14],
-                                'a':[0],
-                                'v':[2]},
-                      'ExpLoad':{'a':[1],
-                                 'v':[3]}}
+    # dq terminal voltages (transformed from v1, a1)
+    'vd': 0.0,                 # d-axis voltage (pu)
+    'vq': 0.95,                # q-axis voltage (pu)
 
-# DAEX = np.array([4.0, 5.0])
-# DAEY = np.array([0.0, 1.0, 2.0, 3.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0])
+    # Electromagnetic torque
+    'te': 0.8,                 # electric torque (pu)
 
-# x0 = 
+    # Electrical power output
+    'Pe': 0.8,                 # real power (pu)
+    'Qe': 0.2,                 # reactive power (pu)
+}
 
-# y0 = 
-
-DAEX = np.array([1.0, 1.0])
-DAEY = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+dae_x0 = np.array(list(x0.values()))
+dae_y0 = np.array(list(y0.values()))

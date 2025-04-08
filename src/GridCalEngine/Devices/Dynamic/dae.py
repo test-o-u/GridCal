@@ -1,11 +1,7 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 from collections import defaultdict
-import pandas as pd
-
-from numpy import asarray
-from numpy import savetxt
-from GridCalEngine.Devices.Dynamic.model_list import DAEX, DAEY
+from GridCalEngine.Devices.Dynamic.model_list import dae_x0, dae_y0
 
 
 class DAE:
@@ -23,8 +19,8 @@ class DAE:
         self.nx = 0
         self.ny = 0
 
-        self.x = DAEX
-        self.y = DAEY
+        self.x = dae_x0
+        self.y = dae_y0
         self.xy = None
         self.f = None
         self.g = None
@@ -54,7 +50,7 @@ class DAE:
         # Dictionary with all the residuals for updating jacobian
         self.residuals_dict = defaultdict(dict)
 
-        # NOTE: change
+        # NOTE: To change!
         self.Tf = 2
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
@@ -110,21 +106,8 @@ class DAE:
         self.concatenate()
         self.build_xy()
         self.system.values_array = self.xy
-        print(self.xy)
         self.system.update_jacobian()
         self.finalize_jacobians()
-        print(self.dfx)
-        print(self.dfy)
-        print(self.dgx)
-        print(self.dgy)
-        # data = asarray(self.dfx)
-        # savetxt('dfx.csv', data, delimiter=',')
-        # data = asarray(self.dfy)
-        # savetxt('dfy.csv', data, delimiter=',')
-        # data = asarray(self.dgx)
-        # savetxt('dgx.csv', data, delimiter=',')
-        # data = asarray(self.dgy)
-        # savetxt('dgy.csv', data, delimiter=',')
 
     def update_fg(self):
         self.concatenate()

@@ -53,7 +53,6 @@ class GENCLS(DynamicModelTemplate):
                               value=[]) 
 
         # state variables
-
         self.delta = StatVar(name='delta', 
                              symbol='delta', 
                              init_eq='delta0', 
