@@ -19,7 +19,7 @@ class TDS():
 
         # Run simulation
         self.system.dae.initilize_fg()
-        self.run()
+        # self.run()
 
     def run(self):
         """

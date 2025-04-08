@@ -76,10 +76,10 @@ def initialize_system():
 
         logging.info("===========================================")
         logging.info("=============== JACOBIANS ================")
-        logging.info(f"dfx = {system.dae.dfx}")
-        logging.info(f"dfy = {system.dae.dfy}")
-        logging.info(f"dgx = {system.dae.dgx}")
-        logging.info(f"dgy = {system.dae.dgy}")
+        # logging.info(f"dfx = {system.dae.dfx}")
+        # logging.info(f"dfy = {system.dae.dfy}")
+        # logging.info(f"dgx = {system.dae.dgx}")
+        # logging.info(f"dgy = {system.dae.dgy}")
         logging.info("===========================================")
 
     return system   
