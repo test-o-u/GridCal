@@ -36,9 +36,12 @@ class Integration:
 
             # Recompute f and g
             dae.update_fg()
+
             
             # Check convergence
-            if np.linalg.norm(inc, np.inf) < tol:
+            error = np.linalg.norm(inc, np.inf)
+            print(error)
+            if error < tol:
                 return True
         
         # Restore previous values if not converged

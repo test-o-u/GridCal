@@ -126,4 +126,4 @@ class DAE:
                 self.xy.append(self.x[addr])
             else:
                 self.xy.append(self.y[addr - self.nx])
-        return np.array(self.xy)
+        return np.array(self.xy) #NOTE: wrong

@@ -199,8 +199,8 @@ class System:
                     states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
                     # Store DAE addresses
-                    self.dae.xy_addr.extend(indices)
                     if model_instance.name != 'Bus':
+                        self.dae.xy_addr.extend(indices)
                         self.dae.x_addr.extend(indices)
 
                     self.dae.nx += model_instance.n
@@ -238,8 +238,8 @@ class System:
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
                     # Store DAE addresses
-                    self.dae.xy_addr.extend(indices)
                     if model_instance.name != 'Bus':
+                        self.dae.xy_addr.extend(indices)
                         self.dae.y_addr.extend(indices)
 
                     self.dae.ny += model_instance.n  

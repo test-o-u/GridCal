@@ -81,10 +81,6 @@ def initialize_system():
         logging.info(f"dgx = {system.dae.dgx}")
         logging.info(f"dgy = {system.dae.dgy}")
         logging.info("===========================================")
-    np.savetxt("jacobian_dfx.csv", (system.dae.dfx).toarray(), delimiter=",")
-    np.savetxt("jacobian_dfy.csv", (system.dae.dfy).toarray(), delimiter=",")
-    np.savetxt("jacobian_dgx.csv", (system.dae.dgx).toarray(), delimiter=",")
-    np.savetxt("jacobian_dgy.csv", (system.dae.dgy).toarray(), delimiter=",")
 
     return system   
     
