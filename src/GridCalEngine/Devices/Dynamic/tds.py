@@ -1,3 +1,4 @@
+import pdb
 from GridCalEngine.Devices.Dynamic.integration import method_map
 
 
@@ -19,6 +20,7 @@ class TDS():
 
         # Run simulation
         self.system.dae.initilize_fg()
+        pdb.set_trace()
         self.run()
 
     def run(self):

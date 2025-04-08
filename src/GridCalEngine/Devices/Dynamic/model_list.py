@@ -18,15 +18,15 @@ MODELS = list([
 ])
 
 x0 = {
-    'delta': 1.0,
+    'delta': 0.1,
     'omega': 1.0,
 }
 
 y0 = {
     'a1': 15 * (np.pi / 180),  # rotor angle (rad)
     'a2': 10 * (np.pi / 180),  # angle of second bus, possibly infinite bus
-    'v1': 0.95,                # generator terminal voltage magnitude (pu)
-    'v2': 1.0,                 # remote bus voltage (pu)
+    'v1': 1.0,                # generator terminal voltage magnitude (pu)
+    'v2': 0.95,                 # remote bus voltage (pu)
 
     # Stator dq axis flux linkages (GENCLS has no field circuit, so usually derived from voltage and current)
     'psid': 1.0,               # flux linkage in d-axis (pu)
@@ -37,9 +37,9 @@ y0 = {
     'i_q': 0.8,                # q-axis stator current (pu)
 
     # dq terminal voltages (transformed from v1, a1)
-    'vd': 0.0,                 # d-axis voltage (pu)
-    'vq': 0.95,                # q-axis voltage (pu)
-
+    'vd': 0.1,                 # d-axis voltage (pu)
+    'vq': 1.0,                # q-axis voltage (pu)
+    
     # Electromagnetic torque
     'te': 0.8,                 # electric torque (pu)
 
