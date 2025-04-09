@@ -25,7 +25,7 @@ class Integration:
         for iteration in range(max_iter):
             jac = method.calc_jac(dae, dt)
             qg = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
-            qg = np.vstack((dae.f, dae.g.reshape(-1, 1)))  # Include algebraic residuals
+            qg = np.vstack((dae.f.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
             inc = spsolve(jac, qg)

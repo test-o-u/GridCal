@@ -208,13 +208,13 @@ class System:
                     # Store DAE addresses
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
-                    
+
                     # Construct DAE lhs matrix
                     if var_list.t_const != 1.0:
                         self.dae.Tf += var_list.t_const
                     else:
                         self.dae.Tf += [1.0] * model_instance.n
-                    
+
                     self.dae.nx += model_instance.n
 
         # Second loop: Process ExternStates
@@ -278,16 +278,6 @@ class System:
                     self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
                     self.dae.y_addr.extend(model_instance.extalgeb_idx[var_list.name])
 
-    # def build_input_dict(self):
-    #
-    #     index1 = 0
-    #     for model_instance in self.devices.values():
-    #         if model_instance.name != 'Bus':
-    #             nr_components = model_instance.n
-    #             for variable in model_instance.variables_list:
-    #                 values = (self.values_array[index1:index1+nr_components])
-    #                 self.dae.residuals_dict[model_instance.name][variable] = values
-    #                 index1 += nr_components
 
     def get_input_values(self, device):
 
@@ -297,8 +287,6 @@ class System:
         residuals = self.dae.update_xy_dict[device.name]
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
-
-        # print(parameters)
 
         pycode_code = device.import_pycode()
         f_jac_arguments = pycode_code.f_jac_args
@@ -324,10 +312,7 @@ class System:
     
 
     def update_jacobian(self):
-        all_triplets = {}
-        f_values_list = []
-        g_values_list = []
-        #all_f_g_values = []
+
         for device in self.devices.values():
             if device.name != 'Bus':
 
@@ -335,74 +320,65 @@ class System:
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
-                # get f and g update
-                f_values, g_values = device.calc_f_g_functions(f_input_values, g_input_values)
-                f_values_list.append(f_values)
-                g_values_list.append(g_values)
+                #get variable addresses
+                var_addresses = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
 
+                ###f and g update
+                # get local f and g info and values
+                local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions(f_input_values, g_input_values)
+
+                eq_type = 'f'
+                pairs = self.assign_global_f_g_positions(local_f_values, variables_names_for_ordering_f, var_addresses)
+                for index, val in pairs:
+                    self.dae.add_to_f_g(self.dae.f, index, val)
+
+                eq_type = 'g'
+                pairs = self.assign_global_f_g_positions(local_g_values, variables_names_for_ordering_g, var_addresses)
+                for index, val in pairs:
+                    self.dae.add_to_f_g(self.dae.g, index, val)
+
+                ### Jacobian update
                 # get local jacobians info and values
                 f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_jac_input_values, g_jac_input_values)
-
-                # get variable addresses
-                g_var_addresses = device.extalgeb_idx
-                g_var_addresses.update(device.algeb_idx)
-
-                f_var_addresses = device.extstates_idx
-                f_var_addresses.update(device.states_idx)
-
-                f_var_addresses.update(g_var_addresses)
-                var_addresses = f_var_addresses
 
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
-                all_triplets[jac_type] = triplets
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses)
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dfx_dict, self.dae.sparsity_fx, row, col, val)
 
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_positions(device, f_jacobians, jac_type, positions, var_addresses)
-                all_triplets[jac_type] = triplets
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses)
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dfy_dict, self.dae.sparsity_fy, row, col, val)
 
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
-                all_triplets[jac_type] = triplets
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses)
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dgx_dict, self.dae.sparsity_gx, row, col, val)
 
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_positions(device, g_jacobians, jac_type, positions, var_addresses)
-                all_triplets[jac_type] = triplets
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses)
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dgy_dict, self.dae.sparsity_gy, row, col, val)
-            
-        #all_f_g_values = [f_values_list, g_values_list]
-
-        # NOTE: necessary?
-        f_value_list_flat = [val for model in f_values_list for val in model]
-        g_value_list_flat = [val for model in g_values_list for val in model]
-
-        f_array = np.array(f_value_list_flat)
-
-        # Residual power balance
-        g_array = self.sum_duplicate_values(g_value_list_flat)
-
-        self.dae.f = f_array
-        self.dae.g = g_array
-
-        return all_triplets
 
 
-    def assign_positions(self, model, local_jacobian, jac_type, positions, var_addresses):
+    def assign_global_f_g_positions(self, local_values, variables_names_for_ordering, var_addresses):
+        pairs = []
+        for val, var_name in zip(local_values, variables_names_for_ordering):
+            address = var_addresses[var_name]
+            pairs.append((address, val))
+        return pairs
+
+
+    def assign_global_jac_positions(self, model, local_jacobian, positions, var_addresses):
         triplets = []
         for i in range(model.n):
             for j, (func_index, var_index) in enumerate(positions):
@@ -411,22 +387,3 @@ class System:
                 address_var = var_addresses[model.vars_index[var_index]][i]
                 triplets.append((address_func, address_var, val))
         return triplets
-    
-    def sum_duplicate_values(self, g_value_list_flat):
-        sum_dict = defaultdict(int)
-
-        self.dae.y_addr[:4] = self.dae.y_addr[-4:]
-
-        for idx, val in zip(self.dae.y_addr, g_value_list_flat):
-            sum_dict[idx] += val
-
-        # Preserve the order of first appearance
-        seen = set()
-        result = []
-        for idx in self.dae.y_addr:
-            if idx not in seen:
-                result.append(sum_dict[idx])
-                seen.add(idx)
-
-        return np.array([result])
-

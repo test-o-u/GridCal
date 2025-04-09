@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+from collections import defaultdict
 class ModelStorage:
     """
     A class to store and manage model expressions and variables (string form).
@@ -35,8 +35,8 @@ class ModelStorage:
         self.name = model_name
 
         # Lists to store model equations
-        self.f = []
-        self.g = []
+        self.f = {}
+        self.g = {}
 
         # Collections of variables
         self.stats = []
@@ -64,14 +64,14 @@ class ModelStorage:
         Add a state variable (differential equation).
         """
         self.stats.append(expr)
-        self.f.append(expr.eq)
+        self.f[expr.name] = expr.eq
 
     def add_algebvars(self, expr):
         """
         Add an algebraic variable (algebraic equation).
         """
         self.algebs.append(expr)
-        self.g.append(expr.eq)
+        self.g[expr.name] = expr.eq
 
     def add_externvars(self, expr):
         """
@@ -85,7 +85,7 @@ class ModelStorage:
         """
         self.stats.append(expr)
         self.externStates.append(expr)
-        self.f.append(expr.eq)
+        self.f[expr.name] = expr.eq
 
     def add_externalgebs(self, expr):
         """
@@ -93,7 +93,7 @@ class ModelStorage:
         """
         self.algebs.append(expr)
         self.externAlgebs.append(expr)
-        self.g.append(expr.eq)
+        self.g[expr.name] = expr.eq
 
     def add_aliasalgebs(self, expr):
         """

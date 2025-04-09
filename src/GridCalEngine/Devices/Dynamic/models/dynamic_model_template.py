@@ -136,7 +136,11 @@ class DynamicModelTemplate(EditableDevice):
                 g_values_device.append(g_values)
         f_values_device_flat = [val for component in f_values_device for val in component]
         g_values_device_flat = [val for component in g_values_device for val in component]
-        return f_values_device_flat, g_values_device_flat
+
+        variables_names_for_ordering_f = pycode_code.variables_names_for_ordering['f']
+        variables_names_for_ordering_g = pycode_code.variables_names_for_ordering['g']
+
+        return f_values_device_flat, g_values_device_flat, variables_names_for_ordering_f, variables_names_for_ordering_g
 
     def calc_local_jacs(self, f_input_values, g_input_values):
         pycode_code = self.import_pycode()

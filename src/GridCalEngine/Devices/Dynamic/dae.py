@@ -24,8 +24,8 @@ class DAE:
         self.y = dae_y0
         self.xy_unique = None
         self.xy_extended = None
-        self.f = None
-        self.g = None
+        self.f = np.zeros(2)
+        self.g = np.zeros(13)
 
         # Dictionaries to accumulate Jacobian values
         self._dfx_dict  = {}
@@ -55,6 +55,10 @@ class DAE:
         # NOTE: To change!
         self.Tf = []
         
+
+
+    def add_to_f_g(self, eq_type_array, index, value):
+        eq_type_array[index[0]-2] += value
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """

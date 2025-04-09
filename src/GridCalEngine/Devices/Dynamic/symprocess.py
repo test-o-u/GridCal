@@ -55,6 +55,7 @@ class SymProcess:
         self.g_matrix = ()
         self.equ_matrix = ()
         self.lambda_equations = {}
+        self.variables_names_for_ordering = {}
 
         # Jacobians
         self.f_args = []
@@ -100,11 +101,13 @@ class SymProcess:
         equation_type = ['f', 'g']
 
         for variables, equations, eq_type in zip(variables_f_g, equations_f_g, equation_type):
+            variables_names_for_ordering = []
             symbolic_eqs = []
             symbolic_vars = []
             # create a list with all symbolic equations (symbolic_expr) and a list with all symbols in equations (symbols_in_equ)
             for var in variables:
                 if var.eq:
+                    variables_names_for_ordering.append(var.name)
                     symbolic_expr = sp.sympify(var.eq)
                     symbols_in_eq = symbolic_expr.free_symbols
 
@@ -127,6 +130,7 @@ class SymProcess:
 
             # Lambdify numerical evaluation functions
             self.lambda_equations[eq_type] = lambdify(symbolic_args, sp.Matrix(symbolic_eqs), modules='numpy')
+            self.variables_names_for_ordering[eq_type] = variables_names_for_ordering
         #self.f_list.append(self.g_list)
         #self.equ_list = self.f_list
         #self.equ_matrix = sp.Matrix(self.equ_list)
@@ -227,6 +231,8 @@ class SymProcess:
 
             f.write(f"f_args =" + pprint.pformat(sorted(self.model_storage.f_args)) + '\n')
             f.write(f"g_args =" + pprint.pformat(sorted(self.model_storage.g_args)) + '\n')
+
+            f.write(f"variables_names_for_ordering =" + pprint.pformat(self.variables_names_for_ordering) + '\n')
 
             for name, func in [('f', self.jacob_states), ('g', self.jacob_algebs)]:
                 py_expr = self._rename_func(func, f"{name}_ia")
