@@ -187,6 +187,7 @@ class System:
                 if isinstance(param, NumDynParam):
                     self.dae.params_dict[device.name][param.symbol] = param.value
 
+
     def set_addresses(self):
         self.global_id = 0
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
@@ -207,8 +208,13 @@ class System:
                     # Store DAE addresses
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
-                        
-
+                    
+                    # Construct DAE lhs matrix
+                    if var_list.t_const != 1.0:
+                        self.dae.Tf += var_list.t_const
+                    else:
+                        self.dae.Tf += [1.0] * model_instance.n
+                    
                     self.dae.nx += model_instance.n
 
         # Second loop: Process ExternStates
@@ -243,8 +249,8 @@ class System:
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
-                    # Store DAE addresses
                     self.dae.y_addr.extend(indices)
+                    # Store DAE addresses
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
                         
@@ -407,8 +413,9 @@ class System:
         return triplets
     
     def sum_duplicate_values(self, g_value_list_flat):
-        # We'll sum values by index
         sum_dict = defaultdict(int)
+
+        self.dae.y_addr[:4] = self.dae.y_addr[-4:]
 
         for idx, val in zip(self.dae.y_addr, g_value_list_flat):
             sum_dict[idx] += val

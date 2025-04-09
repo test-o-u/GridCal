@@ -61,7 +61,8 @@ class GENCLS(DynamicModelTemplate):
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
                              init_eq='omega_0', 
-                             eq='(tm - te - D * (omega - 1))')                          
+                             eq='(tm - te - D * (omega - 1))',
+                             t_const = self.M.value)                          
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',

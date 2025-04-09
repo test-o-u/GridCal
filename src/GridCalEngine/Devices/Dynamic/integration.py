@@ -2,6 +2,7 @@ import numpy as np
 import pdb
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
+
 class Integration:
     """
     Base class for implicit iterative methods.
@@ -27,7 +28,7 @@ class Integration:
             qg = np.vstack((dae.f, dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
-            inc = spsolve(jac, -qg)
+            inc = spsolve(jac, qg)
             
             # Update variables
             dae.x += inc[:dae.nx]
@@ -37,10 +38,9 @@ class Integration:
             # Recompute f and g
             dae.update_fg()
 
-            
             # Check convergence
             residual_error = np.linalg.norm(qg, np.inf)
-            print(residual_error)
+            print(qg)
             if residual_error < tol:
                 return True
         
@@ -59,7 +59,7 @@ class BackEuler(Integration):
     
     @staticmethod
     def calc_q(x, f, Tf, dt, x0, f0):
-        return Tf * (x - x0) - dt * f
+        return Tf @ (x - x0) - dt * f
 
 class Trapezoid(Integration):
     """
@@ -72,7 +72,7 @@ class Trapezoid(Integration):
     
     @staticmethod
     def calc_q(x, f, Tf, dt, x0, f0):
-        return Tf * (x - x0) - 0.5 * dt * (f + f0)
+        return Tf @ (x - x0) - 0.5 * dt * (f + f0)
 
 method_map = {
     "trapezoid": Trapezoid,

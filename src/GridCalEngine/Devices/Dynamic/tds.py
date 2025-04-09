@@ -6,7 +6,7 @@ class TDS():
     """
     Time domain simulation class.
     """
-    def __init__(self, system, dt=0.01, t_final=0.1, method="trapezoid"):
+    def __init__(self, system, dt=0.0001, t_final=0.1, method="trapezoid"):
         self.system = system
         self.dt = dt
         self.t_final = t_final
@@ -17,7 +17,9 @@ class TDS():
         if method not in method_map:
             raise ValueError(f"Unknown integration method: {method}")
         self.integrator = method_map[method]
-
+ 
+        # Set lhs DAE params 
+        self.system.dae.finalize_tconst_matrix()
         # Run simulation
         self.system.dae.initilize_fg()
         self.run()

@@ -1,6 +1,6 @@
 import numpy as np
 import pdb
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
 from GridCalEngine.Devices.Dynamic.model_list import dae_x0, dae_y0
 
@@ -53,7 +53,8 @@ class DAE:
         self.update_xy_dict = defaultdict(dict)
 
         # NOTE: To change!
-        self.Tf = 2
+        self.Tf = []
+        
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
@@ -140,6 +141,11 @@ class DAE:
             addresses = addresses_dict[variable]
             values = [self.xy_unique[address] for address in addresses]
             self.update_xy_dict[device.name][variable] = values
+    
+    def finalize_tconst_matrix(self):
+        self.Tf = diags(self.Tf)
+
+
 
 
 

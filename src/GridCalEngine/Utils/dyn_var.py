@@ -31,13 +31,14 @@ class AlgebVar(DynVar):
 
 
 class StatVar(DynVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, t_const=1.0):
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq)
         self.var_type = 'x'
+        self.t_const = t_const
 
 
 class ExternVar(DynVar):
