@@ -28,14 +28,12 @@ class Integration:
             residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
-            inc = spsolve(jac, -residual)
+            inc = spsolve(jac, residual)
             
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
-            
-            # pdb.set_trace()
-            
+
             # Recompute f and g
             dae.update_fg()
             

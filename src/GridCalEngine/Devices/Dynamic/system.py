@@ -319,10 +319,10 @@ class System:
         self.dae._dgy_dict = {}
         self.dae.f = np.zeros(2)
         self.dae.g = np.zeros(13)
-        self.sparsity_fx = list()
-        self.sparsity_fy = list()
-        self.sparsity_gx = list()
-        self.sparsity_gy = list()
+        self.dae.sparsity_fx = list()
+        self.dae.sparsity_fy = list()
+        self.dae.sparsity_gx = list()
+        self.dae.sparsity_gy = list()
 
         for device in self.devices.values():
             if device.name != 'Bus':

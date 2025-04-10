@@ -96,7 +96,6 @@ class DAE:
         self.dfx = self.build_sparse_matrix(self._dfx_dict,
                                             [(row, col) for row, col in self.sparsity_fx],
                                             (self.nx, self.nx), 'dfx')
-        pdb.set_trace()
 
         self.dfy = self.build_sparse_matrix(self._dfy_dict,
                                             [(row, col - self.nx) for row, col in self.sparsity_fy],
@@ -120,7 +119,7 @@ class DAE:
     def update_fg(self):
         self.concatenate()
         self.build_xy()
-        self.system.values_array = self.xy_extended
+        # self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
     
