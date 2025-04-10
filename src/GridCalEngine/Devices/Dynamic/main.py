@@ -45,9 +45,12 @@ def initialize_system():
     start_time = time.perf_counter()
     try:
         # Initialize the system with given models and datafile
-        system = System(MODELS, datafile)
+        # system = System(MODELS, datafile)
+        system = System(MODELS, 'GridCalEngine/Devices/Dynamic/test.json')
+        print('josep')
 
     except Exception as e:
+        system = None
         logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)
 
     # Performance timing logs

@@ -19,7 +19,7 @@ class TDS():
         self.integrator = method_map[method]
  
         # Set lhs DAE params 
-        self.system.dae.finalize_tconst_matrix()
+        # self.system.dae.finalize_tconst_matrix()
         # Run simulation
         self.system.dae.initilize_fg()
         self.run()
