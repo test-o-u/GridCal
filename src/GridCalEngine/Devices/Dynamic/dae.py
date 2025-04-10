@@ -115,11 +115,6 @@ class DAE:
         # self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
-        # print(self.dfx)
-        # print(self.dfy)
-        # print(self.dgx)
-        # print(self.dgy)
-        # pdb.set_trace()
 
     def update_fg(self):
         self.concatenate()
@@ -128,11 +123,6 @@ class DAE:
         self.system.update_jacobian()
         self.finalize_jacobians()
     
-
-        # print(self.dfx)
-        # print(self.dfy)
-        # print(self.dgx)
-        # print(self.dgy)
 
 
     def concatenate(self):

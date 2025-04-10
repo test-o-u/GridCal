@@ -36,6 +36,7 @@ class Integration:
 
             pdb.set_trace()
           
+            #dae.concatenate()
             # Recompute f and g
             dae.update_fg()
             
