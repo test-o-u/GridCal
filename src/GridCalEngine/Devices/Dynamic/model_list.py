@@ -18,7 +18,7 @@ MODELS = list([
 ])
 
 x0 = {
-    'delta': 0.1,
+    'delta': 0.5,
     'omega': 1.0,
 }
 
