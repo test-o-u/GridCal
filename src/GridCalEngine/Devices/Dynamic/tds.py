@@ -21,10 +21,10 @@ class TDS():
  
         # Initialize 
         self.system.dae.initilize_fg()
-        # Compute steady-state
-        self.run_steadystate()
+        # # Compute steady-state
+        # self.run_steadystate()
         # Run simulation
-        # self.run_tds()
+        self.run_tds()
 
     def run_tds(self):
         """
