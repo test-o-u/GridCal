@@ -41,7 +41,7 @@ y0 = {
     'vq': 1.0,                # q-axis voltage (pu)
     
     # Electromagnetic torque
-    'te': 0.8,                 # electric torque (pu)
+    'te': 0.9,                 # electric torque (pu)
 
     # Electrical power output
     'Pe': 0.8,                 # real power (pu)

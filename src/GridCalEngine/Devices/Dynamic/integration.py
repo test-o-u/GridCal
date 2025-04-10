@@ -34,9 +34,14 @@ class Integration:
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
 
+            pdb.set_trace()
+          
             #dae.concatenate()
             # Recompute f and g
             dae.update_fg()
+            
+
+            print(residual)
 
             # Check convergence
             residual_error = np.linalg.norm(residual, np.inf)
