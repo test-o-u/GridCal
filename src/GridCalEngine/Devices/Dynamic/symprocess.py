@@ -7,7 +7,6 @@ import os
 import sympy as sp
 import inspect
 import pprint
-import pdb
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
 

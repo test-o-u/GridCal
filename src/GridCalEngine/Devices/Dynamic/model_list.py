@@ -18,7 +18,7 @@ MODELS = list([
 ])
 
 x0 = {
-    'delta': 0.5,
+    'delta': 0.0,
     'omega': 1.0,
 }
 
@@ -34,17 +34,17 @@ y0 = {
 
     # dq axis currents — assuming steady state power flow, estimated from power and voltage
     'i_d': 0.1,                # d-axis stator current (pu)
-    'i_q': 0.8,                # q-axis stator current (pu)
+    'i_q': 0.2,                # q-axis stator current (pu)
 
     # dq terminal voltages (transformed from v1, a1)
-    'vd': 0.1,                 # d-axis voltage (pu)
+    'vd': 0.0,                 # d-axis voltage (pu)
     'vq': 1.0,                # q-axis voltage (pu)
     
     # Electromagnetic torque
-    'te': 0.9,                 # electric torque (pu)
+    'te': 0.2,                 # electric torque (pu)
 
     # Electrical power output
-    'Pe': 0.8,                 # real power (pu)
+    'Pe': 0.2,                 # real power (pu)
     'Qe': 0.2,                 # reactive power (pu)
 }
 

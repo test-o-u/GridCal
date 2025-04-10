@@ -61,19 +61,20 @@ class GENCLS(DynamicModelTemplate):
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
                              init_eq='omega_0', 
-                             eq='(tm - te - D * (omega - 1))',
-                             t_const = self.M.value)                          
+                             eq='(-tm / M + te / M - D / M * (omega - 1))')
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',
                              symbol='psid',
                              init_eq='psid0',
-                             eq='(ra * i_q + vq) - psid')
+                            #  eq='(ra * i_q + vq) - psid')
+                             eq='(-ra * i_q + vq) - psid')
         
         self.psiq = AlgebVar(name='psiq',
                              symbol='psiq',
                              init_eq='psiq0',
-                             eq='(ra * i_d + vd) - psiq')
+                            #  eq='(ra * i_d + vd) - psiq')
+                             eq='(-ra * i_d + vd) - psiq')
         
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
