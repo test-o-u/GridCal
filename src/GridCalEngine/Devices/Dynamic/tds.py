@@ -35,9 +35,7 @@ class TDS():
             # Solve DAE step
             converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator)
 
-            if converged:
-                print(f"Converged at time {t}")
-            else:
+            if not converged:
                 raise RuntimeError("Integration step did not converge")
             
             t += self.dt

@@ -27,14 +27,7 @@ class Integration:
             residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
-
-            print('-----------')
-            print('Res')
-            print(residual.transpose())
-            
             inc = spsolve(jac, -residual)
-            
-            daex0 = dae.x.copy()
 
             # Update variables
             dae.x += 0.5 * inc[:dae.nx]
@@ -42,23 +35,6 @@ class Integration:
 
             # Recompute f and g
             dae.update_fg()
-
-            jinv = np.linalg.inv(jac.todense())
-            print('Jinv')
-            print(jinv)
-
-            print('Inc')
-            print(inc)
-
-            print('dae x before and after')
-            print(daex0)
-            print(dae.x)
-
-
-            # for attr in dae.__dict__:
-            #     print(attr)
-            #     print(getattr(dae, attr))
-            
 
             # Check convergence
             residual_error = np.linalg.norm(residual, np.inf)
