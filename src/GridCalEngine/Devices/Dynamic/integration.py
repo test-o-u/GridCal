@@ -1,5 +1,4 @@
 import numpy as np
-import pdb
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
 
@@ -16,7 +15,7 @@ class Integration:
         pass
     
     @staticmethod
-    def step(dae, dt, method, tol=1e-6, max_iter=10):
+    def step(dae, dt, method, tol=1e-5, max_iter=80):
         """
         Perform an implicit integration step with Newton-Raphson.
         """
@@ -28,19 +27,38 @@ class Integration:
             residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
+
+            print('-----------')
+            print('Res')
+            print(residual.transpose())
+            
             inc = spsolve(jac, -residual)
             
-            # Update variables
-            dae.x += inc[:dae.nx]
-            dae.y += inc[dae.nx:]
+            daex0 = dae.x.copy()
 
-            pdb.set_trace()
+            # Update variables
+            dae.x += 0.5 * inc[:dae.nx]
+            dae.y += 0.5 * inc[dae.nx:]
 
             # Recompute f and g
             dae.update_fg()
-            
 
-            print(residual)
+            jinv = np.linalg.inv(jac.todense())
+            print('Jinv')
+            print(jinv)
+
+            print('Inc')
+            print(inc)
+
+            print('dae x before and after')
+            print(daex0)
+            print(dae.x)
+
+
+            # for attr in dae.__dict__:
+            #     print(attr)
+            #     print(getattr(dae, attr))
+            
 
             # Check convergence
             residual_error = np.linalg.norm(residual, np.inf)

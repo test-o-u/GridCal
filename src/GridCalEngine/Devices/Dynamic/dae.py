@@ -1,5 +1,4 @@
 import numpy as np
-import pdb
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
 from GridCalEngine.Devices.Dynamic.model_list import dae_x0, dae_y0

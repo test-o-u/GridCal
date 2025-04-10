@@ -1,4 +1,3 @@
-import pdb
 from GridCalEngine.Devices.Dynamic.integration import method_map
 
 
@@ -6,7 +5,7 @@ class TDS():
     """
     Time domain simulation class.
     """
-    def __init__(self, system, dt=0.0001, t_final=0.1, method="trapezoid"):
+    def __init__(self, system, dt=0.0001, t_final=0.1, method="backeuler"):
         self.system = system
         self.dt = dt
         self.t_final = t_final
