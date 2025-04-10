@@ -45,6 +45,7 @@ def initialize_system():
     start_time = time.perf_counter()
     try:
         # Initialize the system with given models and datafile
+        datafile = 'src/GridCalEngine/Devices/Dynamic/test.json'
         system = System(MODELS, datafile)
 
     except Exception as e:
