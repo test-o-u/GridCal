@@ -284,6 +284,7 @@ class System:
         #get parameters and residuals from "dae"
         self.dae.build_values_dict(device)
 
+
         residuals = self.dae.update_xy_dict[device.name]
         parameters= self.dae.params_dict[device.name]
         parameters.update(residuals)
@@ -312,6 +313,12 @@ class System:
     
 
     def update_jacobian(self):
+        self.dae._dfx_dict = {}
+        self.dae._dfy_dict = {}
+        self.dae._dgx_dict = {}
+        self.dae._dgy_dict = {}
+        self.dae.f = []
+        self.dae.g = []
 
         for device in self.devices.values():
             if device.name != 'Bus':

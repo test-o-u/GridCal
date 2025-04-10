@@ -33,10 +33,8 @@ class Integration:
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
+
             #dae.concatenate()
-            print(dae.x)
-            print(dae.y)
-            print('iteration')
             # Recompute f and g
             dae.update_fg()
 

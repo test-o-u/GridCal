@@ -32,6 +32,8 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/integration.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/integration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -173,6 +175,7 @@
     "Python.__main__.executor": "Debug",
     "Python.cgmes_rdfs_graph.executor": "Run",
     "Python.circuit_to_optimods.executor": "Run",
+    "Python.dae.executor": "Run",
     "Python.new_circuit_objects.executor": "Run",
     "Python.pymoo_example.executor": "Debug",
     "Python.python_console.executor": "Run",
@@ -1871,7 +1874,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="622" />
+    <option name="localTasksCounter" value="623" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
