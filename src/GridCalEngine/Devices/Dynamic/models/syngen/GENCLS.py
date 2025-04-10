@@ -78,12 +78,12 @@ class GENCLS(DynamicModelTemplate):
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
                            init_eq='i_d0', 
-                           eq='psid + vd * i_d - vf')
+                           eq='psid + xd * i_d - vf') # vd
                                                          
         self.i_q = AlgebVar(name='i_q', 
                            symbol='i_q', 
                            init_eq='i_q0', 
-                           eq='psiq + vd * i_q')
+                           eq='psiq + xd * i_q') # vd
                                                      
         self.vd = AlgebVar(name='vd', 
                            symbol='vd', 
