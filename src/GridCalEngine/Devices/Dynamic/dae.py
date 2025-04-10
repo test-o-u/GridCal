@@ -96,6 +96,7 @@ class DAE:
         self.dfx = self.build_sparse_matrix(self._dfx_dict,
                                             [(row, col) for row, col in self.sparsity_fx],
                                             (self.nx, self.nx), 'dfx')
+        pdb.set_trace()
 
         self.dfy = self.build_sparse_matrix(self._dfy_dict,
                                             [(row, col - self.nx) for row, col in self.sparsity_fy],

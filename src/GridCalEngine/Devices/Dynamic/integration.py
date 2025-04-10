@@ -33,10 +33,9 @@ class Integration:
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
-
-            pdb.set_trace()
-          
-            #dae.concatenate()
+            
+            # pdb.set_trace()
+            
             # Recompute f and g
             dae.update_fg()
             
