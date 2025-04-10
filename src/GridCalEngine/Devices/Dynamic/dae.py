@@ -112,21 +112,22 @@ class DAE:
     def initilize_fg(self):
         self.concatenate()
         self.build_xy()
-        self.system.values_array = self.xy_extended
+        # self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
         # print(self.dfx)
         # print(self.dfy)
         # print(self.dgx)
         # print(self.dgy)
+        # pdb.set_trace()
 
     def update_fg(self):
         self.concatenate()
-
         self.build_xy()
         self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
+    
 
         # print(self.dfx)
         # print(self.dfy)

@@ -22,6 +22,7 @@ class TDS():
         # self.system.dae.finalize_tconst_matrix()
         # Run simulation
         self.system.dae.initilize_fg()
+        
         self.run()
 
     def run(self):

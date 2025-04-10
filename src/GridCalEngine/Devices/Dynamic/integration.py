@@ -33,12 +33,14 @@ class Integration:
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
-            #dae.concatenate()
-            print(dae.x)
-            print(dae.y)
-            print('iteration')
+
+            pdb.set_trace()
+          
             # Recompute f and g
             dae.update_fg()
+            
+
+            print(residual)
 
             # Check convergence
             residual_error = np.linalg.norm(residual, np.inf)
