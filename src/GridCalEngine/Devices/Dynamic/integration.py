@@ -24,23 +24,24 @@ class Integration:
         
         for iteration in range(max_iter):
             jac = method.calc_jac(dae, dt)
-            qg = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
-            qg = np.vstack((dae.f.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
+            f_residual = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
+            residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
 
             # Solve linear system
-            inc = spsolve(jac, qg)
+            inc = spsolve(jac, -residual)
             
             # Update variables
             dae.x += inc[:dae.nx]
             dae.y += inc[dae.nx:]
-            dae.concatenate()
-
+            #dae.concatenate()
+            print(dae.x)
+            print(dae.y)
+            print('iteration')
             # Recompute f and g
             dae.update_fg()
 
             # Check convergence
-            residual_error = np.linalg.norm(qg, np.inf)
-            print(qg)
+            residual_error = np.linalg.norm(residual, np.inf)
             if residual_error < tol:
                 return True
         

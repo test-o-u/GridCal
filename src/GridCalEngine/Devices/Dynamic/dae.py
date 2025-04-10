@@ -115,13 +115,24 @@ class DAE:
         self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
+        # print(self.dfx)
+        # print(self.dfy)
+        # print(self.dgx)
+        # print(self.dgy)
 
     def update_fg(self):
         self.concatenate()
+
         self.build_xy()
         self.system.values_array = self.xy_extended
         self.system.update_jacobian()
         self.finalize_jacobians()
+
+        # print(self.dfx)
+        # print(self.dfy)
+        # print(self.dgx)
+        # print(self.dgy)
+
 
     def concatenate(self):
         self.xy_unique = np.hstack((self.x, self.y))
@@ -135,12 +146,7 @@ class DAE:
                 self.xy_extended.append(self.y[addr - self.nx])
 
     def build_values_dict(self, device):
-        states_idx = 0
-        algebs_idx = 0
-        # for device in self.system.devices.values():
-        #     if device.name != 'Bus':
         addresses_dict = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
-        nr_components = device.n
         for variable in device.variables_list:
             addresses = addresses_dict[variable]
             values = [self.xy_unique[address] for address in addresses]
