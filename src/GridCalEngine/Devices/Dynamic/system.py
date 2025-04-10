@@ -317,8 +317,8 @@ class System:
         self.dae._dfy_dict = {}
         self.dae._dgx_dict = {}
         self.dae._dgy_dict = {}
-        self.dae.f = []
-        self.dae.g = []
+        self.dae.f = np.zeros(2)
+        self.dae.g = np.zeros(13)
 
         for device in self.devices.values():
             if device.name != 'Bus':
