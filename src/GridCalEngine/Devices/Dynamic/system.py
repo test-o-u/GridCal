@@ -6,7 +6,7 @@
 import os
 import importlib
 import compileall
-import time  
+import time
 import numpy as np
 import sympy as sp
 from collections import defaultdict
@@ -46,21 +46,12 @@ class System:
 
         self.models_list = models_list
         self.values_array = None
-
         self.models = {}
         self.devices = {}
-
         self.dae = DAE(self)
-
         self.data = readjson(datafile)
-
         self.import_models()
         self.system_prepare()
-        self.dae.concatenate()
-        # self.dae.build_values_dict()
-
-
-
 
     def import_models(self):
         """
@@ -74,17 +65,17 @@ class System:
         for category, model_names in self.models_list:
             # Import the module containing the models for this category (__init__.py)
             category_module = importlib.import_module(f'GridCalEngine.Devices.Dynamic.models.{category}')
-            
+
             for model_name in model_names:
                 # Retrieve the model class from the module
                 ModelClass = getattr(category_module, model_name)
-                
+
                 # Instantiate the model with default attributes
                 model = ModelClass(name=model_name, code='', idtag='')
-                
+
                 # Store the model instance in the dictionary
                 self.models[model_name] = model
-        
+
     def system_prepare(self):
         """
         Prepares the system by processing models, creating devices, and assigning global indices.
@@ -102,7 +93,7 @@ class System:
         for model in self.models.values():
             model.store_data()
             model.process_symbolic()
-        
+
         # Finalize generated code
         self.finalize_pycode()
         symb_end = time.perf_counter()
@@ -138,14 +129,14 @@ class System:
 
         for model_name, device_list in data.items():
             # Retrieve the corresponding model instance
-            model = self.models[model_name]  
+            model = self.models[model_name]
             # Save system devices 
             self.devices[model_name] = model
 
             for device in device_list:
                 # Increment the count of devices for this model
-                model.n += 1  
-                
+                model.n += 1
+
                 for param_name, value in device.items():
                     if hasattr(model, param_name):
                         param = getattr(model, param_name)
@@ -155,7 +146,6 @@ class System:
                             param.id.append(value)
                         elif isinstance(param, NumDynParam):
                             param.value.append(value)
-
 
     def finalize_pycode(self):
         """
@@ -173,19 +163,18 @@ class System:
         # Write import statements for dynamically generated model files
         with open(init_path, 'w') as f:
             for model_name in self.models.keys():
-                #Import each model dynamically
+                # Import each model dynamically
                 f.write(f"from . import {model_name}\n")
 
         # Compile all generated Python code to bytecode (.pyc)
         compileall.compile_dir(pycode_path)
 
-######################### TO CLEAN #######################################
+    ######################### TO CLEAN #######################################
     def store_params(self):
         for device in self.devices.values():
             for param_name, param in device.dict.items():
                 if isinstance(param, NumDynParam):
                     self.dae.params_dict[device.name][param.symbol] = param.value
-
 
     def set_addresses(self):
         self.global_id = 0
@@ -244,7 +233,7 @@ class System:
                     indices = list(range(self.global_id, self.global_id + model_instance.n))
                     model_instance.algeb_idx[var_list.name] = indices
                     self.global_id += model_instance.n  # Move global index forward
-                    
+
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
@@ -252,11 +241,10 @@ class System:
                     # Store DAE addresses
                     if model_instance.name != 'Bus':
                         self.dae.xy_addr.extend(indices)
-                        
 
-                    self.dae.ny += model_instance.n  
-         
-        # Second loop: Process ExternAlgeb
+                    self.dae.ny += model_instance.n
+
+                    # Second loop: Process ExternAlgeb
         for model_instance in self.devices.values():
             for var_list in model_instance.__dict__.values():
                 if isinstance(var_list, ExternAlgeb):
@@ -265,7 +253,7 @@ class System:
                     if key not in algeb_ref_map:
                         raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.algeb_idx")
 
-                    parent_idx = algeb_ref_map[key]  
+                    parent_idx = algeb_ref_map[key]
 
                     # Store in extalgeb_idx using src as the key (grouping multiple references)
                     if var_list.name not in model_instance.extalgeb_idx:
@@ -277,15 +265,13 @@ class System:
                     self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
                     self.dae.y_addr.extend(model_instance.extalgeb_idx[var_list.name])
 
-
     def get_input_values(self, device):
 
-        #get parameters and residuals from "dae"
+        # get parameters and residuals from "dae"
         self.dae.build_values_dict(device)
 
-
         residuals = self.dae.update_xy_dict[device.name]
-        parameters= self.dae.params_dict[device.name]
+        parameters = self.dae.params_dict[device.name]
         parameters.update(residuals)
 
         pycode_code = device.import_pycode()
@@ -309,15 +295,14 @@ class System:
         g_jac_input_values = list(zip(*g_jac_input_values))
 
         return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
-    
 
     def update_jacobian(self):
         self.dae._dfx_dict = {}
         self.dae._dfy_dict = {}
         self.dae._dgx_dict = {}
         self.dae._dgy_dict = {}
-        self.dae.f = np.zeros(2)
-        self.dae.g = np.zeros(13)
+        self.dae.f = np.zeros(2)  # 2 is dae.nx
+        self.dae.g = np.zeros(13)  # 13 is dae.ny
         self.dae.sparsity_fx = list()
         self.dae.sparsity_fy = list()
         self.dae.sparsity_gx = list()
@@ -325,17 +310,17 @@ class System:
 
         for device in self.devices.values():
             if device.name != 'Bus':
-
                 f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
-                #get variable addresses
+                # get variable addresses
                 var_addresses = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
 
                 ###f and g update
                 # get local f and g info and values
-                local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions(f_input_values, g_input_values)
+                local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions(
+                    f_input_values, g_input_values)
 
                 eq_type = 'f'
                 pairs = self.assign_global_f_g_positions(local_f_values, variables_names_for_ordering_f, var_addresses)
@@ -379,14 +364,12 @@ class System:
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dgy_dict, self.dae.sparsity_gy, row, col, val)
 
-
     def assign_global_f_g_positions(self, local_values, variables_names_for_ordering, var_addresses):
         pairs = []
         for val, var_name in zip(local_values, variables_names_for_ordering):
             address = var_addresses[var_name]
             pairs.append((address, val))
         return pairs
-
 
     def assign_global_jac_positions(self, model, local_jacobian, positions, var_addresses):
         triplets = []

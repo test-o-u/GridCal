@@ -130,9 +130,7 @@ class SymProcess:
             # Lambdify numerical evaluation functions
             self.lambda_equations[eq_type] = lambdify(symbolic_args, sp.Matrix(symbolic_eqs), modules='numpy')
             self.variables_names_for_ordering[eq_type] = variables_names_for_ordering
-        #self.f_list.append(self.g_list)
-        #self.equ_list = self.f_list
-        #self.equ_matrix = sp.Matrix(self.equ_list)
+
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
 
@@ -146,18 +144,15 @@ class SymProcess:
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
         g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
-        #equ_jacobian_symbolic = self.equ_matrix.jacobian(sym_variables) if len(self.equ_matrix) > 0 else sp.Matrix([])
-
 
         # Extract unique symbols
         f_jac_symbols = list(f_jacobian_symbolic.free_symbols)
         g_jac_symbols = list(g_jacobian_symbolic.free_symbols)
-        #equ_jac_symbols = list(equ_jacobian_symbolic.free_symbols)
 
         # Convert to sparse matrices
         f_jacob_symbolic_spa = sp.SparseMatrix(f_jacobian_symbolic)
         g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
-        #equ_jacob_symbolic_spa = sp.SparseMatrix(equ_jacobian_symbolic)
+
 
         # Store Jacobian information
         count = 0
@@ -172,15 +167,13 @@ class SymProcess:
                         count += 1
                 else:
                     self.jacobian_store_info[eq_var_code].append((e_idx + count, v_idx))
-
-
-        #pdb.set_trace()
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
+
         # store arguments for f_jacobian
         for arg in f_jac_args:
             self.model_storage.f_jacobian_args.append(str(arg))
-
         g_jac_args = sorted(g_jac_symbols, key=lambda s: s.name)
+
         # store arguments for g_jacobian
         for arg in g_jac_args:
             self.model_storage.g_jacobian_args.append(str(arg))
@@ -194,15 +187,14 @@ class SymProcess:
     def _rename_func(self, func, func_name, vars=False):
         """
         Renames a lambdified function for improved clarity.
-
         Args:
             func: The function to rename.
             func_name (str): The desired function name.
             vars (list, optional): Additional arguments to append.
-
         Returns:
             str: The modified function source code.
         """
+
         if func is None:
             return f"# empty {func_name}\n"
 
