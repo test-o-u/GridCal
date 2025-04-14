@@ -7,7 +7,7 @@ import importlib
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
-from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
+from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 from GridCalEngine.Devices.Dynamic.model_storage import ModelStorage
 from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
 from GridCalEngine.Utils.dyn_param import NumDynParam
@@ -60,6 +60,8 @@ class DynamicModelTemplate(EditableDevice):
 
         # Set address function
         self.n = 0
+        self.nx = 0
+        self.ny = 0
         self.states_idx = {}
         self.extstates_idx = {}
         self.algeb_idx = {}     # Dictionary for algebraic variable indexing
@@ -89,71 +91,68 @@ class DynamicModelTemplate(EditableDevice):
                 self.vars_index[index] = elem.symbol
                 index += 1
 
-            if isinstance(elem, AlgebVar):
-                self.algeb_vars_list.append(elem.symbol)
-                self.model_storage.add_algebvars(elem)
             if isinstance(elem, StatVar):
+                self.nx += 1
                 self.state_vars_list.append(elem.symbol)
                 self.model_storage.add_statvars(elem)
-            if isinstance(elem, ExternVar):
-                self.model_storage.add_externvars(elem)
+
+            if isinstance(elem, AlgebVar):
+                self.ny += 1
+                self.algeb_vars_list.append(elem.symbol)
+                self.model_storage.add_algebvars(elem)
+
             if isinstance(elem, ExternState):
                 self.state_vars_list.append(elem.symbol)
                 self.model_storage.add_externstates(elem)
+
             if isinstance(elem, ExternAlgeb):
                 self.algeb_vars_list.append(elem.symbol)
                 self.model_storage.add_externalgebs(elem)
 
-            #if isinstance(elem, NumDynParam):
-             #   self.dae.params_dict[self.name][elem.symbol] = elem.value
-            #if isinstance(elem, IdxDynParam):
-             #   self.model_storage.add_idxdynparam(elem)
-            #if isinstance(elem, ExtParam):
-             #   self.model_storage.add_extparam(elem)
 
 ####################### TO CLEAN ################################
-    def import_pycode(self):
-        pycode_path = get_pycode_path()
-        pycode_module = importlib.import_module(pycode_path.replace("/", "."))
-        pycode_code = getattr(pycode_module, self.name)
+    def import_generated_code(self):
+        generated_module_path = get_generated_module_path()
+        generated_module = importlib.import_module(generated_module_path.replace("/", "."))
+        generated_code = getattr(generated_module, self.name)
 
-        return pycode_code
+        return generated_code
 
     def calc_f_g_functions(self, f_input_values, g_input_values):
-        pycode_code = self.import_pycode()
+        generated_code = self.import_generated_code()
         f_values_device = []
         g_values_device = []
 
         for i in range(self.n):
             # get f values
             if f_input_values:
-                f_values = pycode_code.f_update(*f_input_values[i])
+                f_values = generated_code.f_update(*f_input_values[i])
                 f_values_device.append(f_values)
             #get g values
             if g_input_values:
-                g_values = pycode_code.g_update(*g_input_values[i])
+                g_values = generated_code.g_update(*g_input_values[i])
                 g_values_device.append(g_values)
         f_values_device_flat = [val for component in f_values_device for val in component]
         g_values_device_flat = [val for component in g_values_device for val in component]
 
-        variables_names_for_ordering_f = pycode_code.variables_names_for_ordering['f']
-        variables_names_for_ordering_g = pycode_code.variables_names_for_ordering['g']
+        variables_names_for_ordering_f = generated_code.variables_names_for_ordering['f']
+        variables_names_for_ordering_g = generated_code.variables_names_for_ordering['g']
 
         return f_values_device_flat, g_values_device_flat, variables_names_for_ordering_f, variables_names_for_ordering_g
 
     def calc_local_jacs(self, f_input_values, g_input_values):
-        pycode_code = self.import_pycode()
-        jacobian_info = pycode_code.jacobian_info
+        generated_code = self.import_generated_code()
+        jacobian_info = generated_code.jacobian_info
         f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
             if f_input_values:
-                local_jac_f = pycode_code.f_ia(*f_input_values[i])
+                local_jac_f = generated_code.f_ia(*f_input_values[i])
                 for j, funct in enumerate(self.state_vars_list):
                     for k, var in enumerate(self.variables_list):
                         f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
             if g_input_values:
-                local_jac_g = pycode_code.g_ia(*g_input_values[i])
+                local_jac_g = generated_code.g_ia(*g_input_values[i])
                 for j, funct in enumerate(self.algeb_vars_list):
                     for k, var in enumerate(self.variables_list):
                         g_jacobians[i][j+len(self.state_vars_list)][k] = local_jac_g[j*len(self.variables_list)+k]

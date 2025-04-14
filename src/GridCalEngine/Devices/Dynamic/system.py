@@ -6,6 +6,7 @@
 import os
 import importlib
 import compileall
+import pdb
 import time
 import numpy as np
 import sympy as sp
@@ -13,7 +14,7 @@ from collections import defaultdict
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Devices.Dynamic.dae import DAE
-from GridCalEngine.Devices.Dynamic.utils.paths import get_pycode_path
+from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 from GridCalEngine.Devices.Dynamic.io.json import readjson
 
 
@@ -95,7 +96,7 @@ class System:
             model.process_symbolic()
 
         # Finalize generated code
-        self.finalize_pycode()
+        self.finalize_generated_code()
         symb_end = time.perf_counter()
         self.symb_time = symb_end - symb_st  # Store symbolic processing time
 
@@ -105,14 +106,12 @@ class System:
         dev_end = time.perf_counter()
         self.dev_time = dev_end - dev_st  # Store device creation time
 
-        # STEP 3: Assign global indices to variables and external references
+        # STEP 3: Store parameters and assign global indices to variables and external references
         add_st = time.perf_counter()
         self.set_addresses()
         add_end = time.perf_counter()
         self.add_time = add_end - add_st  # Store addressing time
 
-        # STEP 4: Store parameters in the DAE
-        self.store_params()
 
     def create_devices(self, data):
         """
@@ -147,7 +146,11 @@ class System:
                         elif isinstance(param, NumDynParam):
                             param.value.append(value)
 
-    def finalize_pycode(self):
+            # calculate nx and ny and save it in dae
+            self.dae.nx += model.n * model.nx
+            self.dae.ny += model.n * model.ny
+
+    def finalize_generated_code(self):
         """
         Generates an __init__.py file to later dynamically import compiled models.
 
@@ -157,8 +160,8 @@ class System:
         - Compiles all Python files within the directory to optimize execution (.pyc).
         """
 
-        pycode_path = get_pycode_path()
-        init_path = os.path.join(pycode_path, '__init__.py')
+        generated_module_path = get_generated_module_path()
+        init_path = os.path.join(generated_module_path, '__init__.py')
 
         # Write import statements for dynamically generated model files
         with open(init_path, 'w') as f:
@@ -166,36 +169,33 @@ class System:
                 # Import each model dynamically
                 f.write(f"from . import {model_name}\n")
 
-        # Compile all generated Python code to bytecode (.pyc)
-        compileall.compile_dir(pycode_path)
-
     ######################### TO CLEAN #######################################
-    def store_params(self):
-        for device in self.devices.values():
-            for param_name, param in device.dict.items():
-                if isinstance(param, NumDynParam):
-                    self.dae.params_dict[device.name][param.symbol] = param.value
 
     def set_addresses(self):
-        self.global_id = 0
+        self.global_states_id = 0
+        self.global_algebs_id = self.dae.nx
         algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
         states_ref_map = {}  # Cache: store states_idx references for quick lookup
 
-        # First loop: Process StatesVar
+        # Loop through devices
         for model_instance in self.devices.values():
+
+            # Store parameters and assign addresses
             for var_list in model_instance.__dict__.values():
+
+                if isinstance(var_list, NumDynParam):
+                    self.dae.params_dict[model_instance.name][var_list.symbol] = var_list.value
+
+                # state varibles
                 if isinstance(var_list, StatVar):
-                    indices = list(range(self.global_id, self.global_id + model_instance.n))
-                    model_instance.states_idx[var_list.name] = indices
-                    self.global_id += model_instance.n  # Move global index forward
+                    indices = list(range(self.global_states_id, self.global_states_id + model_instance.n))
+
+                    # Store dae addresses
+                    self.dae.addresses_dict[model_instance.name][var_list.name] = indices
+                    self.global_states_id += model_instance.n  # Move global index forward
 
                     # Cache reference for faster lookup
                     states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
-
-                    self.dae.x_addr.extend(indices)
-                    # Store DAE addresses
-                    if model_instance.name != 'Bus':
-                        self.dae.xy_addr.extend(indices)
 
                     # Construct DAE lhs matrix
                     if var_list.t_const != 1.0:
@@ -203,11 +203,7 @@ class System:
                     else:
                         self.dae.Tf += [1.0] * model_instance.n
 
-                    self.dae.nx += model_instance.n
-
-        # Second loop: Process ExternStates
-        for model_instance in self.devices.values():
-            for var_list in model_instance.__dict__.values():
+                # external state variables
                 if isinstance(var_list, ExternState):
                     key = (var_list.indexer.symbol, var_list.src)
 
@@ -220,33 +216,23 @@ class System:
                     if var_list.name not in model_instance.extstates_idx:
                         model_instance.extstates_idx[var_list.name] = []  # Initialize as a list of lists
 
-                    model_instance.extstates_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
+                    # Store dae addresses
+                    self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
-                    # Store DAE addresses
-                    self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
-                    self.dae.x_addr.extend(model_instance.extalgeb_idx[var_list.name])
-
-        # First loop: Process AlgebVar
-        for model_instance in self.devices.values():
-            for var_list in model_instance.__dict__.values():
+                # algebraic variables
                 if isinstance(var_list, AlgebVar):
-                    indices = list(range(self.global_id, self.global_id + model_instance.n))
-                    model_instance.algeb_idx[var_list.name] = indices
-                    self.global_id += model_instance.n  # Move global index forward
+                    indices = list(range(self.global_algebs_id, self.global_algebs_id + model_instance.n))
+
+                    self.global_algebs_id += model_instance.n  # Move global index forward
+
+                    # Store dae addresses
+                    self.dae.addresses_dict[model_instance.name][var_list.name] = indices
 
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
-                    self.dae.y_addr.extend(indices)
-                    # Store DAE addresses
-                    if model_instance.name != 'Bus':
-                        self.dae.xy_addr.extend(indices)
 
-                    self.dae.ny += model_instance.n
-
-                    # Second loop: Process ExternAlgeb
-        for model_instance in self.devices.values():
-            for var_list in model_instance.__dict__.values():
+                # external algebraic variables
                 if isinstance(var_list, ExternAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
 
@@ -259,11 +245,9 @@ class System:
                     if var_list.name not in model_instance.extalgeb_idx:
                         model_instance.extalgeb_idx[var_list.name] = []  # Initialize as a list of lists
 
-                    model_instance.extalgeb_idx[var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
+                    # Store dae addresses
+                    self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
-                    # Store DAE addresses
-                    self.dae.xy_addr.extend(model_instance.extalgeb_idx[var_list.name])
-                    self.dae.y_addr.extend(model_instance.extalgeb_idx[var_list.name])
 
     def get_input_values(self, device):
 
@@ -274,12 +258,12 @@ class System:
         parameters = self.dae.params_dict[device.name]
         parameters.update(residuals)
 
-        pycode_code = device.import_pycode()
-        f_jac_arguments = pycode_code.f_jac_args
-        g_jac_arguments = pycode_code.g_jac_args
+        generated_code = device.import_generated_code()
+        f_jac_arguments = generated_code.f_jac_args
+        g_jac_arguments = generated_code.g_jac_args
 
-        f_arguments = pycode_code.f_args
-        g_arguments = pycode_code.g_args
+        f_arguments = generated_code.f_args
+        g_arguments = generated_code.g_args
 
         # create input values lists
 
@@ -315,7 +299,7 @@ class System:
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
                 # get variable addresses
-                var_addresses = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
+                var_addresses = self.dae.addresses_dict[device.name]
 
                 ###f and g update
                 # get local f and g info and values

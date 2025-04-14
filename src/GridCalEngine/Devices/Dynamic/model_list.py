@@ -23,10 +23,10 @@ x0 = {
 }
 
 y0 = {
-    'a1': 15 * (np.pi / 180),  # rotor angle (rad)
-    'a2': 10 * (np.pi / 180),  # angle of second bus, possibly infinite bus
-    'v1': 1.0,                # generator terminal voltage magnitude (pu)
-    'v2': 0.95,                 # remote bus voltage (pu)
+    'a_origin': 15 * (np.pi / 180),  # rotor angle (rad)
+    'a_end': 10 * (np.pi / 180),  # angle of second bus, possibly infinite bus
+    'v_origin': 1.0,                # generator terminal voltage magnitude (pu)
+    'v_end': 0.95,                 # remote bus voltage (pu)
 
     # Stator dq axis flux linkages (GENCLS has no field circuit, so usually derived from voltage and current)
     'psid': 1.0,               # flux linkage in d-axis (pu)

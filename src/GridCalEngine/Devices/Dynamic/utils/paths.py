@@ -5,16 +5,17 @@
 
 import os
 
-def get_pycode_path(pycode_path=None, mkdir=True):
+def get_generated_module_path(mkdir=True):
     """
-    Get the path to the ``pycode`` folder.
+    Get the path to the ``generated_module`` folder.
     """
 
-    if pycode_path is None:
-        pycode_path = 'GridCalEngine/Devices/Dynamic/pycode'
+
+    generated_module_path = 'GridCalEngine/Devices/Dynamic/generated_module'
+
 
 
     if mkdir is True:
-        os.makedirs(pycode_path, exist_ok=True)
+        os.makedirs(generated_module_path, exist_ok=True)
 
-    return pycode_path
+    return generated_module_path

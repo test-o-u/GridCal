@@ -32,7 +32,8 @@ def main():
         sim = simulate_system(system)
 
         # Print results
-        print(sim.results)
+        print('yes')
+        #print(sim.results)
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)

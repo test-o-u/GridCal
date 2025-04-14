@@ -27,7 +27,6 @@ class Integration:
             jac = method.calc_jac(dae, dt)
             f_residual = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
             residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
-
             # Solve linear system
             inc = spsolve(jac, -residual)
 

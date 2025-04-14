@@ -35,96 +35,43 @@ class ModelStorage:
         self.name = model_name
 
         # Lists to store model equations
-        self.f = {}
-        self.g = {}
 
         # Collections of variables
         self.stats = []
         self.algebs = []
-        self.f_args = []
-        self.g_args = []
-        self.f_jacobian_args = []
-        self.g_jacobian_args= []
-
 
         # Categorized variable types
-        self.externVars = []
-        self.externStates = []
-        self.externAlgebs = []
-        self.aliasAlgebs = []
-        self.aliasStats = []
 
         # Parameters
         self.numdynParam = []
         self.idxdynParam = []
-        self.extdynParam = []
+
 
     def add_statvars(self, expr):
         """
         Add a state variable (differential equation).
         """
         self.stats.append(expr)
-        self.f[expr.name] = expr.eq
 
     def add_algebvars(self, expr):
         """
         Add an algebraic variable (algebraic equation).
         """
         self.algebs.append(expr)
-        self.g[expr.name] = expr.eq
-
-    def add_externvars(self, expr):
-        """
-        Add an external variable (input to the system).
-        """
-        self.externVars.append(expr)
 
     def add_externstates(self, expr):
         """
         Add an external state variable (state variable defined externally).
         """
         self.stats.append(expr)
-        self.externStates.append(expr)
-        self.f[expr.name] = expr.eq
 
     def add_externalgebs(self, expr):
         """
         Add an external algebraic variable (algebraic variable defined externally).
         """
         self.algebs.append(expr)
-        self.externAlgebs.append(expr)
-        self.g[expr.name] = expr.eq
 
-    def add_aliasalgebs(self, expr):
-        """
-        Add an alias algebraic variable (reference to another algebraic variable).
-        """
-        self.aliasAlgebs.append(expr)
-        self.g.append(expr.eq)
 
-    def add_aliastats(self, expr):
-        """
-        Add an alias state variable (reference to another state variable).
-        """
-        self.aliasStats.append(expr)
-        self.f.append(expr.eq)
 
-    def add_numdynparam(self, expr):
-        """
-        Add a numeric dynamic parameter.
-        """
-        self.numdynParam.append(expr)
-
-    def add_idxdynparam(self, expr):
-        """
-        Add an indexed dynamic parameter.
-        """
-        self.idxdynParam.append(expr)
-
-    def add_extparam(self, expr):
-        """
-        Add an external dynamic parameter.
-        """
-        self.extParam.append(expr)
 
 

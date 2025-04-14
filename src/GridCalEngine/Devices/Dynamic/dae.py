@@ -1,3 +1,5 @@
+import pdb
+
 import numpy as np
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
@@ -14,9 +16,7 @@ class DAE:
         self.system = system
 
         # dictionary to store addresses
-        self.xy_addr = list()
-        self.x_addr = list()
-        self.y_addr = list()
+        self.addresses_dict = defaultdict(dict)
 
         self.nx = 0
         self.ny = 0
@@ -119,9 +119,8 @@ class DAE:
         self.xy_unique = np.hstack((self.x, self.y))
 
     def build_values_dict(self, device):
-        addresses_dict = {**device.states_idx, **device.extstates_idx, **device.algeb_idx, **device.extalgeb_idx}
         for variable in device.variables_list:
-            addresses = addresses_dict[variable]
+            addresses = self.addresses_dict[device.name][variable]
             values = [self.xy_unique[address] for address in addresses]
             self.update_xy_dict[device.name][variable] = values
 

@@ -47,38 +47,38 @@ class ACLine(DynamicModelTemplate):
         # TODO: 
         # - discuss modeling. Here a pi-model is considered and the power flow equations are derived according to it, while in ANDES they apply some transformations first.
         # - check if naming makes sense.
-        self.a1 = ExternAlgeb(name='a1',
-                              symbol = 'a1',
+        self.a_origin = ExternAlgeb(name='a_origin',
+                              symbol = 'a_origin',
                               src='a',
                               indexer=self.bus1, 
                               init_eq='', 
-                              eq='(v1 ** 2 * g  - \
-                                    v1 * v2 * (g * cos(a1 - a2) + \
-                                        b * sin(a1 - a2)))')  
+                              eq='(v_origin ** 2 * g  - \
+                                    v_origin * v_end * (g * cos(a_origin - a_end) + \
+                                        b * sin(a_origin - a_end)))')
 
-        self.v1 = ExternAlgeb(name='v1',
-                              symbol='v1',
+        self.v_origin = ExternAlgeb(name='v_origin',
+                              symbol='v_origin',
                               src='v',
                               indexer=self.bus1,
                               init_eq='',
-                              eq='(- v1 ** 2 * (b + bsh / 2) - \
-                                            v1 * v2 * (g * sin(a1 - a2) - \
-                                                b * cos(a1 - a2)))')
+                              eq='(- v_origin ** 2 * (b + bsh / 2) - \
+                                            v_origin * v_end * (g * sin(a_origin - a_end) - \
+                                                b * cos(a_origin - a_end)))')
         
-        self.a2 = ExternAlgeb(name='a2',
-                              symbol = 'a2',
+        self.a_end = ExternAlgeb(name='a_end',
+                              symbol = 'a_end',
                               src='a',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='(v2 ** 2 * g  - \
-                                    v2 * v1 * (g * cos(a2 - a1) + \
-                                        b * sin(a2 - a1)))')
+                              eq='(v_end ** 2 * g  - \
+                                    v_end * v_origin * (g * cos(a_end - a_origin) + \
+                                        b * sin(a_end - a_origin)))')
         
-        self.v2 = ExternAlgeb(name='v2',
-                              symbol = 'v2',
+        self.v_end = ExternAlgeb(name='v_end',
+                              symbol = 'v_end',
                               src='v',
                               indexer=self.bus2, 
                               init_eq='', 
-                              eq='(- v2 ** 2 * (b + bsh / 2) - \
-                                    v2 * v1 * (g * sin(a2 - a1) - \
-                                        b * cos(a2 - a1)))')
+                              eq='(- v_end ** 2 * (b + bsh / 2) - \
+                                    v_end * v_origin * (g * sin(a_end - a_origin) - \
+                                        b * cos(a_end - a_origin)))')
