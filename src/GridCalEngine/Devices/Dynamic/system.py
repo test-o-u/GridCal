@@ -212,10 +212,6 @@ class System:
 
                     parent_idx = states_ref_map[key]
 
-                    # Store in extstates_idx using src as the key (grouping multiple references)
-                    if var_list.name not in model_instance.extstates_idx:
-                        model_instance.extstates_idx[var_list.name] = []  # Initialize as a list of lists
-
                     # Store dae addresses
                     self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
@@ -241,10 +237,6 @@ class System:
 
                     parent_idx = algeb_ref_map[key]
 
-                    # Store in extalgeb_idx using src as the key (grouping multiple references)
-                    if var_list.name not in model_instance.extalgeb_idx:
-                        model_instance.extalgeb_idx[var_list.name] = []  # Initialize as a list of lists
-
                     # Store dae addresses
                     self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
@@ -252,31 +244,51 @@ class System:
     def get_input_values(self, device):
 
         # get parameters and residuals from "dae"
-        self.dae.build_values_dict(device)
 
-        residuals = self.dae.update_xy_dict[device.name]
-        parameters = self.dae.params_dict[device.name]
-        parameters.update(residuals)
+        # new approach
+        g_input_values = [[] for i in range(device.n)]
+        f_input_values = [[] for i in range(device.n)]
+        f_jac_input_values = [[] for i in range(device.n)]
+        g_jac_input_values = [[] for i in range(device.n)]
 
         generated_code = device.import_generated_code()
-        f_jac_arguments = generated_code.f_jac_args
-        g_jac_arguments = generated_code.g_jac_args
+
+        values = self.dae.xy_unique
 
         f_arguments = generated_code.f_args
         g_arguments = generated_code.g_args
 
-        # create input values lists
+        f_jac_arguments = generated_code.f_jac_args
+        g_jac_arguments = generated_code.g_jac_args
 
-        f_input_values = [parameters[argument] for argument in f_arguments]
-        g_input_values = [parameters[argument] for argument in g_arguments]
-
-        f_input_values = list(zip(*f_input_values))
-        g_input_values = list(zip(*g_input_values))
-
-        f_jac_input_values = [parameters[argument] for argument in f_jac_arguments]
-        g_jac_input_values = [parameters[argument] for argument in g_jac_arguments]
-        f_jac_input_values = list(zip(*f_jac_input_values))
-        g_jac_input_values = list(zip(*g_jac_input_values))
+        for arg in f_arguments:
+            for i in range(device.n):
+                if arg in device.variables_list:
+                    f_input_values[i].append(values[self.dae.addresses_dict[device.name][arg]][i])
+                else:
+                    param = getattr(device, arg)
+                    f_input_values[i].append(param.value[i])
+        for arg in g_arguments:
+            for i in range(device.n):
+                if arg in device.variables_list:
+                    g_input_values[i].append(values[self.dae.addresses_dict[device.name][arg]][i])
+                else:
+                    param = getattr(device, arg)
+                    g_input_values[i].append(param.value[i])
+        for arg in f_jac_arguments:
+            for i in range(device.n):
+                if arg in device.variables_list:
+                    f_jac_input_values[i].append(values[self.dae.addresses_dict[device.name][arg]][i])
+                else:
+                    param = getattr(device, arg)
+                    f_jac_input_values[i].append(param.value[i])
+        for arg in g_jac_arguments:
+            for i in range(device.n):
+                if arg in device.variables_list:
+                    g_jac_input_values[i].append(values[self.dae.addresses_dict[device.name][arg]][i])
+                else:
+                    param = getattr(device, arg)
+                    g_jac_input_values[i].append(param.value[i])
 
         return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
 
@@ -307,12 +319,12 @@ class System:
                     f_input_values, g_input_values)
 
                 eq_type = 'f'
-                pairs = self.assign_global_f_g_positions(local_f_values, variables_names_for_ordering_f, var_addresses)
+                pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f, var_addresses)
                 for index, val in pairs:
                     self.dae.add_to_f_g(self.dae.f, index, val)
 
                 eq_type = 'g'
-                pairs = self.assign_global_f_g_positions(local_g_values, variables_names_for_ordering_g, var_addresses)
+                pairs = self.assign_global_f_g_positions(device, local_g_values, variables_names_for_ordering_g, var_addresses)
                 for index, val in pairs:
                     self.dae.add_to_f_g(self.dae.g, index, val)
 
@@ -348,11 +360,12 @@ class System:
                 for row, col, val in triplets:
                     self.dae.add_to_jacobian(self.dae._dgy_dict, self.dae.sparsity_gy, row, col, val)
 
-    def assign_global_f_g_positions(self, local_values, variables_names_for_ordering, var_addresses):
+    def assign_global_f_g_positions(self, model, local_values, variables_names_for_ordering, var_addresses):
         pairs = []
-        for val, var_name in zip(local_values, variables_names_for_ordering):
-            address = var_addresses[var_name]
-            pairs.append((address, val))
+        for i in range(model.n):
+            for val, var_name in zip(local_values[i], variables_names_for_ordering):
+                address = var_addresses[var_name][i]
+                pairs.append((address, val))
         return pairs
 
     def assign_global_jac_positions(self, model, local_jacobian, positions, var_addresses):

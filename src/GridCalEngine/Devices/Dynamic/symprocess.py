@@ -30,7 +30,6 @@ class SymProcess:
             model: The model instance containing symbolic equations.
         """
         self.model = model
-        self.model_storage = model.model_storage
 
         # Symbolic Parameters
         self.sym_num_params = []
@@ -71,14 +70,14 @@ class SymProcess:
         Converts model parameters and variables into symbolic expressions.
         """
         # Define symbolic variables
-        self.sym_state = [sp.Symbol(v.symbol) for v in self.model_storage.stats]
-        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model_storage.algebs]
+        self.sym_state = [sp.Symbol(v.symbol) for v in self.model.stats]
+        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algebs]
 
     def generate_equations(self):
         """
         Converts string equations into symbolic expressions and lambdifies them.
         """
-        variables_f_g = [self.model_storage.stats, self.model_storage.algebs]
+        variables_f_g = [self.model.stats, self.model.algebs]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
 
@@ -124,7 +123,7 @@ class SymProcess:
         Computes symbolic Jacobian matrices and lambdifies them.
         """
         sym_variables = self.sym_state + self.sym_algeb
-        all_variables = self.model_storage.stats + self.model_storage.algebs
+        all_variables = self.model.stats + self.model.algebs
 
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
@@ -193,7 +192,7 @@ class SymProcess:
         Generates Python code for numerical model evaluation.
         """
         generated_module_path = get_generated_module_path()
-        filename = f"{self.model_storage.name}.py"
+        filename = f"{self.model.name}.py"
         file_path = os.path.join(generated_module_path, filename)
 
         with open(file_path, 'w') as f:

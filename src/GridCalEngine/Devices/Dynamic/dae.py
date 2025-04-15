@@ -55,7 +55,7 @@ class DAE:
         self.Tf = []
 
     def add_to_f_g(self, eq_type_array, index, value):
-        eq_type_array[index[0] - 2] += value
+        eq_type_array[index - 2] += value
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
@@ -117,12 +117,6 @@ class DAE:
 
     def concatenate(self):
         self.xy_unique = np.hstack((self.x, self.y))
-
-    def build_values_dict(self, device):
-        for variable in device.variables_list:
-            addresses = self.addresses_dict[device.name][variable]
-            values = [self.xy_unique[address] for address in addresses]
-            self.update_xy_dict[device.name][variable] = values
 
     def finalize_tconst_matrix(self):
         self.Tf = diags(self.Tf)

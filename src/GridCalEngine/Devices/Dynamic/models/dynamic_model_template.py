@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import importlib
+import pdb
+
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
-from GridCalEngine.Devices.Dynamic.model_storage import ModelStorage
 from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Utils.dyn_var import *
@@ -39,34 +40,27 @@ class DynamicModelTemplate(EditableDevice):
                                 idtag=idtag,
                                 device_type=device_type)
 
-        # Storage for model variables and parameters
-        self.model_storage = ModelStorage(self.name)
-
-        # Dictionary containing instance attributes
-        self.dict = self.__dict__
-        
-        # Symbolic processing engine
+        # Symbolic processing engine utils
         self.sym = SymProcess(self)
+        self.stats = []
+        self.algebs = []
 
         # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = {}
 
-        # list containing all the symbols of the variables in the model
-        self.variables_list = []
-        self.state_vars_list = []
-        self.algeb_vars_list = []
+        # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
+        self.variables_list = [] # list of all the variables (including external)
+        self.state_vars_list = [] # list of all the state variables (including external)
+        self.algeb_vars_list = [] # list of all the algebraic variables (including external)
 
         # Address mapping for algebraic variables
 
         # Set address function
-        self.n = 0
-        self.nx = 0
-        self.ny = 0
-        self.states_idx = {}
-        self.extstates_idx = {}
-        self.algeb_idx = {}     # Dictionary for algebraic variable indexing
-        self.extalgeb_idx = {}
-        self.addresses_dict = {**self.states_idx, **self.extstates_idx, **self.algeb_idx, **self.extalgeb_idx}# Dictionary for external algebraic variable indexing
+        self.n = 0 # index for the number of components corresponding to this model
+
+        #index for states and algeb variables (used to compute dae.nx and dae.ny)
+        self.nx = 0 # index for the number of state variables (not external)
+        self.ny = 0 # index for the number of algebraic variables (not external)
         
     def process_symbolic(self):
         """
@@ -84,7 +78,7 @@ class DynamicModelTemplate(EditableDevice):
         """
 
         index = 0
-        for key, elem in self.dict.items():
+        for key, elem in self.__dict__.items():
             # assign an index to every variable in the model populating vars_index dictionary
             if isinstance(elem, DynVar):
                 self.variables_list.append(elem.symbol)
@@ -94,20 +88,20 @@ class DynamicModelTemplate(EditableDevice):
             if isinstance(elem, StatVar):
                 self.nx += 1
                 self.state_vars_list.append(elem.symbol)
-                self.model_storage.add_statvars(elem)
+                self.stats.append(elem)
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
                 self.algeb_vars_list.append(elem.symbol)
-                self.model_storage.add_algebvars(elem)
+                self.algebs.append(elem)
 
             if isinstance(elem, ExternState):
                 self.state_vars_list.append(elem.symbol)
-                self.model_storage.add_externstates(elem)
+                self.stats.append(elem)
 
             if isinstance(elem, ExternAlgeb):
                 self.algeb_vars_list.append(elem.symbol)
-                self.model_storage.add_externalgebs(elem)
+                self.algebs.append(elem)
 
 
 ####################### TO CLEAN ################################
@@ -120,29 +114,32 @@ class DynamicModelTemplate(EditableDevice):
 
     def calc_f_g_functions(self, f_input_values, g_input_values):
         generated_code = self.import_generated_code()
-        f_values_device = []
-        g_values_device = []
 
+        f_values_device = np.zeros((self.n, len(self.state_vars_list)))
+        g_values_device = np.zeros((self.n, len(self.algeb_vars_list)))
         for i in range(self.n):
             # get f values
             if f_input_values:
                 f_values = generated_code.f_update(*f_input_values[i])
-                f_values_device.append(f_values)
+                for j in range(len(self.state_vars_list)):
+                    f_values_device[i][j] = f_values[j]
+
             #get g values
             if g_input_values:
                 g_values = generated_code.g_update(*g_input_values[i])
-                g_values_device.append(g_values)
-        f_values_device_flat = [val for component in f_values_device for val in component]
-        g_values_device_flat = [val for component in g_values_device for val in component]
+                for j in range(len(self.algeb_vars_list)):
+                    g_values_device[i][j] = g_values[j]
+
 
         variables_names_for_ordering_f = generated_code.variables_names_for_ordering['f']
         variables_names_for_ordering_g = generated_code.variables_names_for_ordering['g']
 
-        return f_values_device_flat, g_values_device_flat, variables_names_for_ordering_f, variables_names_for_ordering_g
+        return f_values_device, g_values_device, variables_names_for_ordering_f, variables_names_for_ordering_g
 
     def calc_local_jacs(self, f_input_values, g_input_values):
         generated_code = self.import_generated_code()
         jacobian_info = generated_code.jacobian_info
+
         f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
