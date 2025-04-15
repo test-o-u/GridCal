@@ -1,7 +1,7 @@
 import numpy as np
+import config
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
-from GridCalEngine.Devices.Dynamic.model_list import dae_x0, dae_y0
 
 
 class DAE:
@@ -19,8 +19,8 @@ class DAE:
         self.nx = 0
         self.ny = 0
 
-        self.x = dae_x0
-        self.y = dae_y0
+        self.x = config.DAE_X0
+        self.y = config.DAE_Y0
         self.xy_unique = None
         self.xy_extended = None
         self.f = np.zeros(2)

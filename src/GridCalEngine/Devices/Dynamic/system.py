@@ -7,9 +7,9 @@ import os
 import importlib
 import compileall
 import time  
+import config
 import numpy as np
 import sympy as sp
-from collections import defaultdict
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
 from GridCalEngine.Devices.Dynamic.dae import DAE
@@ -28,7 +28,7 @@ class System:
     - Assigning global indices to system variables and copies of these to external system variables.
     """
 
-    def __init__(self, models_list, datafile):
+    def __init__(self):
         """
         Initializes the System instance.
 
@@ -44,7 +44,7 @@ class System:
             data (dict): Parsed JSON data containing device configurations.
         """
 
-        self.models_list = models_list
+        self.models_list = config.MODELS
         self.values_array = None
 
         self.models = {}
@@ -52,12 +52,19 @@ class System:
 
         self.dae = DAE(self)
 
-        self.data = readjson(datafile)
+        self.data = readjson(config.SYSTEM_JSON_PATH)
 
         self.import_models()
         self.system_prepare()
         self.dae.concatenate()
         # self.dae.build_values_dict()
+
+        # TDS settings
+        self.time_tds = config.SIMULATION_TIME
+        self.step_tds = config.TIME_STEP
+        self.tol_tds = config.TOL
+        self.max_iter_tds = config.MAX_ITER
+
 
 
 

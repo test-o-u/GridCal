@@ -17,22 +17,13 @@ os.chdir(SRC_PATH)
 
 import logging
 import time
+import config
 import numpy as np
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.tds import TDS
-from GridCalEngine.Devices.Dynamic.model_list import MODELS
 
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-### Configure time performance ###
-performance = False
-### Configure test ###
-# NOTE: Other tests
-# 'GridCalEngine/Devices/Dynamic/test.json'
-# 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
-# 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-# datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-datafile = 'GridCalEngine/Devices/Dynamic/test.json'
 
 def main():
     """
@@ -58,13 +49,13 @@ def initialize_system():
     try:
         # Initialize the system with given models and datafile
         datafile = 'GridCalEngine/Devices/Dynamic/test.json'
-        system = System(MODELS, datafile)
+        system = System()
 
     except Exception as e:
         logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)
 
     # Performance timing logs
-    if performance:
+    if config.PERFORMANCE:
         logging.info("=============== TIME CHECK ================")
         logging.info(f"Process symbolic time = {system.symb_time:.6f} [s]")
         logging.info(f"Create device time = {system.dev_time:.6f} [s]")
