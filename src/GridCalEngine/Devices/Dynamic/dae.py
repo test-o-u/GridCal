@@ -55,7 +55,7 @@ class DAE:
         self.Tf = []
 
     def add_to_f_g(self, eq_type_array, index, value):
-        eq_type_array[index - 2] += value
+        eq_type_array[index - self.nx] += value
 
     def add_to_jacobian(self, jac_dict, sparsity_set, row, col, value):
         """
@@ -107,7 +107,7 @@ class DAE:
 
     def initilize_fg(self):
         self.concatenate()
-        self.update_jacobian()
+        self.initialize_jacobian()
         self.finalize_jacobians()
 
     def update_fg(self):
@@ -121,13 +121,13 @@ class DAE:
     def finalize_tconst_matrix(self):
         self.Tf = diags(self.Tf)
 
-    def update_jacobian(self):
+    def initialize_jacobian(self):
         self._dfx_dict = {}
         self._dfy_dict = {}
         self._dgx_dict = {}
         self._dgy_dict = {}
-        self.f = np.zeros(2)  # 2 is dae.nx
-        self.g = np.zeros(13)  # 13 is dae.ny
+        self.f = np.zeros(2)
+        self.g = np.zeros(13)
         self.sparsity_fx = list()
         self.sparsity_fy = list()
         self.sparsity_gx = list()
@@ -148,12 +148,12 @@ class DAE:
                     f_input_values, g_input_values)
 
                 eq_type = 'f'
-                pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f, var_addresses)
+                pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f, var_addresses, device.f_output_order)
                 for index, val in pairs:
                     self.add_to_f_g(self.f, index, val)
 
                 eq_type = 'g'
-                pairs = self.assign_global_f_g_positions(device, local_g_values, variables_names_for_ordering_g, var_addresses)
+                pairs = self.assign_global_f_g_positions(device, local_g_values, variables_names_for_ordering_g, var_addresses, device.g_output_order)
                 for index, val in pairs:
                     self.add_to_f_g(self.g, index, val)
 
@@ -164,54 +164,53 @@ class DAE:
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses)
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses, device.dfx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfx_dict, self.sparsity_fx, row, col, val)
 
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses)
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, var_addresses, device.dfy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfy_dict, self.sparsity_fy, row, col, val)
 
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses)
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses, device.dgx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgx_dict, self.sparsity_gx, row, col, val)
 
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses)
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, var_addresses, device.dgy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgy_dict, self.sparsity_gy, row, col, val)
 
-    def assign_global_f_g_positions(self, model, local_values, variables_names_for_ordering, var_addresses):
+    def assign_global_f_g_positions(self, device, local_values, variables_names_for_ordering, var_addresses, outputs_order_list):
         pairs = []
-        for i in range(model.n):
+        for i in range(device.n):
             for val, var_name in zip(local_values[i], variables_names_for_ordering):
                 address = var_addresses[var_name][i]
+                outputs_order_list.append(address)
                 pairs.append((address, val))
         return pairs
 
-    def assign_global_jac_positions(self, model, local_jacobian, positions, var_addresses):
+    def assign_global_jac_positions(self, device, local_jacobian, positions, var_addresses, outputs_order_triplets):
         triplets = []
-        for i in range(model.n):
+        for i in range(device.n):
             for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][func_index][var_index]
-                address_func = var_addresses[model.vars_index[func_index]][i]
-                address_var = var_addresses[model.vars_index[var_index]][i]
+                address_func = var_addresses[device.vars_index[func_index]][i]
+                address_var = var_addresses[device.vars_index[var_index]][i]
+                outputs_order_triplets.append((address_func, address_var))
                 triplets.append((address_func, address_var, val))
         return triplets
 
     def get_input_values(self, device):
 
-        # get parameters and residuals from "dae"
-
-        # new approach
         g_input_values = [[] for i in range(device.n)]
         f_input_values = [[] for i in range(device.n)]
         f_jac_input_values = [[] for i in range(device.n)]
@@ -227,34 +226,141 @@ class DAE:
         f_jac_arguments = generated_code.f_jac_args
         g_jac_arguments = generated_code.g_jac_args
 
-        for arg in f_arguments:
-            for i in range(device.n):
-                if arg in device.variables_list:
-                    f_input_values[i].append(values[self.addresses_dict[device.name][arg]][i])
-                else:
-                    param = getattr(device, arg)
-                    f_input_values[i].append(param.value[i])
-        for arg in g_arguments:
-            for i in range(device.n):
-                if arg in device.variables_list:
-                    g_input_values[i].append(values[self.addresses_dict[device.name][arg]][i])
-                else:
-                    param = getattr(device, arg)
-                    g_input_values[i].append(param.value[i])
-        for arg in f_jac_arguments:
-            for i in range(device.n):
-                if arg in device.variables_list:
-                    f_jac_input_values[i].append(values[self.addresses_dict[device.name][arg]][i])
-                else:
-                    param = getattr(device, arg)
-                    f_jac_input_values[i].append(param.value[i])
-        for arg in g_jac_arguments:
-            for i in range(device.n):
-                if arg in device.variables_list:
-                    g_jac_input_values[i].append(values[self.addresses_dict[device.name][arg]][i])
-                else:
-                    param = getattr(device, arg)
-                    g_jac_input_values[i].append(param.value[i])
+        self.build_input_values(values, device, f_arguments, f_input_values, device.f_inputs_order)
+        self.build_input_values(values, device, g_arguments, g_input_values, device.g_inputs_order)
+        self.build_input_values(values, device, f_jac_arguments, f_jac_input_values, device.f_jac_inputs_order)
+        self.build_input_values(values, device, g_jac_arguments, g_jac_input_values, device.g_jac_inputs_order)
 
         return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
 
+
+    def build_input_values(self, values, device, arguments_list, input_values_list, inputs_order_list ):
+        for arg in arguments_list:
+            for i in range(device.n):
+                if arg in device.variables_list:
+                    inputs_order_list.append(self.addresses_dict[device.name][arg])
+                    input_values_list[i].append(values[self.addresses_dict[device.name][arg]][i])
+                else:
+                    inputs_order_list.append('param')
+                    param = getattr(device, arg)
+                    input_values_list[i].append(param.value[i])
+
+    def update_jacobian(self):
+        self._dfx_dict = {}
+        self._dfy_dict = {}
+        self._dgx_dict = {}
+        self._dgy_dict = {}
+        self.f = np.zeros(self.nx)
+        self.g = np.zeros(self.ny)
+        self.sparsity_fx = list()
+        self.sparsity_fy = list()
+        self.sparsity_gx = list()
+        self.sparsity_gy = list()
+
+        for device in self.system.devices.values():
+            if device.name != 'Bus':
+                f_input_values, g_input_values, f_jac_input_values, g_jac_input_values = self.get_fast_input_values(device)
+
+            # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
+            if device.name != 'Bus':
+                # get variable addresses
+                var_addresses = self.addresses_dict[device.name]
+
+                ###f and g update
+                # get local f and g info and values
+                local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions(
+                    f_input_values, g_input_values)
+
+                eq_type = 'f'
+                pairs = self.assign_fast_global_f_g_positions(device, local_f_values, device.f_output_order)
+                for index, val in pairs:
+                    self.add_to_f_g(self.f, index, val)
+
+                eq_type = 'g'
+                pairs = self.assign_fast_global_f_g_positions(device, local_g_values, device.g_output_order)
+                for index, val in pairs:
+                    self.add_to_f_g(self.g, index, val)
+
+                ### Jacobian update
+                # get local jacobians info and values
+                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs(f_jac_input_values, g_jac_input_values)
+
+                # calc dfx
+                jac_type = 'dfx'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions, device.dfx_jac_output_order)
+                for row, col, val in triplets:
+                    self.add_to_jacobian(self._dfx_dict, self.sparsity_fx, row, col, val)
+
+                # calc dfy
+                jac_type = 'dfy'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions, device.dfy_jac_output_order)
+                for row, col, val in triplets:
+                    self.add_to_jacobian(self._dfy_dict, self.sparsity_fy, row, col, val)
+
+                # calc dgx
+                jac_type = 'dgx'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions, device.dgx_jac_output_order)
+                for row, col, val in triplets:
+                    self.add_to_jacobian(self._dgx_dict, self.sparsity_gx, row, col, val)
+
+                # calc dgy
+                jac_type = 'dgy'
+                positions = jacobian_info[jac_type]
+                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions, device.dgy_jac_output_order)
+                for row, col, val in triplets:
+                    self.add_to_jacobian(self._dgy_dict, self.sparsity_gy, row, col, val)
+
+    def assign_fast_global_f_g_positions(self, device, local_values, outputs_order_list):
+        pairs = []
+        for i in range(device.n):
+            for val, address in zip(local_values[i], outputs_order_list):
+                pairs.append((address, val))
+
+        return pairs
+
+    def assign_fast_global_jac_positions(self, device, local_jacobian, positions, outputs_order_triplets):
+        triplets = []
+        for i in range(device.n):
+            for (func_index, var_index), (address_function, address_variable) in zip(positions, outputs_order_triplets):
+                val = local_jacobian[i][func_index][var_index]
+                address_func = address_function
+                address_var = address_variable
+                triplets.append((address_func, address_var, val))
+        return triplets
+
+    def get_fast_input_values(self, device):
+
+        g_input_values = [[] for i in range(device.n)]
+        f_input_values = [[] for i in range(device.n)]
+        f_jac_input_values = [[] for i in range(device.n)]
+        g_jac_input_values = [[] for i in range(device.n)]
+
+        generated_code = device.import_generated_code()
+
+        values = self.xy_unique
+
+        f_arguments = generated_code.f_args
+        g_arguments = generated_code.g_args
+
+        f_jac_arguments = generated_code.f_jac_args
+        g_jac_arguments = generated_code.g_jac_args
+
+        self.build_fast_input_values(values, device, f_arguments, f_input_values, device.f_inputs_order)
+        self.build_fast_input_values(values, device, g_arguments, g_input_values, device.g_inputs_order)
+        self.build_fast_input_values(values, device, f_jac_arguments, f_jac_input_values, device.f_jac_inputs_order)
+        self.build_fast_input_values(values, device, g_jac_arguments, g_jac_input_values, device.g_jac_inputs_order)
+
+        return f_input_values, g_input_values, f_jac_input_values, g_jac_input_values
+
+
+    def build_fast_input_values(self, values, device, arguments_list, input_values_list, inputs_order_list ):
+        for j, arg in enumerate(arguments_list):
+            for i in range(device.n):
+                if inputs_order_list[j] != 'param':
+                    input_values_list[i].append(values[inputs_order_list[j]][i])
+                else:
+                    param = getattr(device, arg)
+                    input_values_list[i].append(param.value[i])

@@ -53,7 +53,21 @@ class DynamicModelTemplate(EditableDevice):
         self.state_vars_list = [] # list of all the state variables (including external)
         self.algeb_vars_list = [] # list of all the algebraic variables (including external)
 
-        # Address mapping for algebraic variables
+        # Lists to store inputs order when updating f, g, and jacobian functions
+
+        self.f_inputs_order = list()
+        self.g_inputs_order = list()
+        self.f_jac_inputs_order = list()
+        self.g_jac_inputs_order = list()
+
+        self.f_output_order = list()
+        self.g_output_order = list()
+        self.dfx_jac_output_order = list()
+        self.dfy_jac_output_order = list()
+        self.dgx_jac_output_order = list()
+        self.dgy_jac_output_order = list()
+
+
 
         # Set address function
         self.n = 0 # index for the number of components corresponding to this model
