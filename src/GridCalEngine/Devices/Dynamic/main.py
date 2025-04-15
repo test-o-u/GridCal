@@ -3,6 +3,18 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import os
+import sys
+
+# Dynamically add the project src/ folder to sys.path
+CURRENT_FILE = os.path.abspath(__file__)
+# Change module import path to the src/ folder
+SRC_PATH = os.path.abspath(os.path.join(CURRENT_FILE, "../../../../"))
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
+# Change the current working directory to the src/ folder
+os.chdir(SRC_PATH)
+
 import logging
 import time
 import numpy as np
@@ -83,4 +95,6 @@ def simulate_system(system):
         logging.error(f"An error occurred while simulating the system: {e}", exc_info=True)
 
     return sim
-        
+
+if __name__ == "__main__":
+    main()
