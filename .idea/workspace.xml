@@ -28,12 +28,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="optimize input to jacobian and move model storage to dynamic_model_template">
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dae.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/system.py" afterDir="false" />
-    </list>
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="create setup file and move update jacobian function to dae" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -1874,7 +1869,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="628" />
+    <option name="localTasksCounter" value="629" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -1942,7 +1937,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="latitude and longitude as float" />
     <MESSAGE value="added converged condition without retrying pf option" />
     <MESSAGE value="5.3.5" />
     <MESSAGE value="Improved UCTE parsing" />
@@ -1967,7 +1961,8 @@
     <MESSAGE value="First dynamic files" />
     <MESSAGE value="dynamic variables class" />
     <MESSAGE value="optimize input to jacobian and move model storage to dynamic_model_template" />
-    <option name="LAST_COMMIT_MESSAGE" value="optimize input to jacobian and move model storage to dynamic_model_template" />
+    <MESSAGE value="create setup file and move update jacobian function to dae" />
+    <option name="LAST_COMMIT_MESSAGE" value="create setup file and move update jacobian function to dae" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
