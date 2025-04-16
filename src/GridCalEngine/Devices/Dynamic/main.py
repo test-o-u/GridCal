@@ -3,24 +3,27 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import os
+import sys
+
+# Dynamically add the project src/ folder to sys.path
+CURRENT_FILE = os.path.abspath(__file__)
+# Change module import path to the src/ folder
+SRC_PATH = os.path.abspath(os.path.join(CURRENT_FILE, "../../../../"))
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
+# Change the current working directory to the src/ folder
+os.chdir(SRC_PATH)
+
 import logging
 import time
+import config
 import numpy as np
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.tds import TDS
-from GridCalEngine.Devices.Dynamic.model_list import MODELS
 
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-### Configure time performance ###
-performance = False
-### Configure test ###
-# NOTE: Other tests
-# 'GridCalEngine/Devices/Dynamic/test.json'
-# 'GridCalEngine/Devices/Dynamic/test_2buses1line.json'
-# 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-# datafile = 'GridCalEngine/Devices/Dynamic/test_3buses3lines.json'
-datafile = 'GridCalEngine/Devices/Dynamic/test.json'
 
 def main():
     """
@@ -47,13 +50,13 @@ def initialize_system():
     try:
         # Initialize the system with given models and datafile
         datafile = 'GridCalEngine/Devices/Dynamic/test.json'
-        system = System(MODELS, datafile)
+        system = System()
 
     except Exception as e:
         logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)
 
     # Performance timing logs
-    if performance:
+    if config.PERFORMANCE:
         logging.info("=============== TIME CHECK ================")
         logging.info(f"Process symbolic time = {system.symb_time:.6f} [s]")
         logging.info(f"Create device time = {system.dev_time:.6f} [s]")
@@ -84,4 +87,6 @@ def simulate_system(system):
         logging.error(f"An error occurred while simulating the system: {e}", exc_info=True)
 
     return sim
-        
+
+if __name__ == "__main__":
+    main()

@@ -35,3 +35,6 @@ demo_5_node.json
 
 /src/GridCalEngine/Devices/Dynamic/generated_module
 /src/pycode
+
+/src/GridCalEngine/Devices/Dynamic/trials
+/.vscode
