@@ -6,9 +6,11 @@
 import json
 
 def readjson( input_file):
-    "This function creates the system and adds the components specified in the json file"
+    """
+    This function creates the system and adds the components specified in the json file.
+    """
     
-    #read json file and creturn a dict containing info for every component
+    # Read json file and creturn a dict containing info for every component
     with open(input_file, "r", encoding="utf-8") as f:
         json_in = json.load(f)
         return json_in

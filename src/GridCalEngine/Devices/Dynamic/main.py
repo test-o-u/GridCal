@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+# TODO: ask Santiago what's the best practice 
 import os
 import sys
 
@@ -16,17 +17,17 @@ if SRC_PATH not in sys.path:
 os.chdir(SRC_PATH)
 
 import logging
-import time
-import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.system import System
-
-### Configure logging ###
-logging.basicConfig(level=logging.INFO, format="%(message)s")
+from GridCalEngine.Devices.Dynamic.utils.logging_config import setup_logging
 
 def main():
     """
     Main function to initialize and run the system simulation.
     """
+
+    # Set up logging
+    setup_logging()
+
     try:
         # Run the dynamic simulation
         start_dynamic()
@@ -34,37 +35,18 @@ def main():
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
-
-    
+ 
 def start_dynamic():
     """
     System initialization function.
     """
-    start_time = time.perf_counter()
+    
     try:
         # Instanciate the system
         system = System()
 
     except Exception as e:
         logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)
-
-    # Performance timing logs
-    if config.PERFORMANCE:
-        logging.info("=============== TIME CHECK ================")
-        logging.info(f"Process symbolic time = {system.symb_time:.6f} [s]")
-        logging.info(f"Create device time = {system.dev_time:.6f} [s]")
-        logging.info(f"Set address time = {system.add_time:.6f} [s]")
-        total_time = time.perf_counter() - start_time
-        logging.info(f"Total execution time: {total_time:.6f} [s]")
-        logging.info("===========================================")
-        logging.info("=============== ADDRESS CHECK =============")
-        logging.info(f"Bus a = {system.models['Bus'].algeb_idx}")
-        logging.info(f"ACLine a = {system.models['ACLine'].extalgeb_idx}")
-        logging.info(f"ExpLoad a = {system.models['ExpLoad'].extalgeb_idx}")
-        logging.info(f"GENCLS a = {system.models['GENCLS'].states_idx}")
-        logging.info(f"GENCLS a = {system.models['GENCLS'].algeb_idx}")
-        logging.info(f"GENCLS a = {system.models['GENCLS'].extalgeb_idx}")
-        logging.info("===========================================") 
 
 if __name__ == "__main__":
     main()

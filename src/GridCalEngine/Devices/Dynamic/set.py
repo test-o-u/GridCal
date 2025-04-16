@@ -6,7 +6,8 @@
 import os
 import importlib
 import time
-
+import logging
+import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
@@ -59,7 +60,7 @@ class SET:
 
         Execution time for each step is measured and stored.
         """
-
+        start_time = time.perf_counter()
         # STEP 1: Process models symbolically and generate numerical functions
         symb_st = time.perf_counter()
         for model in self.models.values():
@@ -69,19 +70,29 @@ class SET:
         # Finalize generated code
         self.finalize_generated_code()
         symb_end = time.perf_counter()
-        self.symb_time = symb_end - symb_st  # Store symbolic processing time
+        symb_time = symb_end - symb_st  # Store symbolic processing time
 
         # STEP 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
         self.create_devices(self.data)
         dev_end = time.perf_counter()
-        self.dev_time = dev_end - dev_st  # Store device creation time
+        dev_time = dev_end - dev_st  # Store device creation time
 
         # STEP 3: Store parameters and assign global indices to variables and external references
         add_st = time.perf_counter()
         self.set_addresses()
         add_end = time.perf_counter()
-        self.add_time = add_end - add_st  # Store addressing time
+        add_time = add_end - add_st  # Store addressing time
+
+        # Performance timing logs
+        if config.PERFORMANCE:
+            logging.info("=============== TIME CHECK ================")
+            logging.info(f"Process symbolic time = {symb_time:.6f} [s]")
+            logging.info(f"Create device time = {dev_time:.6f} [s]")
+            logging.info(f"Set address time = {add_time:.6f} [s]")
+            total_time = time.perf_counter() - start_time
+            logging.info(f"Total execution time: {total_time:.6f} [s]")
+            logging.info("===========================================")
 
     def finalize_generated_code(self):
         """

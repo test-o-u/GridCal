@@ -3,6 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import time
+import logging
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.set import SET
@@ -48,22 +50,19 @@ class System:
         try:
             self.dae = DAE(self)
         except Exception as e:
-            print(f"An error occurred while initializing the DAE: {e}", exc_info=True)
+            logging.info(f"An error occurred while initializing the DAE: {e}", exc_info=True)
         
         # Setup the system
         try:
             self.setup = SET(self, self.models_list, self.data)
         except Exception as e:
-            print(f"An error occurred while setting-up the SET: {e}", exc_info=True)
+            logging.info(f"An error occurred while setting-up the SET: {e}", exc_info=True)
         
         # Simulate the system
         try:
             self.tds = TDS(self)
         except Exception as e:
-            print(f"An error occurred while simulating the TDS: {e}", exc_info=True)
+            logging.info(f"An error occurred while simulating the TDS: {e}", exc_info=True)
         
-        
-
-
         
 
