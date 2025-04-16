@@ -15,19 +15,19 @@ class SymProcess:
     """
     Handles symbolic processing for dynamic models.
 
-    This class:
-    - Converts model equations into symbolic form.
-    - Generates symbolic-to-numeric transformation.
-    - Computes and stores Jacobian matrices.
-    - Generates Python code for compiled symbolic models.
+    Responsibilities:
+        - Converts model equations into symbolic form
+        - Generates lambdified numerical functions
+        - Computes Jacobian matrices symbolically
+        - Exports Python code for numerical model evaluation
     """
 
     def __init__(self, model):
         """
-        Initialize symbolic processing.
+        Initialize symbolic processing components.
 
         Args:
-            model: The model instance containing symbolic equations.
+            model: The model instance containing symbolic variables and equations.
         """
         self.model = model
 
@@ -56,14 +56,22 @@ class SymProcess:
         self.jacob_algebs = []
         self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
 
+
     def generate(self):
         """
-        Generates symbolic representations, equations, Jacobians, and Python code.
+        Perform full symbolic processing pipeline.
+
+        Steps:
+            1. Generate symbolic variables
+            2. Convert string equations into symbolic expressions
+            3. Compute and store Jacobian matrices
+            4. Generate numerical Python code from symbolic forms
         """
         self.generate_symbols()
         self.generate_equations()
         self.generate_jacobians()
         self.generate_code()
+
 
     def generate_symbols(self):
         """
@@ -73,9 +81,16 @@ class SymProcess:
         self.sym_state = [sp.Symbol(v.symbol) for v in self.model.stats]
         self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algebs]
 
+
     def generate_equations(self):
         """
-        Converts string equations into symbolic expressions and lambdifies them.
+        Convert string equations into symbolic expressions.
+
+        This method:
+            - Parses model equations using SymPy
+            - Identifies symbols used in each equation
+            - Stores arguments used in f/g functions
+            - Creates lambdified numerical functions for f and g
         """
         variables_f_g = [self.model.stats, self.model.algebs]
         equations_f_g = [self.f_list, self.g_list]
@@ -107,7 +122,6 @@ class SymProcess:
             for arg in symbolic_args:
                 if eq_type == 'f':
                     self.f_args.append(str(arg))
-
                 else:
                     self.g_args.append(str(arg))
 
@@ -118,9 +132,10 @@ class SymProcess:
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
 
+
     def generate_jacobians(self):
         """
-        Computes symbolic Jacobian matrices and lambdifies them.
+        Compute and lambdify Jacobian matrices for f and g equations.
         """
         sym_variables = self.sym_state + self.sym_algeb
         all_variables = self.model.stats + self.model.algebs
@@ -137,7 +152,6 @@ class SymProcess:
         f_jacob_symbolic_spa = sp.SparseMatrix(f_jacobian_symbolic)
         g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
 
-
         # Store Jacobian information
         count = 0
         for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
@@ -146,7 +160,6 @@ class SymProcess:
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
                 if idx == 0:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
-
                     if var_type == 'x':
                         count += 1
                 else:
@@ -166,17 +179,19 @@ class SymProcess:
         self.jacob_states = lambdify(f_jac_args, tuple(f_jacobian_symbolic), modules='numpy')
         self.jacob_algebs = lambdify(g_jac_args, tuple(g_jacobian_symbolic), modules='numpy')
 
+
     def _rename_func(self, func, func_name, vars=False):
         """
-        Renames a lambdified function for improved clarity.
-        Args:
-            func: The function to rename.
-            func_name (str): The desired function name.
-            vars (list, optional): Additional arguments to append.
-        Returns:
-            str: The modified function source code.
-        """
+        Generate source code from a lambdified function, renaming it for clarity.
 
+        Args:
+            func (function): The lambdified function object.
+            func_name (str): Desired name for the generated function.
+            vars (list, optional): Extra arguments to append to the function signature.
+
+        Returns:
+            str: Modified function source code string.
+        """
         if func is None:
             return f"# empty {func_name}\n"
 
@@ -187,9 +202,20 @@ class SymProcess:
 
         return src + '\n'
 
+
     def generate_code(self):
         """
-        Generates Python code for numerical model evaluation.
+        Write numerical model code to a Python file.
+
+        This method:
+            - Evaluation functions for f, g
+            - Jacobian evaluation functions
+            - Argument names
+            - Variable ordering metadata
+            - Sparsity pattern (Jacobian info)
+
+        Returns:
+            str: The path to the generated Python file.
         """
         generated_module_path = get_generated_module_path()
         filename = f"{self.model.name}.py"

@@ -7,24 +7,35 @@ import os
 import importlib
 import time
 import logging
+
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
+
 class SET:
     """
     System set-up class.
+
+    Responsible for:
+        - Importing and initializing dynamic models
+        - Processing models symbolically and generating fast numerical code
+        - Creating and configuring system devices
+        - Assigning addresses for variables used in simulations
     """
 
     def __init__(self, system, models_list, data):
      """
-        Imports and initializes dynamic models, process symbolically and generates fast numerical functions, sets up devices and set addresses to variables.
+        Initializes the SET class and prepares the system.
 
-        Attributes:
+        Args:
             system (System): The system instance containing models and devices.
-            models_list (list): A list of tuples, each containing a category and a list of model names.
-            data (dict): A dictionary where keys are model names, and values are lists of device data.
+            dae (DAE): The DAE instance for managing equations.
+            models (dict): Dictionary mapping model names to their instances.
+            devices (dict): Dictionary of instantiated device objects.
+            models_list (list): List of tuples, each containing a category and a list of model names.
+            data (dict): Parsed JSON structure where keys are model names and values are lists of device data.
     """
 
      self.system = system
@@ -32,7 +43,7 @@ class SET:
 
      self.models = self.system.models
      self.devices = self.system.devices
-     
+
      self.models_list = models_list
      self.data = data
 
@@ -63,6 +74,7 @@ class SET:
                 # Store the model instance in the dictionary
                 self.models[model_name] = model
 
+
     def system_prepare(self):
         """
         Prepares the system by processing models, creating devices, and assigning global indices.
@@ -75,30 +87,29 @@ class SET:
         Execution time for each step is measured and stored.
         """
         start_time = time.perf_counter()
-        # STEP 1: Process models symbolically and generate numerical functions
+
+        # Step 1: Process models symbolically and generate numerical functions
         symb_st = time.perf_counter()
         for model in self.models.values():
             model.store_data()
             model.process_symbolic()
-
-        # Finalize generated code
-        self.finalize_generated_code()
+        self.finalize_generated_code()  # Finalize generated code
         symb_end = time.perf_counter()
         symb_time = symb_end - symb_st  # Store symbolic processing time
 
-        # STEP 2: Create vectorized model instances for device storage
+        # Step 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
         self.create_devices(self.data)
         dev_end = time.perf_counter()
         dev_time = dev_end - dev_st  # Store device creation time
 
-        # STEP 3: Store parameters and assign global indices to variables and external references
+        # Step 3: Store parameters and assign global indices to variables and external references
         add_st = time.perf_counter()
         self.set_addresses()
         add_end = time.perf_counter()
         add_time = add_end - add_st  # Store addressing time
 
-        # Performance timing logs
+        # Log time performance
         if config.PERFORMANCE:
             logging.info("=============== TIME CHECK ================")
             logging.info(f"Process symbolic time = {symb_time:.6f} [s]")
@@ -108,16 +119,14 @@ class SET:
             logging.info(f"Total execution time: {total_time:.6f} [s]")
             logging.info("===========================================")
 
+
     def finalize_generated_code(self):
         """
-        Generates an __init__.py file to later dynamically import compiled models.
+        Generates __init__.py to dynamically import compiled model modules.
 
         This method:
-        - Retrieves the path of the generated Python code directory.
         - Writes import statements for each model into __init__.py.
-        - Compiles all Python files within the directory to optimize execution (.pyc).
         """
-
         generated_module_path = get_generated_module_path()
         init_path = os.path.join(generated_module_path, '__init__.py')
 
@@ -127,19 +136,14 @@ class SET:
                 # Import each model dynamically
                 f.write(f"from . import {model_name}\n")
 
+
     def create_devices(self, data):
         """
         Populates vectorized model instances with device data from a parsed JSON file.
 
-        This method:
-        - Iterates through parsed JSON data to initialize devices.
-        - Increments the total device count (`n`) for each model.
-        - Assigns parameter values to their corresponding model attributes in a vectorized manner.
-
         Args:
-            data (dict): A dictionary where keys are model names, and values are lists of device data.
+            data (dict): A dictionary with model names as keys and lists of device data as values.
         """
-
         for model_name, device_list in data.items():
             # Retrieve the corresponding model instance
             model = self.models[model_name]
@@ -164,11 +168,20 @@ class SET:
             self.dae.nx += model.n * model.nx
             self.dae.ny += model.n * model.ny
 
+
     def set_addresses(self):
+        """
+        Assign global DAE indices to variables and store parameter values.
+
+        This method:
+            - Assigning local and global indices to state and algebraic variables
+            - Mapping external variable references
+            - Populating the `dae.addresses_dict` and `dae.params_dict`
+        """
         self.global_states_id = 0
         self.global_algebs_id = self.dae.nx
-        algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
-        states_ref_map = {}  # Cache: store states_idx references for quick lookup
+        algeb_ref_map = {}      # Cache: store algeb_idx references for quick lookup
+        states_ref_map = {}     # Cache: store states_idx references for quick lookup
 
         # Loop through devices
         for model_instance in self.devices.values():

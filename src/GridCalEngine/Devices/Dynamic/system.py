@@ -12,28 +12,28 @@ from GridCalEngine.Devices.Dynamic.utils.json import readjson
 
 class System:
     """
-    This class represents a power system containing various models and devices.
+    Represents a power system composed of various dynamic models and devices.
 
-    It handles:
-        - Initialization of models and devices
-        - Parsing of JSON configuration files
-        - Create the DAE object for managing algebraic and differential equations
-        - Setting up the system for simulation
+    Responsibilities include:
+        - Loading configuration from JSON files
+        - Initializing the DAE (Differential-Algebraic Equations) structure
+        - Setting up devices and models
         - Running time-domain simulations
     """
 
     def __init__(self):
         """
-        Initializes the System instance.
+        Initializes the System instance by loading configuration,
+        creating required simulation components, and preparing for execution.
 
         Attributes:
-            models (dict):          A dictionary mapping model names to their respective instances.
-            devices (dict):         A dictionary to store instantiated device objects.
-            data (dict):            Parsed JSON data containing device configurations.
-            models_list (list):     A dictionary of  abstract models to be processed.
-            dae (DAE):              An instance of the DAE class for managing algebraic and differential equations.
-            setup (SET):            An instance of the SET class for setting up the system.
-            tds (TDS):              An instance of the TDS class for time-domain simulation.
+            models (dict): Dictionary mapping model names to their instances.
+            devices (dict): Dictionary of instantiated device objects.
+            data (dict): Parsed JSON configuration data.
+            models_list (list): List of abstract model types to be processed.
+            dae (DAE): DAE system manager for equations.
+            setup (SET): System setup handler.
+            tds (TDS): Time-domain simulation engine.
         """
         # Initialize empty attributes
         self.models = {}
@@ -57,7 +57,7 @@ class System:
         except Exception as e:
             logging.info(f"An error occurred while setting-up the SET: {e}", exc_info=True)
         
-        # Simulate the system
+        # Run time-domain simulation
         try:
             self.tds = TDS(self)
         except Exception as e:

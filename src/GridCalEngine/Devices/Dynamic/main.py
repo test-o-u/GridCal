@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+######################################################
 # TODO: ask Santiago what's the best practice 
 import os
 import sys
@@ -15,16 +16,20 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 # Change the current working directory to the src/ folder
 os.chdir(SRC_PATH)
+#######################################################
 
 import logging
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.utils.logging_config import setup_logging
 
+
 def main():
     """
     Main function to initialize and run the system simulation.
-    """
 
+    This function sets up logging, starts the dynamic simulation, and 
+    logs the outcome. It handles and logs any exceptions raised during execution.
+    """
     # Set up logging
     setup_logging()
 
@@ -35,18 +40,25 @@ def main():
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
- 
+
+
 def start_dynamic():
     """
-    System initialization function.
-    """
+    Initializes the dynamic system.
 
+    This function instantiates the System object required to start the 
+    dynamic simulation. Logs any exceptions raised during initialization.
+    """
     try:
-        # Instanciate the system
+        # Instantiate the system
         System()
 
     except Exception as e:
-        logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)
+        logging.error(
+            f"An error occurred while initializing the system: {e}",
+            exc_info=True
+        )
+
 
 if __name__ == "__main__":
     main()
