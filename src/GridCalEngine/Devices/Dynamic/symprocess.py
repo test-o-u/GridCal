@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import os
-import sympy as sp
 import inspect
 import pprint
+import sympy as sp
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
@@ -196,23 +196,23 @@ class SymProcess:
         file_path = os.path.join(generated_module_path, filename)
 
         with open(file_path, 'w') as f:
-            f.write("import numpy\n\nfrom numpy import *\n\n")
+            f.write("from numpy import *\n\n")
 
             for eq_type, func_name in [('f', 'f_update'), ('g', 'g_update')]:
                 py_expr = self._rename_func(self.lambda_equations.get(eq_type), func_name)
-                f.write(f"{py_expr}\n")
+                f.write(f"{py_expr}")
 
-            f.write(f"f_args =" + pprint.pformat(sorted(self.f_args)) + '\n')
-            f.write(f"g_args =" + pprint.pformat(sorted(self.g_args)) + '\n')
+            f.write(f"f_args =" + pprint.pformat(sorted(self.f_args), width=1000) + '\n')	
+            f.write(f"g_args =" + pprint.pformat(sorted(self.g_args), width=1000) + '\n\n')
 
-            f.write(f"variables_names_for_ordering =" + pprint.pformat(self.variables_names_for_ordering) + '\n')
+            f.write(f"variables_names_for_ordering =" + pprint.pformat(self.variables_names_for_ordering, width=1000) + '\n\n')
 
             for name, func in [('f', self.jacob_states), ('g', self.jacob_algebs)]:
                 py_expr = self._rename_func(func, f"{name}_ia")
-                f.write(f"{py_expr}\n")
+                f.write(f"{py_expr}")
 
-            f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args) + '\n')
-            f.write(f"g_jac_args =" + pprint.pformat(self.g_jacobian_args) + '\n')
+            f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args, width=1000) + '\n')
+            f.write(f"g_jac_args =" + pprint.pformat(self.g_jacobian_args, width=1000) + '\n\n')
 
             f.write(f"jacobian_info = {self.jacobian_store_info}")
 

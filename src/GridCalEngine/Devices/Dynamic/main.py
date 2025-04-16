@@ -18,9 +18,7 @@ os.chdir(SRC_PATH)
 import logging
 import time
 import config
-import numpy as np
 from GridCalEngine.Devices.Dynamic.system import System
-from GridCalEngine.Devices.Dynamic.tds import TDS
 
 ### Configure logging ###
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -30,26 +28,21 @@ def main():
     Main function to initialize and run the system simulation.
     """
     try:
-        # Initialize and simulate the system
-        system = initialize_system()
-        sim = simulate_system(system)
-
-        # Print results
-        print('yes')
-        #print(sim.results)
+        # Run the dynamic simulation
+        start_dynamic()
+        logging.info("Simulation completed successfully.")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
 
     
-def initialize_system():
+def start_dynamic():
     """
     System initialization function.
     """
     start_time = time.perf_counter()
     try:
-        # Initialize the system with given models and datafile
-        datafile = 'GridCalEngine/Devices/Dynamic/test.json'
+        # Instanciate the system
         system = System()
 
     except Exception as e:
@@ -71,22 +64,7 @@ def initialize_system():
         logging.info(f"GENCLS a = {system.models['GENCLS'].states_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].algeb_idx}")
         logging.info(f"GENCLS a = {system.models['GENCLS'].extalgeb_idx}")
-        logging.info("===========================================")
-    return system   
-    
-
-def simulate_system(system):
-    """
-    System initialization function.
-    """ 
-    try:
-        # Simulate the system
-        sim = TDS(system)
-
-    except Exception as e:
-        logging.error(f"An error occurred while simulating the system: {e}", exc_info=True)
-
-    return sim
+        logging.info("===========================================") 
 
 if __name__ == "__main__":
     main()

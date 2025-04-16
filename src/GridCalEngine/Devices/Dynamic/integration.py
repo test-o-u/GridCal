@@ -1,4 +1,7 @@
-import pdb
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
 
 import numpy as np
 from scipy.sparse import bmat, identity
@@ -17,7 +20,7 @@ class Integration:
         pass
     
     @staticmethod
-    def step(dae, dt, method, tol=1e-5, max_iter=80):
+    def step(dae, dt, method, tol, max_iter):
         """
         Perform an implicit integration step with Newton-Raphson.
         """

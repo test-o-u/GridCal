@@ -1,10 +1,13 @@
-import pdb
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
 
-import numpy as np
+
 import config
+import numpy as np
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
-
 
 class DAE:
     """
@@ -23,9 +26,7 @@ class DAE:
 
         self.x = config.DAE_X0
         self.y = config.DAE_Y0
-        self.xy_unique = None
-        self.f = np.zeros(2)
-        self.g = np.zeros(13)
+        self.xy = None
 
         # Dictionaries to accumulate Jacobian values
         self._dfx_dict = {}
@@ -116,7 +117,7 @@ class DAE:
         self.finalize_jacobians()
 
     def concatenate(self):
-        self.xy_unique = np.hstack((self.x, self.y))
+        self.xy = np.hstack((self.x, self.y))
 
     def finalize_tconst_matrix(self):
         self.Tf = diags(self.Tf)
@@ -129,8 +130,8 @@ class DAE:
         self._dfy_dict = {}
         self._dgx_dict = {}
         self._dgy_dict = {}
-        self.f = np.zeros(2)
-        self.g = np.zeros(13)
+        self.f = np.zeros(self.nx)
+        self.g = np.zeros(self.ny)
         self.sparsity_fx = list()
         self.sparsity_fy = list()
         self.sparsity_gx = list()
@@ -221,7 +222,7 @@ class DAE:
 
         generated_code = device.import_generated_code()
 
-        values = self.xy_unique
+        values = self.xy
 
         f_arguments = generated_code.f_args
         g_arguments = generated_code.g_args
@@ -345,7 +346,7 @@ class DAE:
 
         generated_code = device.import_generated_code()
 
-        values = self.xy_unique
+        values = self.xy
 
         f_arguments = generated_code.f_args
         g_arguments = generated_code.g_args

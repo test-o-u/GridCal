@@ -1,4 +1,8 @@
-# config.py
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
+
 import numpy as np
 
 # Path to the system JSON
@@ -40,8 +44,11 @@ DAE_Y0 = np.array(list(Y0.values()))
 # Simulation parameters
 SIMULATION_TIME = 10.0  # Total simulation time (seconds)
 TIME_STEP = 0.01        # Time step for simulation (seconds)
-TOL = 1e-6              # Tolerance for numerical methods
+TOL = 1e-5              # Tolerance for numerical methods
 MAX_ITER = 80           # Maximum iterations for numerical methods
+# Simulation methods
+STEADYSTATE_METHOD="steadystate" 
+INTEGRATION_METHOD="trapezoid"
 
 # Performance boolean
 PERFORMANCE = False  # Set to True for performance testing, False for debugging

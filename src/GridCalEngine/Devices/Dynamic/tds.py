@@ -1,16 +1,24 @@
-from GridCalEngine.Devices.Dynamic.integration import method_map
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
 
+import config
+from GridCalEngine.Devices.Dynamic.integration import method_map
 
 class TDS():
     """
     Time domain simulation class.
     """
-    def __init__(self, system, dt=0.0001, t_final=0.1, method_ss="steadystate", method_tds="trapezoid"):
+    def __init__(self, system):
+
         self.system = system
-        self.dt = dt
-        self.t_final = t_final
-        self.method_tds = method_tds
-        self.method_ss = method_ss
+
+        self.dt = config.TIME_STEP
+        self.t_final = config.SIMULATION_TIME
+        self.method_tds = config.INTEGRATION_METHOD
+        self.method_ss = config.STEADYSTATE_METHOD
+
         self.results = []
 
         # Get integration method
@@ -21,8 +29,7 @@ class TDS():
  
         # Initialize 
         self.system.dae.initilize_fg()
-        # # Compute steady-state
-        # self.run_steadystate()
+
         # Run simulation
         self.run_tds()
 
@@ -33,7 +40,7 @@ class TDS():
         t = 0
         while t < self.t_final:
             # Solve DAE step
-            converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator)
+            converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator, tol=config.TOL, max_iter=config.MAX_ITER)
 
             if not converged:
                 raise RuntimeError("Integration step did not converge")
@@ -46,7 +53,7 @@ class TDS():
         Performs steady-state computation.
         """
 
-        converged = self.steadystate.steadystate(dae=self.system.dae, method=self.steadystate)
+        converged = self.steadystate.steadystate(dae=self.system.dae, method=self.steadystate, tol=config.TOL, max_iter=config.MAX_ITER)
         
         if converged:
                 print(f"Steady-state found.")

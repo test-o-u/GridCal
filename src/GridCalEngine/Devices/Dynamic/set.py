@@ -7,20 +7,19 @@ import os
 import importlib
 import time
 
-from GridCalEngine.Devices.Dynamic.io.json import readjson
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
-class Setup:
-    def __init__(self, system, models_list, datafile):
+class SET:
+    def __init__(self, system, models_list, data):
 
      self.system = system
      self.dae = self.system.dae
      self.models = self.system.models
      self.devices = self.system.devices
      self.models_list = models_list
-     self.data = readjson(datafile)
+     self.data = data
 
      self.import_models()
      self.system_prepare()
