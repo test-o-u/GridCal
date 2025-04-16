@@ -3,11 +3,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-import config
+import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.set import SET
 from GridCalEngine.Devices.Dynamic.tds import TDS
-from GridCalEngine.Devices.Dynamic.io.json import readjson
+from GridCalEngine.Devices.Dynamic.utils.json import readjson
 
 class System:
     """

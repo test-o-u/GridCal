@@ -6,7 +6,7 @@
 import numpy as np
 
 # Path to the system JSON
-SYSTEM_JSON_PATH = "GridCalEngine/Devices/Dynamic/data/test.json"
+SYSTEM_JSON_PATH = "GridCalEngine/Devices/Dynamic/io/data/test.json"
 
 # Models present in the Dynamic Simulation Engine
 MODELS = list([

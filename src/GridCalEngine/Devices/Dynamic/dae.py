@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-import config
+import GridCalEngine.Devices.Dynamic.io.config as config
 import numpy as np
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict

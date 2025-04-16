@@ -17,7 +17,7 @@ os.chdir(SRC_PATH)
 
 import logging
 import time
-import config
+import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.system import System
 
 ### Configure logging ###
