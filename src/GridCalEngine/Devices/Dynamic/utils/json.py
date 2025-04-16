@@ -5,12 +5,12 @@
 
 import json
 
-def readjson( input_file):
+def readjson(input_file):
     """
-    This function creates the system and adds the components specified in the json file.
+    Parse the information in the json file.
     """
     
-    # Read json file and creturn a dict containing info for every component
+    # Read json file and return a dict containing info for every component
     with open(input_file, "r", encoding="utf-8") as f:
         json_in = json.load(f)
         return json_in

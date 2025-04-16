@@ -10,10 +10,8 @@ def get_generated_module_path(mkdir=True):
     Get the path to the ``generated_module`` folder.
     """
 
-
+    # Get the path to the current file
     generated_module_path = 'GridCalEngine/Devices/Dynamic/generated_module'
-
-
 
     if mkdir is True:
         os.makedirs(generated_module_path, exist_ok=True)

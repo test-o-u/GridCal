@@ -40,10 +40,10 @@ def start_dynamic():
     """
     System initialization function.
     """
-    
+
     try:
         # Instanciate the system
-        system = System()
+        System()
 
     except Exception as e:
         logging.error(f"An error occurred while initializing the system: {e}", exc_info=True)

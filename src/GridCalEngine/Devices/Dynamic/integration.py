@@ -13,10 +13,16 @@ class Integration:
     """
     @staticmethod
     def calc_jac(dae, dt):
+        """
+        Calculates the Jacobian according to integration method.
+        """
         pass
     
     @staticmethod
-    def calc_q(x, f, Tf, h, x0, f0):
+    def calc_f_res(x, f, Tf, h, x0, f0):
+        """
+        Calculates the state residual according to integration method.
+        """
         pass
     
     @staticmethod
@@ -27,13 +33,15 @@ class Integration:
         x0, y0, f0 = dae.x.copy(), dae.y.copy(), dae.f.copy()
         
         for iteration in range(max_iter):
+            # Compute Jacobian and residual
             jac = method.calc_jac(dae, dt)
-            f_residual = method.calc_q(dae.x, dae.f, dae.Tf, dt, x0, f0)
+            f_residual = method.calc_f_res(dae.x, dae.f, dae.Tf, dt, x0, f0)
             residual = np.vstack((f_residual.reshape(-1, 1), dae.g.reshape(-1, 1)))  # Include algebraic residuals
+
             # Solve linear system
             inc = spsolve(jac, -residual)
 
-            # Update variables
+            # Update state and algebraic variables
             dae.x += 0.5 * inc[:dae.nx]
             dae.y += 0.5 * inc[dae.nx:]
 
@@ -86,7 +94,7 @@ class BackEuler(Integration):
                      [dae.dgx, dae.dgy]], format='csr')
     
     @staticmethod
-    def calc_q(x, f, Tf, dt, x0, f0):
+    def calc_f_res(x, f, Tf, dt, x0, f0):
         return Tf @ (x - x0) - dt * f
 
 class Trapezoid(Integration):
@@ -99,7 +107,7 @@ class Trapezoid(Integration):
                      [dae.dgx, dae.dgy]], format='csr')
     
     @staticmethod
-    def calc_q(x, f, Tf, dt, x0, f0):
+    def calc_f_res(x, f, Tf, dt, x0, f0):
         return Tf @ (x - x0) - 0.5 * dt * (f + f0)
 
 class SteadyState(Integration):
@@ -112,7 +120,7 @@ class SteadyState(Integration):
                      [dae.dgx, dae.dgy]], format='csr')
     
     @staticmethod
-    def calc_q(x, f, Tf, dt, x0, f0):
+    def calc_f_res(x, f, Tf, dt, x0, f0):
         pass
 
 method_map = {

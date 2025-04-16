@@ -3,7 +3,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-import time
 import logging
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.dae import DAE
@@ -16,26 +15,25 @@ class System:
     This class represents a power system containing various models and devices.
 
     It handles:
-    - Importing and managing abstract dynamic models.
-    - Processing symbolic and numerical computations.
-    - Creating and managing device instances in one single object in a vecotrized form.
-    - Assigning global indices to system variables and copies of these to external system variables.
+        - Initialization of models and devices
+        - Parsing of JSON configuration files
+        - Create the DAE object for managing algebraic and differential equations
+        - Setting up the system for simulation
+        - Running time-domain simulations
     """
 
     def __init__(self):
         """
         Initializes the System instance.
 
-        Args:
-            models_list (list): A list of model categories and their associated models.
-            datafile (str): Path to the JSON file containing device data and system configuration.
-
         Attributes:
-            models_list (list): Stores the provided list of model categories and models.
-            models (dict): A dictionary mapping model names to their respective instances.
-            devices (dict): A dictionary to store instantiated device objects.
-            dae (DAE): An instance of the DAE class for managing algebraic and differential equations.
-            data (dict): Parsed JSON data containing device configurations.
+            models (dict):          A dictionary mapping model names to their respective instances.
+            devices (dict):         A dictionary to store instantiated device objects.
+            data (dict):            Parsed JSON data containing device configurations.
+            models_list (list):     A dictionary of  abstract models to be processed.
+            dae (DAE):              An instance of the DAE class for managing algebraic and differential equations.
+            setup (SET):            An instance of the SET class for setting up the system.
+            tds (TDS):              An instance of the TDS class for time-domain simulation.
         """
         # Initialize empty attributes
         self.models = {}
@@ -43,6 +41,7 @@ class System:
 
         # Parse the JSON data file
         self.data = readjson(config.SYSTEM_JSON_PATH)
+
         # Get the list of models from the config file
         self.models_list = config.MODELS
 

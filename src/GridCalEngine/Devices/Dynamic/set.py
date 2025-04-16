@@ -13,12 +13,26 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
 class SET:
+    """
+    System set-up class.
+    """
+
     def __init__(self, system, models_list, data):
+     """
+        Imports and initializes dynamic models, process symbolically and generates fast numerical functions, sets up devices and set addresses to variables.
+
+        Attributes:
+            system (System): The system instance containing models and devices.
+            models_list (list): A list of tuples, each containing a category and a list of model names.
+            data (dict): A dictionary where keys are model names, and values are lists of device data.
+    """
 
      self.system = system
      self.dae = self.system.dae
+
      self.models = self.system.models
      self.devices = self.system.devices
+     
      self.models_list = models_list
      self.data = data
 

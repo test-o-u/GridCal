@@ -3,9 +3,8 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-
-import GridCalEngine.Devices.Dynamic.io.config as config
 import numpy as np
+import GridCalEngine.Devices.Dynamic.io.config as config
 from scipy.sparse import coo_matrix, diags
 from collections import defaultdict
 
@@ -53,7 +52,7 @@ class DAE:
         self.update_xy_dict = defaultdict(dict)
 
         # NOTE: To change!
-        self.Tf = []
+        self.Tf = list()
 
     def add_to_f_g(self, eq_type_array, index, value):
         eq_type_array[index - self.nx] += value
