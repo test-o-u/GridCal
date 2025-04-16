@@ -121,6 +121,9 @@ class DAE:
     def finalize_tconst_matrix(self):
         self.Tf = diags(self.Tf)
 
+
+    # Initialization
+
     def initialize_jacobian(self):
         self._dfx_dict = {}
         self._dfy_dict = {}
@@ -244,6 +247,8 @@ class DAE:
                     inputs_order_list.append('param')
                     param = getattr(device, arg)
                     input_values_list[i].append(param.value[i])
+
+    # Iterations
 
     def update_jacobian(self):
         self._dfx_dict = {}
