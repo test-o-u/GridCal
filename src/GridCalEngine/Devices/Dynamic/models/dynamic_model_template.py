@@ -5,7 +5,6 @@
 
 import importlib
 import pdb
-
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
@@ -66,6 +65,8 @@ class DynamicModelTemplate(EditableDevice):
         self.dfy_jac_output_order = list()
         self.dgx_jac_output_order = list()
         self.dgy_jac_output_order = list()
+
+        self.time_consuming = []
 
 
 
@@ -128,22 +129,20 @@ class DynamicModelTemplate(EditableDevice):
 
     def calc_f_g_functions(self, f_input_values, g_input_values):
         generated_code = self.import_generated_code()
-
         f_values_device = np.zeros((self.n, len(self.state_vars_list)))
         g_values_device = np.zeros((self.n, len(self.algeb_vars_list)))
         for i in range(self.n):
             # get f values
-            if f_input_values:
+            if f_input_values[i]:
                 f_values = generated_code.f_update(*f_input_values[i])
                 for j in range(len(self.state_vars_list)):
                     f_values_device[i][j] = f_values[j]
 
             #get g values
-            if g_input_values:
+            if g_input_values[i]:
                 g_values = generated_code.g_update(*g_input_values[i])
                 for j in range(len(self.algeb_vars_list)):
                     g_values_device[i][j] = g_values[j]
-
 
         variables_names_for_ordering_f = generated_code.variables_names_for_ordering['f']
         variables_names_for_ordering_g = generated_code.variables_names_for_ordering['g']
@@ -157,12 +156,12 @@ class DynamicModelTemplate(EditableDevice):
         f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
-            if f_input_values:
+            if f_input_values[i]:
                 local_jac_f = generated_code.f_ia(*f_input_values[i])
                 for j, funct in enumerate(self.state_vars_list):
                     for k, var in enumerate(self.variables_list):
                         f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
-            if g_input_values:
+            if g_input_values[i]:
                 local_jac_g = generated_code.g_ia(*g_input_values[i])
                 for j, funct in enumerate(self.algeb_vars_list):
                     for k, var in enumerate(self.variables_list):

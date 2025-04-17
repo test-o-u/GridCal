@@ -63,6 +63,7 @@ class TDS():
             
             t += self.dt
             self.results.append((t, self.system.dae.x.copy(), self.system.dae.y.copy()))
+        #print(self.results)
 
     def run_steadystate(self):
         """

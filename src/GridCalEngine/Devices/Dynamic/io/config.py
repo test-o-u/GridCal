@@ -42,7 +42,7 @@ DAE_X0 = np.array(list(X0.values()))
 DAE_Y0 = np.array(list(Y0.values()))
 
 # Simulation parameters
-SIMULATION_TIME = 10.0  # Total simulation time (seconds)
+SIMULATION_TIME = 10  # Total simulation time (seconds)
 TIME_STEP = 0.01        # Time step for simulation (seconds)
 TOL = 1e-5              # Tolerance for numerical methods
 MAX_ITER = 80           # Maximum iterations for numerical methods
