@@ -1044,6 +1044,10 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
     f_obj = 0.0
 
     # Analyze topological variability in order to minimize computation time compiling numerical circuits
+    """ 
+    todo:
+    Ver en esa función que cosas hay que ira añadiendo a la matriz de análisis
+    """
     topological_dict = grid.get_topological_profile_variability_dict()
 
     # Get nodal profiles data
@@ -1086,6 +1090,14 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
             #  might arise; if needed dictionary could be discarded, but numerical circuit will be
             #  recomputed each time the topological reference changes.
 
+            """
+            todo:
+            HABLAR CON SANTI: ver si se puede hacer un compilador de ts. Sería el mimso en circuit_to_data que hay
+            donde los valores serían arrays del tamaño de las series en lugar de valores discretos. El problema es que 
+            habría que crear una estructura de datos (ver DataStructures) deberían ser también de vectores. Para no
+            mantener dos estructuras, el actual compile_numerical_circuit_at, compilaria el de ts y extraería el ts que
+            toque. 
+            """
             nc: NumericalCircuit = compile_numerical_circuit_at(
                 circuit=grid,
                 t_idx=t_ref,
@@ -1164,8 +1176,8 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
         # TODO: Add the HVDC saturation logic
         f_obj += add_linear_hvdc_formulation(
             t_idx=t_idx,
-            Sbase=nc.Sbase, # todo: change source of data
-            hvdc_data_t=nc.hvdc_data, # todo: change source of data
+            Sbase=nc.Sbase,  # todo: change source of data
+            hvdc_data_t=nc.hvdc_data,  # todo: change source of data
             hvdc_vars=mip_vars.hvdc_vars,
             vars_bus=mip_vars.bus_vars,
             prob=lp_model,
@@ -1187,7 +1199,7 @@ def run_linear_ntc_opf_ts(grid: MultiCircuit,
                 prob=lp_model,
                 monitor_only_sensitive_branches=monitor_only_sensitive_branches,
                 monitor_only_ntc_load_rule_branches=monitor_only_ntc_load_rule_branches,
-                alpha=alpha, # todo: change source of data
+                alpha=alpha,  # todo: change source of data
                 alpha_threshold=alpha_threshold,
                 structural_ntc=float(structural_ntc),
                 ntc_load_rule=ntc_load_rule,
