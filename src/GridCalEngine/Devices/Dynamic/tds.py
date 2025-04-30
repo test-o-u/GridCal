@@ -5,6 +5,7 @@
 
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.integration import method_map
+from GridCalEngine.Devices.Dynamic.utils.data_processing import Data_processor
 
 class TDS():
     """
@@ -37,6 +38,9 @@ class TDS():
         # Initialize results list
         self.results = []
 
+        # Save simulation data
+        self.data_processor = Data_processor(self.system)
+
         # Get integration method
         if self.method_tds not in method_map or self.method_ss not in method_map:
             raise ValueError(f"Unknown integration method: {self.method_tds}")
@@ -47,7 +51,9 @@ class TDS():
         # Initialize simulatoin
         self.system.dae.initilize_fg()
         # Run simulation
+        #self.run_steadystate()
         self.run_tds()
+        self.save_simulation_data()
 
     def run_tds(self):
         """
@@ -63,7 +69,7 @@ class TDS():
             
             t += self.dt
             self.results.append((t, self.system.dae.x.copy(), self.system.dae.y.copy()))
-        #print(self.results)
+
 
     def run_steadystate(self):
         """
@@ -75,3 +81,10 @@ class TDS():
                 print(f"Steady-state found.")
         else:
             raise RuntimeError("Steady-state not found.")
+
+    def save_simulation_data(self):
+        self.data_processor.save_data(self.results)
+        self.data_processor.export_csv()
+        self.data_processor.plot_results()
+        #self.data_processor.compare_with_andes()
+

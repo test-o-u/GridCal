@@ -5,6 +5,7 @@
 
 import os
 import importlib
+import pdb
 import time
 import logging
 
@@ -144,11 +145,26 @@ class SET:
         Args:
             data (dict): A dictionary with model names as keys and lists of device data as values.
         """
+
+        device_index = 0
         for model_name, device_list in data.items():
+
             # Retrieve the corresponding model instance
             model = self.models[model_name]
             # Save system devices
             self.devices[model_name] = model
+            # set device index
+            model.index = device_index
+            device_index += 1
+
+            # Save arguments for the updating functions
+            generated_code = model.import_generated_code()
+
+            model.f_args = generated_code.f_args
+            model.g_args = generated_code.g_args
+
+            model.f_jac_args = generated_code.f_jac_args
+            model.g_jac_args = generated_code.g_jac_args
 
             for device in device_list:
                 # Increment the count of devices for this model
@@ -168,15 +184,22 @@ class SET:
             self.dae.nx += model.n * model.nx
             self.dae.ny += model.n * model.ny
 
+            model.g_input_values = [[] for i in range(model.n)]
+            model.f_input_values = [[] for i in range(model.n)]
+            model.f_jac_input_values = [[] for i in range(model.n)]
+            model.g_jac_input_values = [[] for i in range(model.n)]
+
+
 
     def set_addresses(self):
         """
-        Assign global DAE indices to variables and store parameter values.
+        Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
 
         This method:
             - Assigning local and global indices to state and algebraic variables
             - Mapping external variable references
             - Populating the `dae.addresses_dict` and `dae.params_dict`
+            - Storing a reference list to analyse results
         """
         self.global_states_id = 0
         self.global_algebs_id = self.dae.nx
@@ -185,6 +208,9 @@ class SET:
 
         # Loop through devices
         for model_instance in self.devices.values():
+            # initialize variables list and addresses list for this device
+            device_variables_list = list()
+            device_addresses_list = list()
 
             # Store parameters and assign addresses
             for var_list in model_instance.__dict__.values():
@@ -196,8 +222,14 @@ class SET:
                 if isinstance(var_list, StatVar):
                     indices = list(range(self.global_states_id, self.global_states_id + model_instance.n))
 
-                    # Store dae addresses
-                    self.dae.addresses_dict[model_instance.name][var_list.name] = indices
+                    # store internal variables in dae
+                    for i in range(model_instance.n):
+                        self.dae.internal_variables_list.append((indices[i], var_list.symbol+'_'+model_instance.name+'_'+str(i)))
+
+                    #store variables names and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(indices)
+
                     self.global_states_id += model_instance.n  # Move global index forward
 
                     # Cache reference for faster lookup
@@ -218,17 +250,23 @@ class SET:
 
                     parent_idx = states_ref_map[key]
 
-                    # Store dae addresses
-                    self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
 
                 # algebraic variables
                 if isinstance(var_list, AlgebVar):
                     indices = list(range(self.global_algebs_id, self.global_algebs_id + model_instance.n))
 
+                    # store internal variables in dae
+                    for i in range(model_instance.n):
+                        self.dae.internal_variables_list.append((indices[i], var_list.symbol+'_'+model_instance.name+'_'+str(i)))
+
                     self.global_algebs_id += model_instance.n  # Move global index forward
 
-                    # Store dae addresses
-                    self.dae.addresses_dict[model_instance.name][var_list.name] = indices
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(indices)
 
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
@@ -243,7 +281,16 @@ class SET:
 
                     parent_idx = algeb_ref_map[key]
 
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
                     # Store dae addresses
-                    self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
+                    #self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
+            # add variables names local list and addresses local list to dae general lists
+            self.dae.variables_list.append(device_variables_list)
+            self.dae.addresses_list.append(device_addresses_list)
+
+            # add device to number of devices in the dae
+            self.dae.n += 1
 

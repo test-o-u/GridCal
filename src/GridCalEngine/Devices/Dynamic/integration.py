@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+import pdb
+import sys
 import numpy as np
+import scipy as sp
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
+from scipy import linalg
 
 class Integration:
     """
@@ -47,6 +50,8 @@ class Integration:
             dae.x += 0.5 * inc[:dae.nx]
             dae.y += 0.5 * inc[dae.nx:]
 
+            #pdb.set_trace()
+
             # Recompute f and g
             dae.update_fg()
 
@@ -61,24 +66,33 @@ class Integration:
     
 
     @staticmethod
-    def steadystate(dae, method, tol=1e-6, max_iter=10):
+    def steadystate(dae, method, tol=1e-2, max_iter=10):
         """
         Perform an implicit integration step with Newton-Raphson.
         """
 
         for iteration in range(max_iter):
             jac = method.calc_jac(dae)
-            residual = np.vstack((dae.f.reshape(-1, 1), dae.g.reshape(-1, 1))) 
+            residual = np.vstack((dae.f.reshape(-1, 1), dae.g.reshape(-1, 1)))
+
+            det = sp.linalg.det(jac.todense())
 
             # Solve linear system
             inc = spsolve(jac, -residual)
 
+            #print(residual[14])
+            print(dae.y[12])
+            # pdb.set_trace()
+
             # Update variables
-            dae.x += inc[:dae.nx]
-            dae.y += inc[dae.nx:]
+            dae.x += 0.5 * inc[:dae.nx]
+            dae.y += 0.5 * inc[dae.nx:]
+
+
 
             # Recompute f and g
             dae.update_fg()
+            np.set_printoptions(threshold=sys.maxsize)
 
            # Check convergence
             residual_error = np.linalg.norm(residual, np.inf)

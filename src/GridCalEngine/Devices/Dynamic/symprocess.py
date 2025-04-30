@@ -222,12 +222,12 @@ class SymProcess:
         file_path = os.path.join(generated_module_path, filename)
 
         with open(file_path, 'w') as f:
-            f.write("from numba import jit\n")
+            f.write("from numba import njit\n")
             f.write("from numpy import *\n\n")
 
             for eq_type, func_name in [('f', 'f_update'), ('g', 'g_update')]:
                 py_expr = self._rename_func(self.lambda_equations.get(eq_type), func_name)
-                f.write(f"@jit\n")
+                f.write(f"@njit(cache=True)\n")
                 f.write(f"{py_expr}")
 
             f.write(f"f_args =" + pprint.pformat(sorted(self.f_args), width=1000) + '\n')	
@@ -237,7 +237,7 @@ class SymProcess:
 
             for name, func in [('f', self.jacob_states), ('g', self.jacob_algebs)]:
                 py_expr = self._rename_func(func, f"{name}_ia")
-                f.write(f"@jit\n")
+                f.write(f"@njit(cache=True)\n")
                 f.write(f"{py_expr}")
 
             f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args, width=1000) + '\n')

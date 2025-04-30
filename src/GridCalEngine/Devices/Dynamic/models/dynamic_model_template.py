@@ -39,6 +39,12 @@ class DynamicModelTemplate(EditableDevice):
                                 idtag=idtag,
                                 device_type=device_type)
 
+        # Device index for ordering devices in the system (used to relate variables with their addresses)
+        self.index = int
+
+        # Set address function
+        self.n = 0  # index for the number of components corresponding to this model
+
         # Symbolic processing engine utils
         self.sym = SymProcess(self)
         self.stats = []
@@ -52,17 +58,29 @@ class DynamicModelTemplate(EditableDevice):
         self.state_vars_list = [] # list of all the state variables (including external)
         self.algeb_vars_list = [] # list of all the algebraic variables (including external)
 
+        # Lists to store function arguments
+        self.f_args = list()
+        self.g_arguments = list ()
+
+        self.f_jac_arguments = list()
+        self.g_jac_arguments = list()
+
+        #Lists to store input values
+        self.g_input_values = list()
+        self.f_input_values = list()
+        self.f_jac_input_values = list()
+        self.g_jac_input_values = list()
+
         # Lists to store inputs order when updating f, g, and jacobian functions
 
-        self.f_inputs_order = list()
         self.g_inputs_order = list()
+        self.f_inputs_order = list()
         self.f_jac_inputs_order = list()
         self.g_jac_inputs_order = list()
-
         self.f_output_order = list()
         self.g_output_order = list()
         self.dfx_jac_output_order = list()
-        self.dfy_jac_output_order = list()
+        self.dfy_jac_output_order =list()
         self.dgx_jac_output_order = list()
         self.dgy_jac_output_order = list()
 
@@ -70,8 +88,6 @@ class DynamicModelTemplate(EditableDevice):
 
 
 
-        # Set address function
-        self.n = 0 # index for the number of components corresponding to this model
 
         #index for states and algeb variables (used to compute dae.nx and dae.ny)
         self.nx = 0 # index for the number of state variables (not external)
@@ -127,20 +143,20 @@ class DynamicModelTemplate(EditableDevice):
 
         return generated_code
 
-    def calc_f_g_functions(self, f_input_values, g_input_values):
+    def calc_f_g_functions(self):
         generated_code = self.import_generated_code()
         f_values_device = np.zeros((self.n, len(self.state_vars_list)))
         g_values_device = np.zeros((self.n, len(self.algeb_vars_list)))
         for i in range(self.n):
             # get f values
-            if f_input_values[i]:
-                f_values = generated_code.f_update(*f_input_values[i])
+            if self.f_input_values[i]:
+                f_values = generated_code.f_update(*self.f_input_values[i])
                 for j in range(len(self.state_vars_list)):
                     f_values_device[i][j] = f_values[j]
 
             #get g values
-            if g_input_values[i]:
-                g_values = generated_code.g_update(*g_input_values[i])
+            if self.g_input_values[i]:
+                g_values = generated_code.g_update(*self.g_input_values[i])
                 for j in range(len(self.algeb_vars_list)):
                     g_values_device[i][j] = g_values[j]
 
@@ -149,20 +165,20 @@ class DynamicModelTemplate(EditableDevice):
 
         return f_values_device, g_values_device, variables_names_for_ordering_f, variables_names_for_ordering_g
 
-    def calc_local_jacs(self, f_input_values, g_input_values):
+    def calc_local_jacs(self):
         generated_code = self.import_generated_code()
         jacobian_info = generated_code.jacobian_info
 
         f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
-            if f_input_values[i]:
-                local_jac_f = generated_code.f_ia(*f_input_values[i])
+            if self.f_jac_input_values[i]:
+                local_jac_f = generated_code.f_ia(*self.f_jac_input_values[i])
                 for j, funct in enumerate(self.state_vars_list):
                     for k, var in enumerate(self.variables_list):
                         f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
-            if g_input_values[i]:
-                local_jac_g = generated_code.g_ia(*g_input_values[i])
+            if self.g_jac_input_values[i]:
+                local_jac_g = generated_code.g_ia(*self.g_jac_input_values[i])
                 for j, funct in enumerate(self.algeb_vars_list):
                     for k, var in enumerate(self.variables_list):
                         g_jacobians[i][j+len(self.state_vars_list)][k] = local_jac_g[j*len(self.variables_list)+k]

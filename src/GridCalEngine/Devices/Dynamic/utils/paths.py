@@ -17,3 +17,10 @@ def get_generated_module_path(mkdir=True):
         os.makedirs(generated_module_path, exist_ok=True)
 
     return generated_module_path
+
+def get_andes_results_path():
+
+    path = 'GridCalEngine/Devices/Dynamic/io/data/Gen_Load_out.csv'
+
+    return path
+
