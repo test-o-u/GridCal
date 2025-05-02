@@ -4,8 +4,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import GridCalEngine.Devices.Dynamic.io.config as config
+from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Devices.Dynamic.integration import method_map
 from GridCalEngine.Devices.Dynamic.utils.data_processing import Data_processor
+from GridCalEngine.Devices.Dynamic.utils.json import readjson
+
 
 class TDS():
     """
@@ -29,7 +32,12 @@ class TDS():
         # Pass the system object
         self.system = system
 
+        # Load events from JSON file
+        self.events = readjson(config.EVENTS_JSON_PATH)
+        self.applied_events = [] 
+
         # Set simulation parameters
+        self.t = 0.0
         self.dt = config.TIME_STEP
         self.t_final = config.SIMULATION_TIME
         self.method_tds = config.INTEGRATION_METHOD
@@ -53,22 +61,24 @@ class TDS():
         # Run simulation
         #self.run_steadystate()
         self.run_tds()
-        self.save_simulation_data()
+        # self.save_simulation_data()
 
     def run_tds(self):
         """
         Performs the numerical integration using the chosen method.
         """
-        t = 0
-        while t < self.t_final:
+        while self.t < self.t_final:
             # Solve DAE step
             converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator, tol=config.TOL, max_iter=config.MAX_ITER)
 
             if not converged:
                 raise RuntimeError("Integration step did not converge.")
             
-            t += self.dt
-            self.results.append((t, self.system.dae.x.copy(), self.system.dae.y.copy()))
+            self.t += self.dt
+            self.results.append((self.t, self.system.dae.x.copy(), self.system.dae.y.copy()))
+
+            # Check for events
+            self.get_events()
 
 
     def run_steadystate(self):
@@ -86,5 +96,19 @@ class TDS():
         self.data_processor.save_data(self.results)
         self.data_processor.export_csv()
         self.data_processor.plot_results()
-        #self.data_processor.compare_with_andes()
+        self.data_processor.compare_with_andes()
 
+    def get_events(self):
+        for i, event in enumerate(self.events):
+            if i in self.applied_events:
+                continue  # already applied
+
+            if abs(self.t - event["time"]) < 1e-6:
+                model = self.system.devices[event["model"]]
+                param = getattr(model, event["param"])
+
+                if isinstance(param, NumDynParam):
+                    print(f"Applying event at t={self.t:.2f}: "
+                        f"{event['model']}[{event['device_index']}].{event['param']} = {event['value']}")
+                    param.value[event["device_index"]] = event["value"]
+                    self.applied_events.append(i)
