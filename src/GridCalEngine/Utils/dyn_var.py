@@ -5,9 +5,8 @@
 
 'Class to store variables'
 
-
 class DynVar:
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, eq: str,  init_eq: str):
         self.name = name
         self.symbol = symbol
         self.init_eq = init_eq
@@ -21,7 +20,7 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, eq: str, init_eq=None):
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
@@ -31,62 +30,52 @@ class AlgebVar(DynVar):
 
 
 class StatVar(DynVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, t_const=1.0):
+    def __init__(self, name: str, symbol: str, eq=None, init_eq=None, t_const=None, tf=None):
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
                         init_eq=init_eq,
-                        eq=eq)
+                        eq=eq
+                        )
         self.var_type = 'x'
         self.t_const = t_const
+        self.tf = tf
+    
+        if tf is not None:
+            self._convert_tf(tf)
 
+    def _convert_tf(self, tf):
+        rhs_expr = tf.process_tf()
+
+        self.eq = str(rhs_expr)
+        # self.t_const = lhs_coeff
 
 class ExternVar(DynVar):
-    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, eq=None, init_eq=None):
         DynVar.__init__(self, name=name,
                         symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
+                        eq=eq,
+                        init_eq=init_eq)
         self.src = src
         self.indexer = indexer 
 
 class ExternState(ExternVar):
-    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, eq=None, init_eq=None):
         ExternVar.__init__(self, name=name,
                            symbol=symbol,
                            src=src,
                            indexer=indexer,
-                           init_eq=init_eq,
-                           eq=eq)
+                           eq=eq,
+                           init_eq=init_eq)
         self.var_type = 'x'
 
 class ExternAlgeb(ExternVar):
-    def __init__(self, name: str, symbol: str, src: str, indexer, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, src: str, indexer, eq=None, init_eq=None):
         ExternVar.__init__(self, name=name,
                            symbol=symbol,
                            src=src,
                            indexer=indexer,
-                           init_eq=init_eq,
-                           eq=eq)
+                           eq=eq,
+                           init_eq=init_eq)
         self.var_type = 'y'
 
-class AliasAlgeb(ExternVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
-        self.var_type = 'y'
-
-
-class AliasState(ExternState):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
-        self.var_type = 'x'

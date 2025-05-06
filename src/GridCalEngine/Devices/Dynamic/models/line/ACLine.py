@@ -6,7 +6,7 @@
 from typing import Union
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class ACLine(DynamicModelTemplate):
@@ -23,11 +23,11 @@ class ACLine(DynamicModelTemplate):
         # TODO: 
         # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do? 
         # - is there a reason why it is called symbol and not model as in ANDES?
-        self.bus1 = IdxDynParam(symbol='Bus', 
+        self.bus1_idx = IdxDynParam(symbol='Bus', 
                                 info="idx of from bus",
                                 id=[])
         
-        self.bus2 = IdxDynParam(symbol='Bus',
+        self.bus2_idx = IdxDynParam(symbol='Bus',
                                 info="idx of to bus",
                                 id=[])
 
@@ -50,8 +50,7 @@ class ACLine(DynamicModelTemplate):
         self.a_origin = ExternAlgeb(name='a_origin',
                               symbol = 'a_origin',
                               src='a',
-                              indexer=self.bus1, 
-                              init_eq='', 
+                              indexer=self.bus1_idx,
                               eq='(v_origin ** 2 * g  - \
                                     v_origin * v_end * (g * cos(a_origin - a_end) + \
                                         b * sin(a_origin - a_end)))')
@@ -59,8 +58,7 @@ class ACLine(DynamicModelTemplate):
         self.v_origin = ExternAlgeb(name='v_origin',
                               symbol='v_origin',
                               src='v',
-                              indexer=self.bus1,
-                              init_eq='',
+                              indexer=self.bus1_idx,
                               eq='(- v_origin ** 2 * (b + bsh / 2) - \
                                             v_origin * v_end * (g * sin(a_origin - a_end) - \
                                                 b * cos(a_origin - a_end)))')
@@ -68,8 +66,7 @@ class ACLine(DynamicModelTemplate):
         self.a_end = ExternAlgeb(name='a_end',
                               symbol = 'a_end',
                               src='a',
-                              indexer=self.bus2, 
-                              init_eq='', 
+                              indexer=self.bus2_idx,
                               eq='(v_end ** 2 * g  - \
                                     v_end * v_origin * (g * cos(a_end - a_origin) + \
                                         b * sin(a_end - a_origin)))')
@@ -77,8 +74,7 @@ class ACLine(DynamicModelTemplate):
         self.v_end = ExternAlgeb(name='v_end',
                               symbol = 'v_end',
                               src='v',
-                              indexer=self.bus2, 
-                              init_eq='', 
+                              indexer=self.bus2_idx,
                               eq='(- v_end ** 2 * (b + bsh / 2) - \
                                     v_end * v_origin * (g * sin(a_end - a_origin) - \
                                         b * cos(a_end - a_origin)))')

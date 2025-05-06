@@ -5,15 +5,16 @@
 
 import os
 import importlib
-import pdb
 import time
 import logging
+import pdb
 
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
+# NOTE: Double loop through devices in the set_addresses method needs to be evaluated.  
 
 class SET:
     """
@@ -100,7 +101,7 @@ class SET:
 
         # Step 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
-        self.create_devices(self.data)
+        self.create_devices()
         dev_end = time.perf_counter()
         dev_time = dev_end - dev_st  # Store device creation time
 
@@ -138,7 +139,7 @@ class SET:
                 f.write(f"from . import {model_name}\n")
 
 
-    def create_devices(self, data):
+    def create_devices(self):
         """
         Populates vectorized model instances with device data from a parsed JSON file.
 
@@ -147,9 +148,9 @@ class SET:
         """
 
         device_index = 0
-        for model_name, device_list in data.items():
+        for model_name, device_list in self.data.items():
 
-            # Retrieve the corresponding model instance
+            # Retrieve the corresponding abstract model instance
             model = self.models[model_name]
             # Save system devices
             self.devices[model_name] = model
@@ -169,7 +170,7 @@ class SET:
             for device in device_list:
                 # Increment the count of devices for this model
                 model.n += 1
-
+                
                 for param_name, value in device.items():
                     if hasattr(model, param_name):
                         param = getattr(model, param_name)
@@ -190,7 +191,6 @@ class SET:
             model.g_jac_input_values = [[] for i in range(model.n)]
 
 
-
     def set_addresses(self):
         """
         Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
@@ -206,7 +206,7 @@ class SET:
         algeb_ref_map = {}      # Cache: store algeb_idx references for quick lookup
         states_ref_map = {}     # Cache: store states_idx references for quick lookup
 
-        # Loop through devices
+        # First: Loop through devices to assign internal varibales and parameters
         for model_instance in self.devices.values():
             # initialize variables list and addresses list for this device
             device_variables_list = list()
@@ -236,23 +236,10 @@ class SET:
                     states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
 
                     # Construct DAE lhs matrix
-                    if var_list.t_const != 1.0:
-                        self.dae.Tf += var_list.t_const
+                    if var_list.t_const != None:
+                        self.dae.Tconst += var_list.t_const.value
                     else:
-                        self.dae.Tf += [1.0] * model_instance.n
-
-                # external state variables
-                if isinstance(var_list, ExternState):
-                    key = (var_list.indexer.symbol, var_list.src)
-
-                    if key not in states_ref_map:
-                        raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.algeb_idx")
-
-                    parent_idx = states_ref_map[key]
-
-                    # store variable name and addresses locally
-                    device_variables_list.append(var_list.symbol)
-                    device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
+                        self.dae.Tconst += [1.0] * model_instance.n
 
                 # algebraic variables
                 if isinstance(var_list, AlgebVar):
@@ -270,7 +257,31 @@ class SET:
 
                     # Cache reference for faster lookup
                     algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+            
+            # add variables names local list and addresses local list to dae general lists
+            self.dae.variables_list.append(device_variables_list)
+            self.dae.addresses_list.append(device_addresses_list)
+        
+        # Second: Loop through devices to assign external varibales and parameters
+        for i, model_instance in enumerate(self.devices.values()):
+            # initialize variables list and addresses list for this device
+            device_variables_list = list()
+            device_addresses_list = list()
 
+            # Store parameters and assign addresses
+            for var_list in model_instance.__dict__.values():
+                # external state variables
+                if isinstance(var_list, ExternState):
+                    key = (var_list.indexer.symbol, var_list.src)
+
+                    if key not in states_ref_map:
+                        raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.state_idx")
+
+                    parent_idx = states_ref_map[key]
+
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
 
                 # external algebraic variables
                 if isinstance(var_list, ExternAlgeb):
@@ -284,13 +295,9 @@ class SET:
                     # store variable name and addresses locally
                     device_variables_list.append(var_list.symbol)
                     device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
-                    # Store dae addresses
-                    #self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
             # add variables names local list and addresses local list to dae general lists
-            self.dae.variables_list.append(device_variables_list)
-            self.dae.addresses_list.append(device_addresses_list)
-
-            # add device to number of devices in the dae
-            self.dae.n += 1
-
+            if device_variables_list and device_addresses_list:
+                self.dae.variables_list[i].extend(device_variables_list)
+                self.dae.addresses_list[i].extend(device_addresses_list)
+        

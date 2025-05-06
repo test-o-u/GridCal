@@ -79,7 +79,7 @@ class DAE:
         self.update_xy_dict = defaultdict(dict)
 
         # NOTE: To change!
-        self.Tf = list()
+        self.Tconst = list()
 
 
     def add_to_f_g(self, eq_type_array, index, value):
@@ -188,10 +188,10 @@ class DAE:
 
     def finalize_tconst_matrix(self):
         """
-        Build a sparse diagonal matrix from the Tf list.
+        Build a sparse diagonal matrix from the Tconst list.
         Typically used for time constant scaling in integration.
         """
-        self.Tf = diags(self.Tf)
+        self.Tconst = diags(self.Tconst)
 
 
     # Initialization

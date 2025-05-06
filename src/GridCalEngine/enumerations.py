@@ -875,6 +875,8 @@ class DeviceType(Enum):
     DynExpLoadModel = "DynExpLoadModel"
     DynACLineModel = "DynACLineModel"
 
+    Exciter = "Exciter"
+
     def __str__(self) -> str:
         return str(self.value)
 

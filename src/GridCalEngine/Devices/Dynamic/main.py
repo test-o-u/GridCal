@@ -23,7 +23,6 @@ import logging
 from GridCalEngine.Devices.Dynamic.system import System
 from GridCalEngine.Devices.Dynamic.utils.logging_config import setup_logging
 
-
 def main():
     """
     Main function to initialize and run the system simulation.

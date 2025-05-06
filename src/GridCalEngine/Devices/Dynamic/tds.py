@@ -61,7 +61,7 @@ class TDS():
         # Run simulation
         #self.run_steadystate()
         self.run_tds()
-        # self.save_simulation_data()
+        self.get_results()
 
     def run_tds(self):
         """
@@ -92,11 +92,11 @@ class TDS():
         else:
             raise RuntimeError("Steady-state not found.")
 
-    def save_simulation_data(self):
+    def get_results(self):
         self.data_processor.save_data(self.results)
-        self.data_processor.export_csv()
+        # self.data_processor.export_csv()
         self.data_processor.plot_results()
-        self.data_processor.compare_with_andes()
+        # self.data_processor.compare_with_andes()
 
     def get_events(self):
         for i, event in enumerate(self.events):

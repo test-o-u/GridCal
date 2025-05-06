@@ -6,7 +6,7 @@
 from typing import Union
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class ExpLoad(DynamicModelTemplate):
@@ -20,7 +20,7 @@ class ExpLoad(DynamicModelTemplate):
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynExpLoadModel)
 
         # parameters
-        self.bus = IdxDynParam(symbol='Bus', 
+        self.bus_idx = IdxDynParam(symbol='Bus', 
                                 info='Load bus',
                                 id=[])
 
@@ -51,13 +51,11 @@ class ExpLoad(DynamicModelTemplate):
         self.a = ExternAlgeb(name='a',
                              symbol = 'a',
                              src='a',
-                             indexer=self.bus, 
-                             init_eq='', 
+                             indexer=self.bus_idx,
                              eq='Pl0 * v ** coeff_alfa')  
         
         self.v = ExternAlgeb(name='v',
                              symbol = 'v',
                              src='v',
-                             indexer=self.bus,
-                             init_eq='',
+                             indexer=self.bus_idx,
                              eq='Ql0 * v ** coeff_beta')

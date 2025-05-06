@@ -14,16 +14,17 @@ MODELS = list([
     ('bus', ['Bus']),
     ('line', ['ACLine']), 
     ('load', ['ExpLoad']),
-    ('syngen', ['GENCLS'])
+    ('syngen', ['GENCLS']),
+    ('exciter', ['Exciter'])
 ])
 
 # Initial DAE state vectors
 X0 = {
     'delta': 0.0,
     'omega': 1.0,
+    'vf': 0.9
     # 'delta': 1.888852339,
     # 'omega': 2
-
 }
 
 Y0 = {
@@ -64,6 +65,7 @@ SIMULATION_TIME = 10 # Total simulation time (seconds)
 TIME_STEP = 0.01        # Time step for simulation (seconds)
 TOL = 1e-5             # Tolerance for numerical methods
 MAX_ITER = 1000           # Maximum iterations for numerical methods
+
 # Simulation methods
 STEADYSTATE_METHOD="steadystate" 
 INTEGRATION_METHOD="trapezoid"

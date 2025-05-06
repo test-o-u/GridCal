@@ -47,16 +47,16 @@ class DynamicModelTemplate(EditableDevice):
 
         # Symbolic processing engine utils
         self.sym = SymProcess(self)
-        self.stats = []
-        self.algebs = []
+        self.state_vars = []
+        self.algeb_vars = []
 
         # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = {}
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
-        self.variables_list = [] # list of all the variables (including external)
-        self.state_vars_list = [] # list of all the state variables (including external)
-        self.algeb_vars_list = [] # list of all the algebraic variables (including external)
+        self.variables_list = []  # list of all the variables (including external)
+        self.state_eqs = [] # list of all the state variables (including external)
+        self.algeb_eqs = [] # list of all the algebraic variables (including external)
 
         # Lists to store function arguments
         self.f_args = list()
@@ -85,9 +85,6 @@ class DynamicModelTemplate(EditableDevice):
         self.dgy_jac_output_order = list()
 
         self.time_consuming = []
-
-
-
 
         #index for states and algeb variables (used to compute dae.nx and dae.ny)
         self.nx = 0 # index for the number of state variables (not external)
@@ -118,21 +115,25 @@ class DynamicModelTemplate(EditableDevice):
 
             if isinstance(elem, StatVar):
                 self.nx += 1
-                self.state_vars_list.append(elem.symbol)
-                self.stats.append(elem)
+                if elem.eq != None:
+                    self.state_eqs.append(elem.symbol)
+                self.state_vars.append(elem)
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
-                self.algeb_vars_list.append(elem.symbol)
-                self.algebs.append(elem)
+                if elem.eq != None:
+                    self.algeb_eqs.append(elem.symbol)
+                self.algeb_vars.append(elem)
 
             if isinstance(elem, ExternState):
-                self.state_vars_list.append(elem.symbol)
-                self.stats.append(elem)
+                if elem.eq != None:
+                    self.state_eqs.append(elem.symbol)
+                self.state_vars.append(elem)
 
             if isinstance(elem, ExternAlgeb):
-                self.algeb_vars_list.append(elem.symbol)
-                self.algebs.append(elem)
+                if elem.eq != None:
+                    self.algeb_eqs.append(elem.symbol)
+                self.algeb_vars.append(elem)
 
 
 ####################### TO CLEAN ################################
@@ -145,19 +146,19 @@ class DynamicModelTemplate(EditableDevice):
 
     def calc_f_g_functions(self):
         generated_code = self.import_generated_code()
-        f_values_device = np.zeros((self.n, len(self.state_vars_list)))
-        g_values_device = np.zeros((self.n, len(self.algeb_vars_list)))
+        f_values_device = np.zeros((self.n, len(self.state_eqs)))
+        g_values_device = np.zeros((self.n, len(self.algeb_eqs)))
         for i in range(self.n):
             # get f values
             if self.f_input_values[i]:
                 f_values = generated_code.f_update(*self.f_input_values[i])
-                for j in range(len(self.state_vars_list)):
+                for j in range(len(self.state_eqs)):
                     f_values_device[i][j] = f_values[j]
 
             #get g values
             if self.g_input_values[i]:
                 g_values = generated_code.g_update(*self.g_input_values[i])
-                for j in range(len(self.algeb_vars_list)):
+                for j in range(len(self.algeb_eqs)):
                     g_values_device[i][j] = g_values[j]
 
         variables_names_for_ordering_f = generated_code.variables_names_for_ordering['f']
@@ -169,19 +170,19 @@ class DynamicModelTemplate(EditableDevice):
         generated_code = self.import_generated_code()
         jacobian_info = generated_code.jacobian_info
 
-        f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
+        f_jacobians = np.zeros((self.n, len(self.state_eqs), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
         for i in range(self.n):
             if self.f_jac_input_values[i]:
                 local_jac_f = generated_code.f_ia(*self.f_jac_input_values[i])
-                for j, funct in enumerate(self.state_vars_list):
+                for j, funct in enumerate(self.state_eqs):
                     for k, var in enumerate(self.variables_list):
                         f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
             if self.g_jac_input_values[i]:
                 local_jac_g = generated_code.g_ia(*self.g_jac_input_values[i])
-                for j, funct in enumerate(self.algeb_vars_list):
+                for j, funct in enumerate(self.algeb_eqs):
                     for k, var in enumerate(self.variables_list):
-                        g_jacobians[i][j+len(self.state_vars_list)][k] = local_jac_g[j*len(self.variables_list)+k]
+                        g_jacobians[i][j+len(self.state_eqs)][k] = local_jac_g[j*len(self.variables_list)+k]
         return f_jacobians, g_jacobians, jacobian_info
             
 

@@ -5,7 +5,7 @@
 from typing import Union
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class GENCLS(DynamicModelTemplate):
@@ -19,11 +19,16 @@ class GENCLS(DynamicModelTemplate):
         
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
 
-        # parameters
-        self.bus = IdxDynParam(symbol='Bus', 
+        # indexes
+        self.bus_idx = IdxDynParam(symbol='Bus', 
                                info='interface bus id',
                                id=[])
         
+        self.device_idx = IdxDynParam(symbol='Exciter', 
+                               info='device id per bus',
+                               id=[])
+        
+        # parameters    
         self.fn = NumDynParam(symbol='fn',
                               info='rated frequency',
                               value=[])
@@ -48,85 +53,76 @@ class GENCLS(DynamicModelTemplate):
                               info='uncontrolled mechanical torque',
                               value=[])
         
-        self.vf = NumDynParam(symbol='vf',
-                              info='uncontrolled exitation voltage',
-                              value=[]) 
+        # self.vf = NumDynParam(symbol='vf',
+        #                       info='uncontrolled exitation voltage',
+        #                       value=[]) 
 
         # state variables
         self.delta = StatVar(name='delta', 
                              symbol='delta', 
-                             init_eq='delta0', 
                              eq='(2 * pi * fn) * (omega - 1)')   
                               
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
-                             init_eq='omega_0', 
-                             eq='(-tm / M + te / M - D / M * (omega - 1))')
+                             eq='(-tm  + te  - D * (omega - 1))',
+                             t_const=self.M)
+        
+        self.vf = ExternState(name='vf',
+                              symbol='vf',
+                              src='vf',
+                              indexer=self.device_idx)
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',
                              symbol='psid',
-                             init_eq='psid0',
                             #  eq='(ra * i_q + vq) - psid')
                              eq='(-ra * i_q + vq) - psid')
         
         self.psiq = AlgebVar(name='psiq',
                              symbol='psiq',
-                             init_eq='psiq0',
                             #  eq='(ra * i_d + vd) - psiq')
                              eq='(-ra * i_d + vd) - psiq')
         
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
-                           init_eq='i_d0', 
                            eq='psid + xd * i_d - vf') # vd
                                                          
         self.i_q = AlgebVar(name='i_q', 
-                           symbol='i_q', 
-                           init_eq='i_q0', 
+                           symbol='i_q',
                            eq='psiq + xd * i_q') # vd
                                                      
         self.vd = AlgebVar(name='vd', 
-                           symbol='vd', 
-                           init_eq='vd0', 
+                           symbol='vd',
                            eq='v * sin(delta - a) - vd')  
                                     
         self.vq = AlgebVar(name='vq', 
-                           symbol='vq', 
-                           init_eq='vq0', 
+                           symbol='vq',
                            eq='v * cos(delta - a) - vq')   
                                  
         self.te = AlgebVar(name='te', 
-                           symbol='te', 
-                           init_eq='tm', 
+                           symbol='te',
                            eq='(psid * i_q - psiq * i_d) - te')   
                      
         self.Pe = AlgebVar(name='Pe',
-                           symbol='Pe', 
-                           init_eq='(vd0 * i_d0 + vq0 * i_q0)', 
+                           symbol='Pe',
                            eq='(vd * i_d + vq * i_q) - Pe')       
                                 
         self.Qe = AlgebVar(name='Qe', 
-                           symbol='Qe', 
-                           init_eq='(vq0 * i_d0 - vd0 * i_q0)', 
+                           symbol='Qe',
                            eq='(vq * i_d - vd * i_q) - Qe')
 
         self.a = ExternAlgeb(name='a',
                              symbol='a',
                              src='a',
-                             indexer=self.bus,
-                             init_eq='',
+                             indexer=self.bus_idx,
                              eq='(vd * i_d + vq * i_q)')
 
         self.v = ExternAlgeb(name='v',
                              symbol='v',
                              src='v',
-                             indexer=self.bus,
-                             init_eq='',
+                             indexer=self.bus_idx,
                              eq='(vq * i_d - vd * i_q)')
-
 
         # network algebraic variables 
         # TODO: 
         # -check naming
-        # -check how they are exported

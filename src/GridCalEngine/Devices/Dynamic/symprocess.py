@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import pdb
 import os
 import inspect
 import pprint
@@ -78,8 +79,8 @@ class SymProcess:
         Converts model parameters and variables into symbolic expressions.
         """
         # Define symbolic variables
-        self.sym_state = [sp.Symbol(v.symbol) for v in self.model.stats]
-        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algebs]
+        self.sym_state = [sp.Symbol(v.symbol) for v in self.model.state_vars]
+        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algeb_vars]
 
 
     def generate_equations(self):
@@ -92,7 +93,7 @@ class SymProcess:
             - Stores arguments used in f/g functions
             - Creates lambdified numerical functions for f and g
         """
-        variables_f_g = [self.model.stats, self.model.algebs]
+        variables_f_g = [self.model.state_vars, self.model.algeb_vars]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
 
@@ -138,8 +139,8 @@ class SymProcess:
         Compute and lambdify Jacobian matrices for f and g equations.
         """
         sym_variables = self.sym_state + self.sym_algeb
-        all_variables = self.model.stats + self.model.algebs
-
+        all_variables = self.model.state_vars + self.model.algeb_vars
+    
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
         g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
