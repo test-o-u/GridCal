@@ -8,8 +8,8 @@ import logging
 def setup_logging():
     """
     Configure the logger for the entire package.
+    :return:
     """
-    
     logging.basicConfig(
         level=logging.INFO,
         format="%(message)s"

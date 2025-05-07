@@ -4,16 +4,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import importlib
-import pdb
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
-from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Utils.dyn_var import *
-from GridCalEngine.Utils.dyn_param import *
-
 
 
 class DynamicModelTemplate(EditableDevice):
@@ -23,10 +19,11 @@ class DynamicModelTemplate(EditableDevice):
 
     Inherits from EditableDevice, allowing dynamic model creation and symbolic processing.
     """
+
     def __init__(self, name: str, code: str, idtag: Union[str, None],
                  device_type: DeviceType):
         """
-        Initializes a dynamic model template with symbolic processing and storage.
+        DynamicModelTemplate class constructor. Initializes a dynamic model template with symbolic processing and storage.
 
         :param name: Name of the dynamic model.
         :param code: Unique code identifier.
@@ -54,18 +51,18 @@ class DynamicModelTemplate(EditableDevice):
         self.vars_index = {}
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
-        self.variables_list = [] # list of all the variables (including external)
-        self.state_vars_list = [] # list of all the state variables (including external)
-        self.algeb_vars_list = [] # list of all the algebraic variables (including external)
+        self.variables_list = []  # list of all the variables (including external)
+        self.state_vars_list = []  # list of all the state variables (including external)
+        self.algeb_vars_list = []  # list of all the algebraic variables (including external)
 
         # Lists to store function arguments
         self.f_args = list()
-        self.g_arguments = list ()
+        self.g_arguments = list()
 
         self.f_jac_arguments = list()
         self.g_jac_arguments = list()
 
-        #Lists to store input values
+        # Lists to store input values
         self.g_input_values = list()
         self.f_input_values = list()
         self.f_jac_input_values = list()
@@ -80,34 +77,31 @@ class DynamicModelTemplate(EditableDevice):
         self.f_output_order = list()
         self.g_output_order = list()
         self.dfx_jac_output_order = list()
-        self.dfy_jac_output_order =list()
+        self.dfy_jac_output_order = list()
         self.dgx_jac_output_order = list()
         self.dgy_jac_output_order = list()
 
         self.time_consuming = []
 
+        # index for states and algebraic variables (used to compute dae.nx and dae.ny)
+        self.nx = 0  # index for the number of state variables (not external)
+        self.ny = 0  # index for the number of algebraic variables (not external)
 
-
-
-        #index for states and algeb variables (used to compute dae.nx and dae.ny)
-        self.nx = 0 # index for the number of state variables (not external)
-        self.ny = 0 # index for the number of algebraic variables (not external)
-        
     def process_symbolic(self):
         """
         Generates symbolic equations and Jacobians for the dynamic model.
+        :return:
         """
         self.sym.generate()
 
     def store_data(self):
         """
-        Stores different types of variables and parameters in the model storage.
-        This method categorizes each instance variable and adds it to the corresponding 
+        Stores different types of variables and parameters.
+        This method categorizes each instance variable and adds it to the corresponding
         storage structure.
-
         Also, it saves a list with all the variables of a model and creates a dictionary with an index as key and the variable name as value
+        :return:
         """
-
         index = 0
         for key, elem in self.__dict__.items():
             # assign an index to every variable in the model populating vars_index dictionary
@@ -134,9 +128,12 @@ class DynamicModelTemplate(EditableDevice):
                 self.algeb_vars_list.append(elem.symbol)
                 self.algebs.append(elem)
 
-
-####################### TO CLEAN ################################
+    ####################### TO CLEAN ################################
     def import_generated_code(self):
+        """
+        Imports generated code module
+        :return: generated code module
+        """
         generated_module_path = get_generated_module_path()
         generated_module = importlib.import_module(generated_module_path.replace("/", "."))
         generated_code = getattr(generated_module, self.name)
@@ -144,6 +141,10 @@ class DynamicModelTemplate(EditableDevice):
         return generated_code
 
     def calc_f_g_functions(self):
+        """
+        calculates f and g functions and gets variables order.
+        :return: f and g functions values, lists with the order of the variables for f and g
+        """
         generated_code = self.import_generated_code()
         f_values_device = np.zeros((self.n, len(self.state_vars_list)))
         g_values_device = np.zeros((self.n, len(self.algeb_vars_list)))
@@ -154,7 +155,7 @@ class DynamicModelTemplate(EditableDevice):
                 for j in range(len(self.state_vars_list)):
                     f_values_device[i][j] = f_values[j]
 
-            #get g values
+            # get g values
             if self.g_input_values[i]:
                 g_values = generated_code.g_update(*self.g_input_values[i])
                 for j in range(len(self.algeb_vars_list)):
@@ -166,8 +167,13 @@ class DynamicModelTemplate(EditableDevice):
         return f_values_device, g_values_device, variables_names_for_ordering_f, variables_names_for_ordering_g
 
     def calc_local_jacs(self):
+        """
+        calculates f and g Jacobians and gets Jacobians info.
+        :return: f Jacobian, g Jacobian, Jacobians info
+        """
         generated_code = self.import_generated_code()
         jacobian_info = generated_code.jacobian_info
+        jacobian_equations = generated_code.jacobian_equations
 
         f_jacobians = np.zeros((self.n, len(self.state_vars_list), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
@@ -176,16 +182,10 @@ class DynamicModelTemplate(EditableDevice):
                 local_jac_f = generated_code.f_ia(*self.f_jac_input_values[i])
                 for j, funct in enumerate(self.state_vars_list):
                     for k, var in enumerate(self.variables_list):
-                        f_jacobians[i][j][k] = local_jac_f[j*len(self.variables_list) +k]
+                        f_jacobians[i][j][k] = local_jac_f[j * len(self.variables_list) + k]
             if self.g_jac_input_values[i]:
                 local_jac_g = generated_code.g_ia(*self.g_jac_input_values[i])
                 for j, funct in enumerate(self.algeb_vars_list):
                     for k, var in enumerate(self.variables_list):
-                        g_jacobians[i][j+len(self.state_vars_list)][k] = local_jac_g[j*len(self.variables_list)+k]
-        return f_jacobians, g_jacobians, jacobian_info
-            
-
-
-
-
-         
+                        g_jacobians[i][j + len(self.state_vars_list)][k] = local_jac_g[j * len(self.variables_list) + k]
+        return f_jacobians, g_jacobians, jacobian_info, jacobian_equations

@@ -8,7 +8,6 @@
 import os
 import sys
 
-
 # Dynamically add the project src/ folder to sys.path
 CURRENT_FILE = os.path.abspath(__file__)
 # Change module import path to the src/ folder
@@ -28,8 +27,9 @@ def main():
     """
     Main function to initialize and run the system simulation.
 
-    This function sets up logging, starts the dynamic simulation, and 
+    This function sets up logging, starts the dynamic simulation, and
     logs the outcome. It handles and logs any exceptions raised during execution.
+    :return:
     """
     # Set up logging
     setup_logging()
@@ -47,8 +47,9 @@ def start_dynamic():
     """
     Initializes the dynamic system.
 
-    This function instantiates the System object required to start the 
+    This function instantiates the System object required to start the
     dynamic simulation. Logs any exceptions raised during initialization.
+    :return:
     """
     try:
         # Instantiate the system

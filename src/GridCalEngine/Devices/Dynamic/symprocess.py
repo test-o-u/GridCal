@@ -5,6 +5,7 @@
 
 import os
 import inspect
+import pdb
 import pprint
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
@@ -24,10 +25,8 @@ class SymProcess:
 
     def __init__(self, model):
         """
-        Initialize symbolic processing components.
-
-        Args:
-            model: The model instance containing symbolic variables and equations.
+        SymProcess class constructor
+        :param model: The model instance containing variables and equations
         """
         self.model = model
 
@@ -55,7 +54,7 @@ class SymProcess:
         self.jacob_states = []
         self.jacob_algebs = []
         self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
-
+        self.jacobian_store_equations = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
 
     def generate(self):
         """
@@ -66,31 +65,32 @@ class SymProcess:
             2. Convert string equations into symbolic expressions
             3. Compute and store Jacobian matrices
             4. Generate numerical Python code from symbolic forms
+        :return:
         """
         self.generate_symbols()
         self.generate_equations()
         self.generate_jacobians()
         self.generate_code()
 
-
     def generate_symbols(self):
         """
-        Converts model parameters and variables into symbolic expressions.
+        Converts model variables into symbolic expressions.
+        :return:
         """
         # Define symbolic variables
         self.sym_state = [sp.Symbol(v.symbol) for v in self.model.stats]
         self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algebs]
 
-
     def generate_equations(self):
         """
-        Convert string equations into symbolic expressions.
+         Convert string equations into symbolic expressions.
 
         This method:
             - Parses model equations using SymPy
             - Identifies symbols used in each equation
             - Stores arguments used in f/g functions
             - Creates lambdified numerical functions for f and g
+        :return:
         """
         variables_f_g = [self.model.stats, self.model.algebs]
         equations_f_g = [self.f_list, self.g_list]
@@ -132,10 +132,10 @@ class SymProcess:
         self.f_matrix = sp.Matrix(self.f_list)
         self.g_matrix = sp.Matrix(self.g_list)
 
-
     def generate_jacobians(self):
         """
         Compute and lambdify Jacobian matrices for f and g equations.
+        :return:
         """
         sym_variables = self.sym_state + self.sym_algeb
         all_variables = self.model.stats + self.model.algebs
@@ -153,17 +153,16 @@ class SymProcess:
         g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
 
         # Store Jacobian information
-        count = 0
         for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
             for e_idx, v_idx, e_symbolic in eq_sparse.row_list():
                 var_type = all_variables[v_idx].var_type
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
                 if idx == 0:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
-                    if var_type == 'x':
-                        count += 1
+                    self.jacobian_store_equations[eq_var_code].append(str(e_symbolic))
                 else:
-                    self.jacobian_store_info[eq_var_code].append((e_idx + count, v_idx))
+                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_vars_list), v_idx))
+                    self.jacobian_store_equations[eq_var_code].append(str(e_symbolic))
 
         # store arguments for f_jacobian
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
@@ -179,18 +178,13 @@ class SymProcess:
         self.jacob_states = lambdify(f_jac_args, tuple(f_jacobian_symbolic), modules='numpy')
         self.jacob_algebs = lambdify(g_jac_args, tuple(g_jacobian_symbolic), modules='numpy')
 
-
     def _rename_func(self, func, func_name, vars=False):
         """
         Generate source code from a lambdified function, renaming it for clarity.
-
-        Args:
-            func (function): The lambdified function object.
-            func_name (str): Desired name for the generated function.
-            vars (list, optional): Extra arguments to append to the function signature.
-
-        Returns:
-            str: Modified function source code string.
+        :param func: The lambdified function object
+        :param func_name: Desired name for the generated function
+        :param vars: Extra arguments to append to the function signature
+        :return: Modified function source code string
         """
         if func is None:
             return f"# empty {func_name}\n"
@@ -202,7 +196,6 @@ class SymProcess:
 
         return src + '\n'
 
-
     def generate_code(self):
         """
         Write numerical model code to a Python file.
@@ -213,10 +206,9 @@ class SymProcess:
             - Argument names
             - Variable ordering metadata
             - Sparsity pattern (Jacobian info)
-
-        Returns:
-            str: The path to the generated Python file.
+        :return: The path to the generated Python file
         """
+
         generated_module_path = get_generated_module_path()
         filename = f"{self.model.name}.py"
         file_path = os.path.join(generated_module_path, filename)
@@ -230,10 +222,11 @@ class SymProcess:
                 f.write(f"@njit(cache=True)\n")
                 f.write(f"{py_expr}")
 
-            f.write(f"f_args =" + pprint.pformat(sorted(self.f_args), width=1000) + '\n')	
+            f.write(f"f_args =" + pprint.pformat(sorted(self.f_args), width=1000) + '\n')
             f.write(f"g_args =" + pprint.pformat(sorted(self.g_args), width=1000) + '\n\n')
 
-            f.write(f"variables_names_for_ordering =" + pprint.pformat(self.variables_names_for_ordering, width=1000) + '\n\n')
+            f.write(f"variables_names_for_ordering =" + pprint.pformat(self.variables_names_for_ordering,
+                                                                       width=1000) + '\n\n')
 
             for name, func in [('f', self.jacob_states), ('g', self.jacob_algebs)]:
                 py_expr = self._rename_func(func, f"{name}_ia")
@@ -243,6 +236,7 @@ class SymProcess:
             f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args, width=1000) + '\n')
             f.write(f"g_jac_args =" + pprint.pformat(self.g_jacobian_args, width=1000) + '\n\n')
 
-            f.write(f"jacobian_info = {self.jacobian_store_info}")
+            f.write(f"jacobian_info = {self.jacobian_store_info}"+ '\n')
+            f.write(f"jacobian_equations =" + pprint.pformat(self.jacobian_store_equations, width=1000))
 
         return file_path

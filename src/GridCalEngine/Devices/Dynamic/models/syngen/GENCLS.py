@@ -9,13 +9,19 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class GENCLS(DynamicModelTemplate):
-    "This class contains the variables needed for the GENCLS model"
+    "This class contains the parameters and variables needed for the GENCLS model"
     # TODO: check GENCLS model.
 
     def __init__(self,
                  name: str,
                  code: str,
                  idtag: Union[str, None]):
+        """
+        GENCLS class constructor
+        :param name: Name of the GENCLS
+        :param code: secondary code
+        :param idtag: UUID code
+        """
         
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
 

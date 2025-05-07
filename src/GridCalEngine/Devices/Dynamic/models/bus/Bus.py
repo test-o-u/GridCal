@@ -9,17 +9,23 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class Bus(DynamicModelTemplate):
-    "This class contains the variables needed for the Bus model."
-
+    """
+    This class contains the variables needed for the Bus model
+    """
     def __init__(self,
                  name: str,
                  code: str,
                  idtag: Union[str, None]):
+        """
+        Bus class constructor
+        :param name: Name of the Bus
+        :param code: secondary code
+        :param idtag: UUID code
+        """
     
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynBusModel)
 
-        # network algebraic variables 
-        # TODO: check the naming and see if it really make sense to keep them like this.
+        # network algebraic variables
         self.a = AlgebVar(name='a',
                           symbol='a',
                           init_eq='',

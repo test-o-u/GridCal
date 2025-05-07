@@ -10,19 +10,24 @@ from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAl
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class ACLine(DynamicModelTemplate):
-    "This class contains the variables needed for the AC line model."
+    "This class contains the parameters and variables needed for the AC line model."
 
     def __init__(self,
                  name: str,
                  code: str,
                  idtag: Union[str, None]):
-    
+        """
+        ACLine class constructor
+        :param name: Name of the ACLine
+        :param code: secondary code
+        :param idtag: UUID code
+        """
+
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynACLineModel)
 
         # parameters 
         # TODO: 
-        # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do? 
-        # - is there a reason why it is called symbol and not model as in ANDES?
+        # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do?
         self.bus1 = IdxDynParam(symbol='Bus', 
                                 info="idx of from bus",
                                 id=[])

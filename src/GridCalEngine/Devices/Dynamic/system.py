@@ -10,6 +10,7 @@ from GridCalEngine.Devices.Dynamic.set import SET
 from GridCalEngine.Devices.Dynamic.tds import TDS
 from GridCalEngine.Devices.Dynamic.utils.json import readjson
 
+
 class System:
     """
     Represents a power system composed of various dynamic models and devices.
@@ -23,45 +24,30 @@ class System:
 
     def __init__(self):
         """
+        System class constructor.
         Initializes the System instance by loading configuration,
         creating required simulation components, and preparing for execution.
-
-        Attributes:
-            models (dict): Dictionary mapping model names to their instances.
-            devices (dict): Dictionary of instantiated device objects.
-            data (dict): Parsed JSON configuration data.
-            models_list (list): List of abstract model types to be processed.
-            dae (DAE): DAE system manager for equations.
-            setup (SET): System setup handler.
-            tds (TDS): Time-domain simulation engine.
         """
-        # Initialize empty attributes
-        self.models = {}
-        self.devices = {}
 
-        # Parse the JSON data file
-        self.data = readjson(config.SYSTEM_JSON_PATH)
-
-        # Get the list of models from the config file
-        self.models_list = config.MODELS
+        self.models = {}  # Dictionary mapping model names to their instances.
+        self.devices = {}  # Dictionary of instantiated device objects.
+        self.data = readjson(config.SYSTEM_JSON_PATH)  # Parsed JSON configuration data.
+        self.models_list = config.MODELS  # List of abstract model types to be processed.
 
         # Instanciate DAE object
         try:
-            self.dae = DAE(self)
+            self.dae = DAE(self)  # DAE system manager for equations.
         except Exception as e:
             logging.info(f"An error occurred while initializing the DAE: {e}", exc_info=True)
-        
+
         # Setup the system
         try:
-            self.setup = SET(self, self.models_list, self.data)
+            self.setup = SET(self, self.models_list, self.data)  # System setup handler.
         except Exception as e:
             logging.info(f"An error occurred while setting-up the SET: {e}", exc_info=True)
-        
+
         # Run time-domain simulation
         try:
-            self.tds = TDS(self)
+            self.tds = TDS(self)  # Time-domain simulation engine.
         except Exception as e:
             logging.info(f"An error occurred while simulating the TDS: {e}", exc_info=True)
-        
-        
-

@@ -16,6 +16,12 @@ class ExpLoad(DynamicModelTemplate):
                  name: str,
                  code: str,
                  idtag: Union[str, None]):
+        """
+        ExpLoad class constructor
+        :param name: Name of the ExpLoad
+        :param code: secondary code
+        :param idtag: UUID code
+        """
     
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynExpLoadModel)
 
