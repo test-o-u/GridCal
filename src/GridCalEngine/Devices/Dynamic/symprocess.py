@@ -11,6 +11,7 @@ import sympy as sp
 from sympy.utilities.lambdify import lambdify
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
+# NOTE: Separation between initialization and symbolic processing is important for clarity and maintainability, but needs to be evaluated in the future.
 
 class SymProcess:
     """
@@ -37,8 +38,8 @@ class SymProcess:
         self.sym_idx_params = []
 
         # Symbolic Variables
-        self.sym_state = []
-        self.sym_algeb = []
+        self.sym_state_vars = []
+        self.sym_algeb_vars = []
 
         # Symbolic Equations
         self.f_args = []
@@ -79,8 +80,11 @@ class SymProcess:
         Converts model parameters and variables into symbolic expressions.
         """
         # Define symbolic variables
-        self.sym_state = [sp.Symbol(v.symbol) for v in self.model.state_vars]
-        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algeb_vars]
+        self.sym_state_vars = [sp.Symbol(v.symbol) for v in self.model.state_vars]
+        self.sym_algeb_vars = [sp.Symbol(v.symbol) for v in self.model.algeb_vars]
+        
+        # self.sym_state_eqs = [sp.Symbol(v.symbol) for v in self.model.state_eqs]
+        # self.sym_algeb_eqs = [sp.Symbol(v.symbol) for v in self.model.algeb_eqs]
 
 
     def generate_equations(self):
@@ -93,7 +97,7 @@ class SymProcess:
             - Stores arguments used in f/g functions
             - Creates lambdified numerical functions for f and g
         """
-        variables_f_g = [self.model.state_vars, self.model.algeb_vars]
+        variables_f_g = [self.model.state_eqs, self.model.algeb_eqs]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
 
@@ -138,7 +142,7 @@ class SymProcess:
         """
         Compute and lambdify Jacobian matrices for f and g equations.
         """
-        sym_variables = self.sym_state + self.sym_algeb
+        sym_variables = self.sym_state_vars + self.sym_algeb_vars
         all_variables = self.model.state_vars + self.model.algeb_vars
     
         # Compute Jacobian matrices
@@ -154,17 +158,14 @@ class SymProcess:
         g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
 
         # Store Jacobian information
-        count = 0
         for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
             for e_idx, v_idx, e_symbolic in eq_sparse.row_list():
                 var_type = all_variables[v_idx].var_type
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
                 if idx == 0:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
-                    if var_type == 'x':
-                        count += 1
                 else:
-                    self.jacobian_store_info[eq_var_code].append((e_idx + count, v_idx))
+                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_vars), v_idx))
 
         # store arguments for f_jacobian
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)

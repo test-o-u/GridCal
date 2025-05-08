@@ -156,6 +156,7 @@ class DAE:
         self.dgy = self.build_sparse_matrix(self._dgy_jac_positions, self._dgy_jac_values,
                                             [(row - self.nx, col - self.nx) for row, col in self.sparsity_gy],
                                             (self.ny, self.ny), 'dgy')
+        
 
 
     def initilize_fg(self):
@@ -263,28 +264,28 @@ class DAE:
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfx_jac_output_order)
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfx_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfx_jac_positions, self._dfx_jac_values, self.sparsity_fx, row, col, val)
 
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfy_jac_output_order)
+                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfy_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfy_jac_positions, self._dfy_jac_values, self.sparsity_fy, row, col, val)
 
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgx_jac_output_order)
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgx_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgx_jac_positions, self._dgx_jac_values, self.sparsity_gx, row, col, val)
 
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgy_jac_output_order)
+                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgy_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgy_jac_positions, self._dgy_jac_values, self.sparsity_gy, row, col, val)
 
@@ -311,10 +312,10 @@ class DAE:
                 address = self.addresses_list[device.index][self.variables_list[device.index].index(var_name)][i]
                 outputs_order_list[i].append(address)
                 pairs.append((address, val))
-
+                    
         return pairs
 
-    def assign_global_jac_positions(self, device, local_jacobian, positions, outputs_order_triplets):
+    def assign_global_jac_positions(self, device, local_jacobian, positions, outputs_order_triplets, jac_type):
         """
         Assign global positions for Jacobian values.
 
@@ -330,13 +331,14 @@ class DAE:
         triplets = []
         for i in range(device.n):
 
+
             for j, (func_index, var_index) in enumerate(positions):
                 val = local_jacobian[i][func_index][var_index]
                 address_func = self.addresses_list[device.index][self.variables_list[device.index].index(device.variables_list[func_index])][i]
                 address_var = self.addresses_list[device.index][self.variables_list[device.index].index(device.variables_list[var_index])][i]
                 outputs_order_triplets[i].append((address_func, address_var))
                 triplets.append((address_func, address_var, val))
-
+            
         return triplets
 
     def get_input_values(self, device):
@@ -375,6 +377,7 @@ class DAE:
                     inputs_order_list[i].append('param')
                     param = getattr(device, arg)
                     input_values_list[i].append(param.value[i])
+                 
 
     # Iterations
     def update_jacobian(self):

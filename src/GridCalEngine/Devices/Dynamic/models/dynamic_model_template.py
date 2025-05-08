@@ -54,9 +54,9 @@ class DynamicModelTemplate(EditableDevice):
         self.vars_index = {}
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
-        self.variables_list = []  # list of all the variables (including external)
-        self.state_eqs = [] # list of all the state variables (including external)
-        self.algeb_eqs = [] # list of all the algebraic variables (including external)
+        self.variables_list = []  # list of all the variables 
+        self.state_eqs = [] # list of all the state variables 
+        self.algeb_eqs = [] # list of all the algebraic variables
 
         # Lists to store function arguments
         self.f_args = list()
@@ -107,32 +107,32 @@ class DynamicModelTemplate(EditableDevice):
 
         index = 0
         for key, elem in self.__dict__.items():
-            # assign an index to every variable in the model populating vars_index dictionary
+
             if isinstance(elem, DynVar):
                 self.variables_list.append(elem.symbol)
                 self.vars_index[index] = elem.symbol
                 index += 1
-
+            
             if isinstance(elem, StatVar):
                 self.nx += 1
                 if elem.eq != None:
-                    self.state_eqs.append(elem.symbol)
+                    self.state_eqs.append(elem)
                 self.state_vars.append(elem)
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
                 if elem.eq != None:
-                    self.algeb_eqs.append(elem.symbol)
+                    self.algeb_eqs.append(elem)
                 self.algeb_vars.append(elem)
 
             if isinstance(elem, ExternState):
                 if elem.eq != None:
-                    self.state_eqs.append(elem.symbol)
+                    self.state_eqs.append(elem)
                 self.state_vars.append(elem)
 
             if isinstance(elem, ExternAlgeb):
                 if elem.eq != None:
-                    self.algeb_eqs.append(elem.symbol)
+                    self.algeb_eqs.append(elem)
                 self.algeb_vars.append(elem)
 
 

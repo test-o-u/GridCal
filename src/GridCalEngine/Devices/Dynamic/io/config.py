@@ -14,8 +14,8 @@ MODELS = list([
     ('bus', ['Bus']),
     ('line', ['ACLine']), 
     ('load', ['ExpLoad']),
-    ('syngen', ['GENCLS']),
-    ('exciter', ['Exciter'])
+    ('syngen', ['GENCLS'])
+    # ('exciter', ['Exciter'])
 ])
 
 # Initial DAE state vectors

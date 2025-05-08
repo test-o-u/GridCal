@@ -300,4 +300,4 @@ class SET:
             if device_variables_list and device_addresses_list:
                 self.dae.variables_list[i].extend(device_variables_list)
                 self.dae.addresses_list[i].extend(device_addresses_list)
-        
+         

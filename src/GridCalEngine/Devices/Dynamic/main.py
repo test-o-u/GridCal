@@ -36,7 +36,6 @@ def main():
     try:
         # Run the dynamic simulation
         start_dynamic()
-        logging.info("Simulation completed successfully.")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)

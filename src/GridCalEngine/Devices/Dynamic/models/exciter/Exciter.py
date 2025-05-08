@@ -38,19 +38,18 @@ class Exciter(DynamicModelTemplate):
                              info='bus(terminal) voltage reference',
                              value=[])
         
-        # variables 
-        self.v = ExternAlgeb(name='v',
-                             symbol='v',
-                             src='v',
-                             indexer=self.bus_idx,
-                             init_eq='',
-                             eq='')
-        
+        # state
         self.vf = StatVar(name='vf',
                           symbol='vf',
                           t_const=self.T,
                           tf=LaplaceTF("G / (T*s + 1)", 
                                         input='v - v_ref', 
                                         output='vf'))
+
+        # algebraic 
+        self.v = ExternAlgeb(name='v',
+                             symbol='v',
+                             src='v',
+                             indexer=self.bus_idx)
                             
         
