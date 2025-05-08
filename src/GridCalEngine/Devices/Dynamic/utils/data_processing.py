@@ -67,7 +67,7 @@ class DataProcessor():
         :return:
         """
 
-        self.dataframe.to_csv('system_name.csv')
+        self.dataframe.to_csv('GridCalEngine/Devices/Dynamic/results/system_name.csv')
 
     def plot_results(self, variables_to_plot = 'all' , time_period = 'full'):
         """

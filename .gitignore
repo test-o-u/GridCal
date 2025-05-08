@@ -37,4 +37,5 @@ demo_5_node.json
 /src/pycode
 
 /src/GridCalEngine/Devices/Dynamic/trials
+/src/GridCalEngine/Devices/Dynamic/results
 /.vscode
