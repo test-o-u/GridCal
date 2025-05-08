@@ -236,7 +236,7 @@ class SymProcess:
             f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args, width=1000) + '\n')
             f.write(f"g_jac_args =" + pprint.pformat(self.g_jacobian_args, width=1000) + '\n\n')
 
-            f.write(f"jacobian_info = {self.jacobian_store_info}"+ '\n')
+            f.write(f"jacobian_info = {self.jacobian_store_info}" + '\n')
             f.write(f"jacobian_equations =" + pprint.pformat(self.jacobian_store_equations, width=1000))
 
         return file_path

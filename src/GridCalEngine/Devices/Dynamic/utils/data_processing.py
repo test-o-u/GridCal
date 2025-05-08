@@ -67,7 +67,7 @@ class DataProcessor():
         :return:
         """
 
-        self.dataframe.to_csv('GridCalEngine/Devices/Dynamic/results/system_name.csv')
+        self.dataframe.to_csv('system_name.csv')
 
     def plot_results(self, variables_to_plot = 'all' , time_period = 'full'):
         """
@@ -147,10 +147,13 @@ class DataProcessor():
         # # axis[1, 1].set_ylim([0, -0.5])
 
         # self.dataframe.plot(x="time_stamp", y= ['delta_GENCLS_0'], kind='line', legend=True)
-        self.dataframe.plot(x="time_stamp", y=['omega_GENCLS_0'], kind='scatter', legend=True)
+        self.dataframe.plot(x=["time_stamp"], y=['omega_GENCLS_0'], kind='scatter', legend=True)
         # self.dataframe.plot(x="time_stamp", y=['delta_GENCLS_0'], kind='line', legend=True)
         # self.dataframe.plot(x="time_stamp", y=['delta_GENCLS_0'], kind='line', legend=True)
-        plt.ylim(0.999195, 0.999205)
+        plt.ylim(0.0, 1.5)
+        plt.xlabel(r'Time[s]')
+        plt.ylabel(r'$\omega$ [p.u]')
+        plt.title(r'Steady-state Synchronous Generator Speed')
         #Display plot
         # figure.suptitle(' Gridcal_dyn: System1 no steady state computation ', fontsize=20)
         plt.show()

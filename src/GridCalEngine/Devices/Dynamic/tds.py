@@ -31,7 +31,7 @@ class TDS():
         # Initialize results list
         self.results = []  # List to store simulation results
 
-        # Save simulation data
+        # Initialize data processor
         self.dataprocessor = DataProcessor(self.system)  # Data processor to evaluate simulation data
 
         # Get integration method
@@ -44,7 +44,7 @@ class TDS():
         # Initialize simulatoin
         self.system.dae.initilize_fg()
         # Run simulation
-        #self.run_steadystate()
+        # self.run_steadystate()
         self.run_tds()
         self.save_simulation_data()
 

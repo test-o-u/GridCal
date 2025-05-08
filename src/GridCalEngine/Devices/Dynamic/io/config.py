@@ -69,4 +69,4 @@ STEADYSTATE_METHOD="steadystate"
 INTEGRATION_METHOD="trapezoid"
 
 # Performance boolean
-PERFORMANCE = False  # Set to True for performance testing, False for debugging
+PERFORMANCE = False # Set to True for performance testing, False for debugging

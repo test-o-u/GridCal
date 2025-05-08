@@ -182,6 +182,7 @@ class SET:
             self.dae.nx += model.n * model.nx
             self.dae.ny += model.n * model.ny
 
+            # Initialize the lists that will store the input values of the equations corresponding to this device
             model.g_input_values = [[] for i in range(model.n)]
             model.f_input_values = [[] for i in range(model.n)]
             model.f_jac_input_values = [[] for i in range(model.n)]
@@ -212,10 +213,7 @@ class SET:
             # Store parameters and assign addresses
             for var_list in model_instance.__dict__.values():
 
-                if isinstance(var_list, NumDynParam):
-                    self.dae.params_dict[model_instance.name][var_list.symbol] = var_list.value
-
-                # state varibles
+                # state varibles first
                 if isinstance(var_list, StatVar):
                     indices = list(range(self.global_states_id, self.global_states_id + model_instance.n))
 
@@ -252,7 +250,7 @@ class SET:
                     device_variables_list.append(var_list.symbol)
                     device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
 
-                # algebraic variables
+                # algebraic variables second
                 if isinstance(var_list, AlgebVar):
                     indices = list(range(self.global_algebs_id, self.global_algebs_id + model_instance.n))
 
@@ -282,8 +280,6 @@ class SET:
                     # store variable name and addresses locally
                     device_variables_list.append(var_list.symbol)
                     device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
-                    # Store dae addresses
-                    # self.dae.addresses_dict[model_instance.name][var_list.name] = [parent_idx[i] for i in var_list.indexer.id]
 
             # add variables names local list and addresses local list to dae general lists
             self.dae.variables_list.append(device_variables_list)
