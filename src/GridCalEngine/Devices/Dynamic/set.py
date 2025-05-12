@@ -7,7 +7,6 @@ import os
 import importlib
 import time
 import logging
-import pdb
 
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
