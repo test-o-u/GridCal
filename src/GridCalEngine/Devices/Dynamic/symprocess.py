@@ -146,27 +146,28 @@ class SymProcess:
         all_variables = self.model.state_vars + self.model.algeb_vars
     
         # Compute Jacobian matrices
-        f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
-        g_jacobian_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
+        f_jac_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
+        g_jac_symbolic = self.g_matrix.jacobian(sym_variables) if len(self.g_matrix) > 0 else sp.Matrix([])
 
         # Extract unique symbols
-        f_jac_symbols = list(f_jacobian_symbolic.free_symbols)
-        g_jac_symbols = list(g_jacobian_symbolic.free_symbols)
+        f_jac_symbols = list(f_jac_symbolic.free_symbols)
+        g_jac_symbols = list(g_jac_symbolic.free_symbols)
 
         # Convert to sparse matrices
-        f_jacob_symbolic_spa = sp.SparseMatrix(f_jacobian_symbolic)
-        g_jacob_symbolic_spa = sp.SparseMatrix(g_jacobian_symbolic)
+        f_jac_symbolic_sparse = sp.SparseMatrix(f_jac_symbolic)
+        g_jac_symbolic_sparse = sp.SparseMatrix(g_jac_symbolic)
 
         # Store Jacobian information
-        for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
+        for idx, eq_sparse in enumerate([f_jac_symbolic_sparse, g_jac_symbolic_sparse]):
+
             for e_idx, v_idx, e_symbolic in eq_sparse.row_list():
                 var_type = all_variables[v_idx].var_type
                 eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
                 if idx == 0:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
                 else:
-                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_vars), v_idx))
-
+                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_eqs) , v_idx))
+        
         # store arguments for f_jacobian
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
         for arg in f_jac_args:
@@ -178,8 +179,8 @@ class SymProcess:
             self.g_jacobian_args.append(str(arg))
 
         # Lambdify Jacobian functions
-        self.jacob_states = lambdify(f_jac_args, tuple(f_jacobian_symbolic), modules='numpy')
-        self.jacob_algebs = lambdify(g_jac_args, tuple(g_jacobian_symbolic), modules='numpy')
+        self.jacob_states = lambdify(f_jac_args, tuple(f_jac_symbolic), modules='numpy')
+        self.jacob_algebs = lambdify(g_jac_args, tuple(g_jac_symbolic), modules='numpy')
 
 
     def _rename_func(self, func, func_name, vars=False):

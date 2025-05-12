@@ -24,8 +24,12 @@ class GENCLS(DynamicModelTemplate):
                                info='interface bus id',
                                id=[])
         
-        self.device_idx = IdxDynParam(symbol='Exciter', 
-                               info='device id per bus',
+        self.exciter_idx = IdxDynParam(symbol='Exciter', 
+                               info='exciter id per bus',
+                               id=[])
+        
+        self.governor_idx = IdxDynParam(symbol='Governor',
+                               info='governor id per bus',
                                id=[])
         
         # parameters    
@@ -49,9 +53,9 @@ class GENCLS(DynamicModelTemplate):
                               info='d-axis transient reactance',
                               value=[])
         
-        self.tm = NumDynParam(symbol='tm',
-                              info='uncontrolled mechanical torque',
-                              value=[])
+        # self.tm = NumDynParam(symbol='tm',
+        #                       info='uncontrolled mechanical torque',
+        #                       value=[])
         
         # self.vf = NumDynParam(symbol='vf',
         #                       info='uncontrolled exitation voltage',
@@ -70,7 +74,7 @@ class GENCLS(DynamicModelTemplate):
         self.vf = ExternState(name='vf',
                               symbol='vf',
                               src='vf',
-                              indexer=self.device_idx)
+                              indexer=self.exciter_idx)
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',
@@ -122,6 +126,11 @@ class GENCLS(DynamicModelTemplate):
                              src='v',
                              indexer=self.bus_idx,
                              eq='(vq * i_d - vd * i_q)')
+        
+        self.tm = ExternAlgeb(name='tm',
+                             symbol='tm',
+                             src='tm',
+                             indexer=self.governor_idx)
 
         # network algebraic variables 
         # TODO: 

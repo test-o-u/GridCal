@@ -14,8 +14,9 @@ MODELS = list([
     ('bus', ['Bus']),
     ('line', ['ACLine']), 
     ('load', ['ExpLoad']),
-    ('syngen', ['GENCLS'])
-    # ('exciter', ['Exciter'])
+    ('syngen', ['GENCLS']),
+    ('exciter', ['Exciter']),
+    ('governor', ['Governor'])
 ])
 
 # Initial DAE state vectors
@@ -41,6 +42,7 @@ Y0 = {
     'te': 0.1,  # electromagnetic torque (pu)
     'Pe': 0.2,  # real power (pu)
     'Qe': 0.2,  # reactive power (pu)
+    'tm': 0.1  # mechanical torque (pu)
     # 'a1': 1,
     # 'a2': 0.9149,
     # 'v1': 2,
@@ -54,7 +56,6 @@ Y0 = {
     # 'te': 4.03046412,
     # 'Pe': 4.03046412,
     # 'Qe': 2.28390768
-
 }
 
 DAE_X0 = np.array(list(X0.values()))

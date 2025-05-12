@@ -141,6 +141,7 @@ class DAE:
         Finalize and build all Jacobian matrices as sparse matrices
         using the collected dictionary values and sparsity patterns.
         """
+
         self.dfx = self.build_sparse_matrix(self._dfx_jac_positions, self._dfx_jac_values,
                                             [(row, col) for row, col in self.sparsity_fx],
                                             (self.nx, self.nx), 'dfx')
@@ -259,35 +260,36 @@ class DAE:
 
                 ### Jacobian update
                 # get local jacobians info and values
-                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs()
+                jacobian, jacobian_info = device.calc_local_jacs()
 
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfx_jac_output_order, jac_type)
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, device.dfx_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfx_jac_positions, self._dfx_jac_values, self.sparsity_fx, row, col, val)
-
+                
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, device.dfy_jac_output_order, jac_type)
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, device.dfy_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfy_jac_positions, self._dfy_jac_values, self.sparsity_fy, row, col, val)
-
+                
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgx_jac_output_order, jac_type)
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, device.dgx_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgx_jac_positions, self._dgx_jac_values, self.sparsity_gx, row, col, val)
-
+                 
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, device.dgy_jac_output_order, jac_type)
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, device.dgy_jac_output_order, jac_type)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgy_jac_positions, self._dgy_jac_values, self.sparsity_gy, row, col, val)
+                
 
 
     def assign_global_f_g_positions(self, device, local_values, variables_names_for_ordering, outputs_order_list):
@@ -329,16 +331,17 @@ class DAE:
         """
         # Initialize triplets list to store global row, column, and value
         triplets = []
+
         for i in range(device.n):
 
-
             for j, (func_index, var_index) in enumerate(positions):
+
                 val = local_jacobian[i][func_index][var_index]
-                address_func = self.addresses_list[device.index][self.variables_list[device.index].index(device.variables_list[func_index])][i]
-                address_var = self.addresses_list[device.index][self.variables_list[device.index].index(device.variables_list[var_index])][i]
+                address_func = self.addresses_list[device.index][self.variables_list[device.index].index(device.eqs_list[func_index])][i] 
+                address_var = self.addresses_list[device.index][self.variables_list[device.index].index(device.vars_list[var_index])][i]
                 outputs_order_triplets[i].append((address_func, address_var))
                 triplets.append((address_func, address_var, val))
-            
+        pdb.set_trace()
         return triplets
 
     def get_input_values(self, device):
@@ -437,33 +440,33 @@ class DAE:
 
                 ### Jacobian update
                 # get local jacobians info and values
-                f_jacobians, g_jacobians, jacobian_info = device.calc_local_jacs()
+                jacobian, jacobian_info = device.calc_local_jacs()
 
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions, device.dfx_jac_output_order)
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions, device.dfx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfx_jac_positions, self._dfx_jac_values, self.sparsity_fx, row, col, val)
 
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions, device.dfy_jac_output_order)
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions, device.dfy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfy_jac_positions, self._dfy_jac_values, self.sparsity_fy, row, col, val)
 
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions, device.dgx_jac_output_order)
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions, device.dgx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgx_jac_positions, self._dgx_jac_values, self.sparsity_gx, row, col, val)
 
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions, device.dgy_jac_output_order)
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions, device.dgy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgy_jac_positions, self._dgy_jac_values, self.sparsity_gy, row, col, val)
 

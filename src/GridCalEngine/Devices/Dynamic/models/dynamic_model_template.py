@@ -55,6 +55,8 @@ class DynamicModelTemplate(EditableDevice):
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
         self.variables_list = []  # list of all the variables 
+        self.eqs_list = [] # list of all the variables with an equation
+        self.vars_list = [] # list of all the variables
         self.state_eqs = [] # list of all the state variables 
         self.algeb_eqs = [] # list of all the algebraic variables
 
@@ -117,23 +119,31 @@ class DynamicModelTemplate(EditableDevice):
                 self.nx += 1
                 if elem.eq != None:
                     self.state_eqs.append(elem)
+                    self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
+                self.vars_list.append(elem.symbol)
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
                 if elem.eq != None:
                     self.algeb_eqs.append(elem)
+                    self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)
+                self.vars_list.append(elem.symbol)
 
             if isinstance(elem, ExternState):
                 if elem.eq != None:
                     self.state_eqs.append(elem)
+                    self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
+                self.vars_list.append(elem.symbol)
 
             if isinstance(elem, ExternAlgeb):
                 if elem.eq != None:
                     self.algeb_eqs.append(elem)
+                    self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)
+                self.vars_list.append(elem.symbol)
 
 
 ####################### TO CLEAN ################################
@@ -168,10 +178,11 @@ class DynamicModelTemplate(EditableDevice):
 
     def calc_local_jacs(self):
         generated_code = self.import_generated_code()
-        jacobian_info = generated_code.jacobian_info
+        jacobian_info = generated_code.jacobian_info 
 
         f_jacobians = np.zeros((self.n, len(self.state_eqs), len(self.variables_list)))
-        g_jacobians = np.zeros((self.n, len(self.variables_list), len(self.variables_list)))
+        g_jacobians = np.zeros((self.n, len(self.algeb_eqs), len(self.variables_list)))
+
         for i in range(self.n):
             if self.f_jac_input_values[i]:
                 local_jac_f = generated_code.f_ia(*self.f_jac_input_values[i])
@@ -182,8 +193,11 @@ class DynamicModelTemplate(EditableDevice):
                 local_jac_g = generated_code.g_ia(*self.g_jac_input_values[i])
                 for j, funct in enumerate(self.algeb_eqs):
                     for k, var in enumerate(self.variables_list):
-                        g_jacobians[i][j+len(self.state_eqs)][k] = local_jac_g[j*len(self.variables_list)+k]
-        return f_jacobians, g_jacobians, jacobian_info
+                        g_jacobians[i][j][k] = local_jac_g[j*len(self.variables_list)+k]  #+len(self.state_eqs)
+        
+        jacobian = np.concatenate((f_jacobians, g_jacobians), axis=1)
+
+        return jacobian, jacobian_info
             
 
 

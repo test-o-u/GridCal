@@ -22,7 +22,8 @@
   "GENCLS": [
     {
       "bus_idx": 0,
-      "device_idx": 0,
+      "exciter_idx": 0,
+      "governor_idx": 0,
       "name": "GENCLS 1",
       "fn": 50.0,
       "D": 10,
@@ -52,6 +53,14 @@
       "T": 1.5,
       "v_ref": 1.0
     }
+  ],
+  "Governor": [
+    {
+      "bus_idx": 0,
+      "device_idx": 0,
+      "name": "Governor 1",
+      "Kp": 2.0,
+      "omega_ref": 1.0
+    }
   ]
-
 }

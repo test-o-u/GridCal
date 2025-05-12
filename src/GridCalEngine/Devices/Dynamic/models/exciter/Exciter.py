@@ -18,11 +18,11 @@ class Exciter(DynamicModelTemplate):
                  code: str,
                  idtag: Union[str, None]):
         
-        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.Exciter)
+        DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynExciterModel)
         
         # index
         self.bus_idx = IdxDynParam(symbol='Bus', 
-                                  info="idx of from the synchronous generator",
+                                  info="idx of the bus",
                                   id=[])
         
         # parameters

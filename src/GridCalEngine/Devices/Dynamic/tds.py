@@ -68,18 +68,21 @@ class TDS():
         Performs the numerical integration using the chosen method.
         """
         while self.t < self.t_final:
-            # Solve DAE step
-            converged = self.integrator.step(dae=self.system.dae, dt=self.dt, method=self.integrator, tol=config.TOL, max_iter=config.MAX_ITER)
+            converged = self.integrator.step(
+                dae=self.system.dae,
+                dt=self.dt,
+                method=self.integrator,
+                tol=config.TOL,
+                max_iter=config.MAX_ITER
+            )
 
             if not converged:
-                raise RuntimeError("Integration step did not converge.")
-            
+                raise RuntimeError(f"Integration step did not converge at time {self.t}.")
+
             self.t += self.dt
             self.results.append((self.t, self.system.dae.x.copy(), self.system.dae.y.copy()))
 
-            # Check for events
             self.get_events()
-
 
     def run_steadystate(self):
         """

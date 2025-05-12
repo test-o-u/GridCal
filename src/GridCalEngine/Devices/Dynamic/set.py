@@ -273,7 +273,7 @@ class SET:
                 # external state variables
                 if isinstance(var_list, ExternState):
                     key = (var_list.indexer.symbol, var_list.src)
-
+                    
                     if key not in states_ref_map:
                         raise KeyError(f"Variable '{var_list.src}' not found in {var_list.indexer.symbol}.state_idx")
 
@@ -282,7 +282,7 @@ class SET:
                     # store variable name and addresses locally
                     device_variables_list.append(var_list.symbol)
                     device_addresses_list.append([parent_idx[i] for i in var_list.indexer.id])
-
+                
                 # external algebraic variables
                 if isinstance(var_list, ExternAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
