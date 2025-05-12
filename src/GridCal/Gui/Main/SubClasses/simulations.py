@@ -13,6 +13,7 @@ from typing import List, Tuple, Dict, Union
 # GUI imports
 from PySide6 import QtGui, QtWidgets
 from matplotlib.colors import LinearSegmentedColormap
+
 import GridCal.Gui.gui_functions as gf
 import GridCal.Gui.Visualization.visualization as viz
 from GridCal.Gui.Diagrams.SchematicWidget.Substation.bus_graphics import BusGraphicItem
@@ -22,6 +23,7 @@ from GridCal.Gui.Diagrams.MapWidget.grid_map_widget import MapWidget
 from GridCal.Gui.messages import yes_no_question, error_msg, warning_msg, info_msg
 from GridCal.Gui.Main.SubClasses.Model.time_events import TimeEventsMain
 from GridCal.Gui.SigmaAnalysis.sigma_analysis_dialogue import SigmaAnalysisGUI
+from GridCal.Session.server_driver import RemoteJobDriver
 
 # Engine imports
 import GridCalEngine.Devices as dev
@@ -33,6 +35,7 @@ from GridCalEngine.IO.file_system import opf_file_path
 from GridCalEngine.IO.gridcal.remote import RemoteInstruction
 from GridCalEngine.Compilers.circuit_to_data import compile_numerical_circuit_at
 from GridCalEngine.Simulations.types import DRIVER_OBJECTS
+from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.enumerations import (DeviceType, AvailableTransferMode, SolverType, MIPSolvers, TimeGrouping,
                                         ZonalGrouping, ContingencyMethod, InvestmentEvaluationMethod, EngineType,
                                         BranchImpedanceMode, ResultTypes, SimulationTypes, NodalCapacityMethod,
@@ -52,6 +55,8 @@ class SimulationsMain(TimeEventsMain):
 
         # create main window
         TimeEventsMain.__init__(self, parent)
+
+        self._remote_jobs: Dict[str, RemoteJobDriver] = dict()
 
         # Power Flow Methods
         self.solvers_dict = OrderedDict()
@@ -282,7 +287,33 @@ class SimulationsMain(TimeEventsMain):
         """
         eng = self.get_preferred_engine()
 
-        if eng == EngineType.NewtonPA:
+        if eng == EngineType.GSLV:
+            self.ui.opfUnitCommitmentCheckBox.setVisible(True)
+
+            # add the AC_OPF option
+            self.lp_solvers_dict = OrderedDict()
+            self.lp_solvers_dict[SolverType.LINEAR_OPF.value] = SolverType.LINEAR_OPF
+            self.lp_solvers_dict[SolverType.NONLINEAR_OPF.value] = SolverType.NONLINEAR_OPF
+            self.lp_solvers_dict[SolverType.SIMPLE_OPF.value] = SolverType.SIMPLE_OPF
+            self.ui.lpf_solver_comboBox.setModel(gf.get_list_model(list(self.lp_solvers_dict.keys())))
+
+            # Power Flow Methods
+            self.solvers_dict[SolverType.NR.value] = SolverType.NR
+            self.solvers_dict[SolverType.IWAMOTO.value] = SolverType.IWAMOTO
+            self.solvers_dict[SolverType.LM.value] = SolverType.LM
+            self.solvers_dict[SolverType.FASTDECOUPLED.value] = SolverType.FASTDECOUPLED
+            self.solvers_dict[SolverType.HELM.value] = SolverType.HELM
+            self.solvers_dict[SolverType.GAUSS.value] = SolverType.GAUSS
+            self.solvers_dict[SolverType.LACPF.value] = SolverType.LACPF
+            self.solvers_dict[SolverType.DC.value] = SolverType.DC
+
+            self.ui.solver_comboBox.setModel(gf.get_list_model(list(self.solvers_dict.keys())))
+            self.ui.solver_comboBox.setCurrentIndex(0)
+
+            mip_solvers = get_newton_mip_solvers_list()
+            self.ui.mip_solver_comboBox.setModel(gf.get_list_model(mip_solvers))
+
+        elif eng == EngineType.NewtonPA:
             self.ui.opfUnitCommitmentCheckBox.setVisible(True)
 
             # add the AC_OPF option
@@ -511,6 +542,7 @@ class SimulationsMain(TimeEventsMain):
         self.ui.sbase_doubleSpinBox.setValue(self.circuit.Sbase)
         self.ui.fbase_doubleSpinBox.setValue(self.circuit.fBase)
         self.ui.model_version_label.setText('Model v. ' + str(self.circuit.model_version))
+        self.ui.grid_idtag_label.setText('idtag. ' + str(self.circuit.idtag))
         self.ui.user_name_label.setText('User: ' + str(self.circuit.user_name))
         if self.open_file_thread_object is not None:
             if isinstance(self.open_file_thread_object.file_name, str):
@@ -698,7 +730,6 @@ class SimulationsMain(TimeEventsMain):
             verbose=self.ui.verbositySpinBox.value(),
             tolerance=tolerance,
             max_iter=self.ui.max_iterations_spinBox.value(),
-            max_outer_loop_iter=1000,
             control_q=self.ui.control_q_checkBox.isChecked(),
             control_taps_phase=self.ui.control_tap_phase_checkBox.isChecked(),
             control_taps_modules=self.ui.control_tap_modules_checkBox.isChecked(),
@@ -710,6 +741,7 @@ class SimulationsMain(TimeEventsMain):
             ignore_single_node_islands=self.ui.ignore_single_node_islands_checkBox.isChecked(),
             trust_radius=self.ui.muSpinBox.value(),
             use_stored_guess=self.ui.use_voltage_guess_checkBox.isChecked(),
+            initialize_angles=self.ui.initialize_pf_angles_checkBox.isChecked(),
             generate_report=self.ui.addPowerFlowReportCheckBox.isChecked()
         )
 
@@ -795,7 +827,8 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.PowerFlow_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
+
         else:
             if self.ts_flag():
                 self.run_power_flow_time_series()
@@ -813,7 +846,7 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.OPF_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
         else:
             if self.ts_flag():
                 self.run_opf_time_series()
@@ -831,7 +864,7 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.OPF_NTC_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
         else:
             if self.ts_flag():
                 self.run_available_transfer_capacity_ts()
@@ -849,7 +882,7 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.NetTransferCapacity_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
         else:
             if self.ts_flag():
                 self.run_opf_ntc_ts()
@@ -867,7 +900,7 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.LinearAnalysis_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
         else:
             if self.ts_flag():
                 self.run_linear_analysis_ts()
@@ -885,7 +918,8 @@ class SimulationsMain(TimeEventsMain):
             else:
                 instruction = RemoteInstruction(operation=SimulationTypes.ContingencyAnalysis_run)
 
-            self.server_driver.send_data(circuit=self.circuit, instruction=instruction)
+            self.run_remote(instruction=instruction)
+
         else:
             if self.ts_flag():
                 self.run_contingency_analysis_ts()
@@ -925,7 +959,7 @@ class SimulationsMain(TimeEventsMain):
                                  text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another simulation of the same type is running...')
+                self.show_warning_toast('Another simulation of the same type is running...')
         else:
             pass
 
@@ -944,6 +978,11 @@ class SimulationsMain(TimeEventsMain):
             self.remove_simulation(SimulationTypes.PowerFlow_run)
             self.update_available_results()
             self.colour_diagrams()
+
+            if results.converged:
+                self.show_info_toast("Power flow converged :)")
+            else:
+                self.show_warning_toast("Power flow not converged :/")
 
         else:
             warning_msg('There are no power flow results.\nIs there any slack bus or generator?', 'Power flow')
@@ -1083,7 +1122,7 @@ class SimulationsMain(TimeEventsMain):
                                  prog_func=self.ui.progressBar.setValue,
                                  text_func=self.ui.progress_label.setText)
             else:
-                warning_msg('Another PTDF is being executed now...')
+                self.show_warning_toast('Another PTDF is being executed now...')
         else:
             pass
 
@@ -1105,7 +1144,7 @@ class SimulationsMain(TimeEventsMain):
             self.update_available_results()
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no PTDF results.')
+            self.show_warning_toast('Something went wrong, There are no PTDF results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1138,7 +1177,7 @@ class SimulationsMain(TimeEventsMain):
                 else:
                     warning_msg('Another PTDF time series is being executed now...')
             else:
-                warning_msg('There are no time series...')
+                self.show_warning_toast('There are no time series...')
 
     def post_linear_analysis_ts(self):
         """
@@ -1163,10 +1202,10 @@ class SimulationsMain(TimeEventsMain):
             if results.S.shape[0] > 0:
                 self.colour_diagrams()
             else:
-                info_msg('Cannot colour because the PTDF results have zero time steps :/')
+                self.show_warning_toast('Cannot colour because the PTDF results have zero time steps :/')
 
         else:
-            error_msg('Something went wrong, There are no PTDF Time series results.')
+            self.show_warning_toast('Something went wrong, There are no PTDF Time series results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1221,10 +1260,10 @@ class SimulationsMain(TimeEventsMain):
                                      prog_func=self.ui.progressBar.setValue,
                                      text_func=self.ui.progress_label.setText)
                 else:
-                    warning_msg('Another contingency analysis is being executed now...')
+                    self.show_warning_toast('Another contingency analysis is being executed now...')
 
             else:
-                warning_msg('There are no contingency groups declared...')
+                self.show_warning_toast('There are no contingency groups declared...')
         else:
             pass
 
@@ -1247,7 +1286,7 @@ class SimulationsMain(TimeEventsMain):
 
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no contingency analysis results.')
+            self.show_error_toast('Something went wrong, There are no contingency analysis results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1279,12 +1318,12 @@ class SimulationsMain(TimeEventsMain):
                                          prog_func=self.ui.progressBar.setValue,
                                          text_func=self.ui.progress_label.setText)
                     else:
-                        warning_msg('Another LODF is being executed now...')
+                        self.show_warning_toast('Another LODF is being executed now...')
                 else:
-                    warning_msg('There are no time series...')
+                    self.show_warning_toast('There are no time series...')
 
             else:
-                warning_msg('There are no contingency groups declared...')
+                self.show_warning_toast('There are no contingency groups declared...')
 
         else:
             pass
@@ -1311,7 +1350,7 @@ class SimulationsMain(TimeEventsMain):
 
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no contingency time series results.')
+            self.show_error_toast('Something went wrong, There are no contingency time series results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1350,7 +1389,7 @@ class SimulationsMain(TimeEventsMain):
                         Pf_hvdc = pf_results.Pf_hvdc.real
                         use_provided_flows = True
                     else:
-                        warning_msg('There were no power flow values available. Linear flows will be used.')
+                        self.show_warning_toast('There were no power flow values available. Linear flows will be used.')
                         use_provided_flows = False
                         Pf_hvdc = None
                         Pf = None
@@ -1399,7 +1438,7 @@ class SimulationsMain(TimeEventsMain):
                 self.LOCK()
 
             else:
-                warning_msg('Another contingency analysis is being executed now...')
+                self.show_warning_toast('Another contingency analysis is being executed now...')
 
         else:
             pass
@@ -1422,7 +1461,7 @@ class SimulationsMain(TimeEventsMain):
             self.update_available_results()
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no ATC results.')
+            self.show_error_toast('Something went wrong, There are no ATC results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1517,9 +1556,9 @@ class SimulationsMain(TimeEventsMain):
                     self.LOCK()
 
                 else:
-                    warning_msg('Another ATC time series is being executed now...')
+                    self.show_warning_toast('Another ATC time series is being executed now...')
             else:
-                error_msg('There are no time series!')
+                self.show_warning_toast('There are no time series!')
         else:
             pass
 
@@ -1544,7 +1583,7 @@ class SimulationsMain(TimeEventsMain):
             self.update_available_results()
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no ATC time series results.')
+            self.show_error_toast('Something went wrong, There are no ATC time series results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1647,7 +1686,7 @@ class SimulationsMain(TimeEventsMain):
                         QtGui.QGuiApplication.processEvents()
 
                         #  compose the base power
-                        Sbase = pf_results.Sbus / self.circuit.Sbase
+                        Sbase: CxVec = pf_results.Sbus / self.circuit.Sbase
 
                         base_overload_number = len(np.where(np.abs(pf_results.loading) > 1)[0])
 
@@ -1678,14 +1717,18 @@ class SimulationsMain(TimeEventsMain):
                             self.LOCK()
 
                             nc_start = compile_numerical_circuit_at(circuit=self.circuit, t_idx=start_idx)
+                            Sbus_init = nc_start.get_power_injections_pu()
+
                             nc_end = compile_numerical_circuit_at(circuit=self.circuit, t_idx=start_idx)
+                            Sbus_end = nc_end.get_power_injections_pu()
+
                             pf_drv_start = sim.PowerFlowDriver(grid=self.circuit, options=pf_options)
                             pf_drv_start.run()
 
                             # get the power Injections array to get the initial and end points
-                            vc_inputs = sim.ContinuationPowerFlowInput(Sbase=nc_start.Sbus,
+                            vc_inputs = sim.ContinuationPowerFlowInput(Sbase=Sbus_init,
                                                                        Vbase=pf_drv_start.results.voltage,
-                                                                       Starget=nc_end.Sbus)
+                                                                       Starget=Sbus_end)
 
                             pf_options = self.get_selected_power_flow_options()
 
@@ -1699,9 +1742,9 @@ class SimulationsMain(TimeEventsMain):
                                              prog_func=self.ui.progressBar.setValue,
                                              text_func=self.ui.progress_label.setText)
                         else:
-                            info_msg('Check the selected start and finnish time series indices.')
+                            self.show_warning_toast('Check the selected start and finnish time series indices.')
                 else:
-                    warning_msg('Another voltage collapse simulation is running...')
+                    self.show_warning_toast('Another voltage collapse simulation is running...')
             else:
                 info_msg('Run a power flow simulation first.\n'
                          'The results are needed to initialize this simulation.')
@@ -1720,14 +1763,13 @@ class SimulationsMain(TimeEventsMain):
             self.remove_simulation(SimulationTypes.ContinuationPowerFlow_run)
 
             if results.voltages is not None:
-                if results.voltages.shape[0] > 0:
-                    self.update_available_results()
-
-                    self.colour_diagrams()
+                self.update_available_results()
+                self.colour_diagrams()
             else:
-                info_msg('The voltage stability did not converge.\nIs this case already at the collapse limit?')
+                self.show_warning_toast('The voltage stability did not converge.\n'
+                                        'Is this case already at the collapse limit?', 5000)
         else:
-            error_msg('Something went wrong, There are no voltage stability results.')
+            self.show_error_toast('Something went wrong, There are no voltage stability results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1766,9 +1808,9 @@ class SimulationsMain(TimeEventsMain):
                                      text_func=self.ui.progress_label.setText)
 
                 else:
-                    warning_msg('There are no time series.', 'Time series')
+                    self.show_warning_toast('There are no time series.')
             else:
-                warning_msg('Another time series power flow is being executed now...')
+                self.show_warning_toast('Another time series power flow is being executed now...')
         else:
             pass
 
@@ -1792,7 +1834,7 @@ class SimulationsMain(TimeEventsMain):
             self.colour_diagrams()
 
         else:
-            warning_msg('No results for the time series simulation.')
+            self.show_warning_toast('No results for the time series simulation.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -1834,10 +1876,10 @@ class SimulationsMain(TimeEventsMain):
                                      prog_func=self.ui.progressBar.setValue,
                                      text_func=self.ui.progress_label.setText)
                 else:
-                    warning_msg('There are no time series.')
+                    self.show_warning_toast('There are no time series.')
 
             else:
-                warning_msg('Another Monte Carlo simulation is running...')
+                self.show_warning_toast('Another Monte Carlo simulation is running...')
 
         else:
             pass
@@ -1916,6 +1958,7 @@ class SimulationsMain(TimeEventsMain):
         unit_commitment = self.ui.opfUnitCommitmentCheckBox.isChecked()
         generate_report = self.ui.addOptimalPowerFlowReportCheckBox.isChecked()
         robust = self.ui.fixOpfCheckBox.isChecked()
+        generation_expansion_planning = self.ui.opfGEPCheckBox.isChecked()
 
         if self.ui.save_mip_checkBox.isChecked():
             folder = opf_file_path()
@@ -1930,11 +1973,11 @@ class SimulationsMain(TimeEventsMain):
             inter_aggregation_info: dev.InterAggregationInfo = self.get_compatible_from_to_buses_and_inter_branches()
 
             if len(inter_aggregation_info.lst_from) == 0:
-                error_msg('The area "from" has no buses!')
+                self.show_error_toast('The area "from" has no buses!', 5000)
                 return None
 
             if len(inter_aggregation_info.lst_to) == 0:
-                error_msg('The area "to" has no buses!')
+                self.show_error_toast('The area "to" has no buses!', 5000)
                 return None
         else:
             inter_aggregation_info = None
@@ -1960,6 +2003,7 @@ class SimulationsMain(TimeEventsMain):
                                               maximize_flows=maximize_flows,
                                               inter_aggregation_info=inter_aggregation_info,
                                               unit_commitment=unit_commitment,
+                                              generation_expansion_planning=generation_expansion_planning,
                                               export_model_fname=export_model_fname,
                                               generate_report=generate_report,
                                               ips_method=ips_method,
@@ -1999,7 +2043,7 @@ class SimulationsMain(TimeEventsMain):
                                  text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another OPF is being run...')
+                self.show_warning_toast('Another OPF is being run...')
         else:
             pass
 
@@ -2013,11 +2057,14 @@ class SimulationsMain(TimeEventsMain):
 
             self.remove_simulation(SimulationTypes.OPF_run)
 
-            if not results.converged:
-                warning_msg('Some islands did not solve.\n'
-                            'Check that all Branches have rating and \n'
-                            'that the generator bounds are ok.\n'
-                            'You may also use the diagnostic tool (F8)', 'OPF')
+            if results.converged:
+                self.show_info_toast("Optimal power flow converged :)")
+            else:
+                self.show_warning_toast('Power flow not converged :/\n'
+                                        'Check that all Branches have rating and \n'
+                                        'that the generator bounds are ok.\n'
+                                        'You may also use the diagnostic tool (F8)',
+                                        duration=4000)
 
             self.update_available_results()
 
@@ -2063,10 +2110,10 @@ class SimulationsMain(TimeEventsMain):
                                          text_func=self.ui.progress_label.setText)
 
                 else:
-                    warning_msg('There are no time series.\nLoad time series are needed for this simulation.')
+                    self.show_warning_toast('There are no time series...')
 
             else:
-                warning_msg('Another OPF time series is running already...')
+                self.show_warning_toast('Another OPF time series is running already...')
 
         else:
             pass
@@ -2083,7 +2130,7 @@ class SimulationsMain(TimeEventsMain):
             # expand the clusters
             results.expand_clustered_results()
 
-            # remove from the current simulations
+            # delete from the current simulations
             self.remove_simulation(SimulationTypes.OPFTimeSeries_run)
 
             if results is not None:
@@ -2127,7 +2174,7 @@ class SimulationsMain(TimeEventsMain):
                              '\nRun OPF time series to be able to copy the value to the time series object.')
 
             else:
-                warning_msg('There are no time series.\nLoad time series are needed for this simulation.')
+                self.show_warning_toast('There are no time series...')
         else:
             pass
 
@@ -2207,7 +2254,7 @@ class SimulationsMain(TimeEventsMain):
                                      text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another OPF is being run...')
+                self.show_warning_toast('Another OPF is being run...')
         else:
             pass
 
@@ -2258,7 +2305,7 @@ class SimulationsMain(TimeEventsMain):
                                      text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another Optimal NCT time series is being run...')
+                self.show_warning_toast('Another Optimal NCT time series is being run...')
         else:
             pass
 
@@ -2274,7 +2321,7 @@ class SimulationsMain(TimeEventsMain):
             # expand the clusters
             results.expand_clustered_results()
 
-            # remove from the current simulations
+            # delete from the current simulations
             self.remove_simulation(SimulationTypes.OPF_NTC_TS_run)
 
             if results is not None:
@@ -2312,10 +2359,10 @@ class SimulationsMain(TimeEventsMain):
                                  text_func=self.ui.progress_label.setText)
 
             else:
-                error_msg('There are no PTDF results :/')
+                self.show_error_toast('There are no PTDF results :/')
 
         else:
-            # delete the markers
+            # delete_with_dialogue the markers
             self.clear_big_bus_markers()
 
     def post_run_find_node_groups(self):
@@ -2370,7 +2417,7 @@ class SimulationsMain(TimeEventsMain):
                                  text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another inputs analysis is being run...')
+                self.show_warning_toast('Another inputs analysis is being run...')
         else:
             pass
 
@@ -2450,7 +2497,7 @@ class SimulationsMain(TimeEventsMain):
 
             else:
 
-                # delete the red dots
+                # delete_with_dialogue the red dots
                 self.clear_big_bus_markers()
         else:
             pass
@@ -2466,7 +2513,7 @@ class SimulationsMain(TimeEventsMain):
             sigma_driver.run()
 
             if not sigma_driver.results.converged:
-                error_msg("Sigma coefficients did not converge :(")
+                self.show_error_toast("Sigma coefficients did not converge :(")
 
             self.sigma_dialogue = SigmaAnalysisGUI(parent=self,
                                                    results=sigma_driver.results,
@@ -2539,7 +2586,7 @@ class SimulationsMain(TimeEventsMain):
                     self.LOCK()
 
                 else:
-                    warning_msg('Another contingency analysis is being executed now...')
+                    self.show_warning_toast('Another contingency analysis is being executed now...')
             else:
                 warning_msg("There are no investment groups, "
                             "you need to create some so that GridCal can evaluate them ;)")
@@ -2563,7 +2610,7 @@ class SimulationsMain(TimeEventsMain):
             self.update_available_results()
             self.colour_diagrams()
         else:
-            error_msg('Something went wrong, There are no investments evaluation results.')
+            self.show_error_toast('Something went wrong, There are no investments evaluation results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -2589,7 +2636,7 @@ class SimulationsMain(TimeEventsMain):
                     return clustering_results
             else:
                 # no results ...
-                warning_msg("There are no clustering results.")
+                self.show_warning_toast("There are no clustering results.")
                 self.ui.actionUse_clustering.setChecked(False)
                 return None
 
@@ -2629,7 +2676,7 @@ class SimulationsMain(TimeEventsMain):
                                 title="Clustering")
 
             else:
-                warning_msg('Another clustering is being executed now...')
+                self.show_warning_toast('Another clustering is being executed now...')
         else:
             pass
 
@@ -2647,7 +2694,7 @@ class SimulationsMain(TimeEventsMain):
 
             self.update_available_results()
         else:
-            error_msg('Something went wrong, There are no power short circuit results.')
+            self.show_error_toast('Something went wrong, There are no power short circuit results.')
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -2687,7 +2734,7 @@ class SimulationsMain(TimeEventsMain):
                              text_func=self.ui.progress_label.setText)
 
         else:
-            warning_msg('Another simulation of the same type is running...')
+            self.show_warning_toast('Another simulation of the same type is running...')
 
     def post_topology_processor(self):
         """
@@ -2695,8 +2742,6 @@ class SimulationsMain(TimeEventsMain):
         """
 
         self.remove_simulation(SimulationTypes.TopologyProcessor_run)
-        # self.update_available_results()
-        # self.colour_diagrams()
 
         if not self.session.is_anything_running():
             self.UNLOCK()
@@ -2725,7 +2770,7 @@ class SimulationsMain(TimeEventsMain):
                     return None
             else:
                 # no results ...
-                warning_msg("There are no clustering results.")
+                self.show_warning_toast("There are no clustering results.")
                 self.ui.actionUse_clustering.setChecked(False)
                 return None
 
@@ -2795,7 +2840,7 @@ class SimulationsMain(TimeEventsMain):
                                      text_func=self.ui.progress_label.setText)
 
             else:
-                warning_msg('Another OPF time series is running already...')
+                self.show_warning_toast('Another OPF time series is running already...')
 
         else:
             pass
@@ -2812,7 +2857,7 @@ class SimulationsMain(TimeEventsMain):
             # expand the clusters
             results.expand_clustered_results()
 
-            # remove from the current simulations
+            # delete from the current simulations
             self.remove_simulation(SimulationTypes.NodalCapacityTimeSeries_run)
 
             if results is not None:
@@ -2837,3 +2882,45 @@ class SimulationsMain(TimeEventsMain):
             tol_idx = 12
 
         self.ui.tolerance_spinBox.setValue(tol_idx)
+
+    def run_remote(self, instruction):
+        """
+        Run remote simulation
+        :param instruction:
+        :return:
+        """
+
+        if self.server_driver.is_running():
+            driver = RemoteJobDriver(grid=self.circuit,
+                                     instruction=instruction,
+                                     base_url=self.server_driver.base_url(),
+                                     certificate_path=self.server_driver.get_certificate_path(),
+                                     register_driver_func=self.session.register_driver)
+            driver.done_signal.connect(self.post_run_remote)
+
+            self._remote_jobs[driver.idtag] = driver
+
+            driver.start()
+
+    def post_run_remote(self, driver_idtag: str):
+        """
+        Function executed upon data reception complete
+        :return:
+        """
+        print("Done!")
+
+        remote_job_driver = self._remote_jobs.get(driver_idtag, None)
+
+        if remote_job_driver is not None:
+            if remote_job_driver.logger.has_logs():
+                # Show dialogue
+                dlg = LogsDialogue(name="Remote connection logs", logger=remote_job_driver.logger)
+                dlg.setModal(True)
+                dlg.exec()
+
+            self.update_available_results()
+            self.colour_diagrams()
+
+            self._remote_jobs.pop(driver_idtag)
+
+            self.show_info_toast(f"Remote results received!")

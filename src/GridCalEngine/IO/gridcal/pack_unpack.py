@@ -128,22 +128,6 @@ def gather_model_as_data_frames(circuit: MultiCircuit, logger: Logger = Logger()
     """
     dfs = dict()
 
-    # configuration ################################################################################################
-    obj = list()
-    obj.append(['BaseMVA', circuit.Sbase])
-    obj.append(['Version', 5])
-    obj.append(['Name', str(circuit.name)])
-    obj.append(['Comments', str(circuit.comments)])
-
-    # increase the model version
-    circuit.model_version += 1
-
-    obj.append(['ModelVersion', str(circuit.model_version)])
-    obj.append(['UserName', str(circuit.user_name)])
-    obj.append(['program', 'GridCal'])
-
-    dfs['config'] = pd.DataFrame(data=obj, columns=['Property', 'Value'], dtype=str)
-
     # get the master time profile
     time_profile = circuit.time_profile
     nt = len(time_profile) if time_profile is not None else 0
@@ -160,6 +144,24 @@ def gather_model_as_data_frames(circuit: MultiCircuit, logger: Logger = Logger()
     # generic object iteration
     ########################################################################################################
     if legacy:
+
+        # configuration ################################################################################################
+        obj = list()
+        obj.append(['BaseMVA', circuit.Sbase])
+        obj.append(['Version', 5])
+        obj.append(['Name', str(circuit.name)])
+        obj.append(['Comments', str(circuit.comments)])
+        obj.append(['idtag', str(circuit.idtag)])
+
+        # increase the model version
+        circuit.model_version += 1
+
+        obj.append(['ModelVersion', str(circuit.model_version)])
+        obj.append(['UserName', str(circuit.user_name)])
+        obj.append(['program', 'GridCal'])
+
+        dfs['config'] = pd.DataFrame(data=obj, columns=['Property', 'Value'], dtype=str)
+
         for object_type_name, object_sample in object_types.items():
 
             headers = object_sample.registered_properties.keys()
@@ -408,6 +410,9 @@ def gridcal_object_to_json(elm: ALL_DEV_TYPES) -> Dict[str, str]:
         elif prop.tpe == SubObjectType.Associations:
             data[name] = obj.to_dict()
 
+        elif prop.tpe == SubObjectType.AdmittanceMatrix:
+            data[name] = obj.to_dict()
+
         elif prop.tpe == SubObjectType.Array:
             data[name] = list(obj)
 
@@ -466,6 +471,10 @@ def gather_model_as_jsons(circuit: MultiCircuit) -> Dict[str, Dict[str, str]]:
     data['time'] = {'unix': unix_time.tolist(),
                     'prob': list(np.ones(len(unix_time))),
                     'snapshot_unix': circuit.get_snapshot_time_unix()}
+
+    # gather the circuit
+    circuit.model_version += 1
+    data['circuit'] = circuit.to_dict()
 
     return data
 
@@ -1117,6 +1126,12 @@ def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
                                     val = np.array(property_value)
                                     elm.set_snapshot_value(gc_prop.name, val)
 
+                                elif gc_prop.tpe == SubObjectType.AdmittanceMatrix:
+
+                                    # get the line locations object and fill it with the json data
+                                    adm_mat: SubObjectType.AdmittanceMatrix = elm.get_snapshot_value(prop=gc_prop)
+                                    adm_mat.parse(property_value)
+
                                 elif gc_prop.tpe == SubObjectType.Associations:
 
                                     # get the list of associations
@@ -1275,10 +1290,18 @@ def parse_gridcal_data(data: GRIDCAL_FILE_TYPE,
     # create circuit
     circuit = MultiCircuit()
 
+    # Legacy circuit information parsing -------------------------------------------------------------------------------
     if 'name' in data.keys():
         circuit.name = str(data['name'])
         if circuit.name == 'nan':
             circuit.name = ''
+
+    if 'idtag' in data.keys():
+        val = str(data['idtag'])
+        if val != '':
+            circuit.idtag = val
+        else:
+            logger.add_warning("Had to create a new idtag", value=circuit.idtag)
 
     # set the base magnitudes
     if 'baseMVA' in data.keys():
@@ -1386,6 +1409,12 @@ def parse_gridcal_data(data: GRIDCAL_FILE_TYPE,
 
         if len(model_data) > 0:
 
+            # parse circuit own data
+            circuit_data = model_data.get('circuit', None)
+            if circuit_data is not None:
+                circuit.parse(data=circuit_data)
+
+            # parse time
             tdata = model_data.get('time', None)
             if tdata is not None:
                 circuit.set_unix_time(arr=tdata['unix'])
@@ -1464,7 +1493,7 @@ def parse_gridcal_data(data: GRIDCAL_FILE_TYPE,
     if text_func is not None:
         text_func("Parsing diagrams...")
 
-    # try to get the get the list of diagrams
+    # try to get the list of diagrams
     list_of_diagrams: List[Dict[str, Any]] = data.get('diagrams', None)
 
     if list_of_diagrams is not None:

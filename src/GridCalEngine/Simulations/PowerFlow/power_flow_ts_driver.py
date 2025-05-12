@@ -14,6 +14,7 @@ import GridCalEngine.Simulations.PowerFlow.power_flow_worker as pf_worker
 from GridCalEngine.Compilers.circuit_to_bentayga import bentayga_pf
 from GridCalEngine.Compilers.circuit_to_newton_pa import newton_pa_pf
 from GridCalEngine.Compilers.circuit_to_pgm import pgm_pf
+from GridCalEngine.Compilers.circuit_to_gslv import gslv_pf
 from GridCalEngine.basic_structures import IntVec
 from GridCalEngine.enumerations import EngineType, SimulationTypes
 
@@ -69,16 +70,21 @@ class PowerFlowTimeSeriesDriver(TimeSeriesDriverTemplate):
         """
 
         n = self.grid.get_bus_number()
-        m = self.grid.get_branch_number_wo_hvdc()
+        # m = self.grid.get_branch_number_wo_hvdc()
+        m = self.grid.get_branch_number(add_vsc=False,
+                                        add_hvdc=False,
+                                        add_switch=True)
 
         # initialize the grid time series results we will append the island results with another function
         time_series_results = PowerFlowTimeSeriesResults(n=n,
                                                          m=m,
                                                          n_hvdc=self.grid.get_hvdc_number(),
                                                          bus_names=self.grid.get_bus_names(),
-                                                         branch_names=self.grid.get_branch_names_wo_hvdc(),
+                                                         branch_names=self.grid.get_branch_names(add_vsc=False,
+                                                                                                 add_hvdc=False,
+                                                                                                 add_switch=True),
                                                          hvdc_names=self.grid.get_hvdc_names(),
-                                                         bus_types=np.zeros(m),
+                                                         bus_types=np.zeros(n),
                                                          time_array=self.grid.time_profile[time_indices],
                                                          clustering_results=self.clustering_results)
 
@@ -192,6 +198,71 @@ class PowerFlowTimeSeriesDriver(TimeSeriesDriverTemplate):
 
         return results
 
+    def run_gslv(self, time_indices=None) -> PowerFlowTimeSeriesResults:
+        """
+        Run with Newton Power Analytics
+        :param time_indices: array of time indices
+        :return:
+        """
+        res = gslv_pf(circuit=self.grid,
+                      pf_opt=self.options,
+                      time_series=True,
+                      time_indices=time_indices,
+                      opf_results=self.opf_time_series_results,
+                      logger=self.logger)
+
+        n = self.grid.get_bus_number()
+        results = PowerFlowTimeSeriesResults(n=self.grid.get_bus_number(),
+                                             m=self.grid.get_branch_number_wo_hvdc(),
+                                             n_hvdc=self.grid.get_hvdc_number(),
+                                             # n_vsc=self.grid.get_vsc_number(),
+                                             # n_gen=self.grid.get_generators_number(),
+                                             # n_batt=self.grid.get_batteries_number(),
+                                             # n_sh=self.grid.get_shunt_like_device_number(),
+                                             bus_names=self.grid.get_bus_names(),
+                                             branch_names=self.grid.get_branch_names(add_switch=True),
+                                             hvdc_names=self.grid.get_hvdc_names(),
+                                             # vsc_names=self.grid.get_vsc_names(),
+                                             # gen_names=self.grid.get_generator_names(),
+                                             # batt_names=self.grid.get_battery_names(),
+                                             # sh_names=self.grid.get_shunt_like_devices_names(),
+                                             bus_types=np.ones(n, dtype=int),
+                                             time_array=self.grid.time_profile[time_indices],
+                                             clustering_results=self.clustering_results
+                                             )
+
+        # self.results = translate_gslv_pf_results(self.grid, res)
+        # self.results.area_names = [a.name for a in self.grid.areas]
+        # self.convergence_reports = self.results.convergence_reports
+
+        results.voltage = res.voltage
+        results.S = res.S
+        results.Sf = res.Sf
+        results.St = res.St
+        results.loading = res.loading
+        results.losses = res.losses
+        # results.Vbranch = res.Vbranch
+        # results.If = res.If
+        # results.It = res.It
+        results.tap_module = res.tap_module
+        results.tap_angle = res.tap_angle
+        # results.F = res.F
+        # results.T = res.T
+        # results.hvdc_F = res.hvdc_F
+        # results.hvdc_T = res.hvdc_T
+        results.hvdc_Pf = res.Pf_hvdc
+        results.hvdc_Pt = res.Pt_hvdc
+        results.hvdc_loading = res.loading_hvdc
+        results.hvdc_losses = res.losses_hvdc
+        results.error_values = res.error_values
+
+        results.Pf_vsc = res.Pf_vsc
+        results.St_vsc = res.St_vsc
+        results.loading_vsc = res.loading_vsc
+        results.losses_vsc = res.losses_vsc
+
+        return results
+
     def run(self):
         """
         Run the time series simulation
@@ -210,6 +281,10 @@ class PowerFlowTimeSeriesDriver(TimeSeriesDriverTemplate):
         elif self.engine == EngineType.NewtonPA:
             self.report_text('Running Newton power analytics... ')
             self.results = self.run_newton_pa(time_indices=self.time_indices)
+
+        elif self.engine == EngineType.GSLV:
+            self.report_text('Running GSLV... ')
+            self.results = self.run_gslv(time_indices=self.time_indices)
 
         elif self.engine == EngineType.PGM:
             self.report_text('Running Power Grid Model... ')

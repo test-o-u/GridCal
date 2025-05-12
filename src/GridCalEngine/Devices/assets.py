@@ -12,7 +12,7 @@ from GridCalEngine.basic_structures import IntVec, StrVec
 import GridCalEngine.Devices as dev
 from GridCalEngine.Devices.types import ALL_DEV_TYPES, BRANCH_TYPES, INJECTION_DEVICE_TYPES, FLUID_TYPES
 from GridCalEngine.Devices.Parents.editable_device import GCPROP_TYPES
-from GridCalEngine.enumerations import DeviceType
+from GridCalEngine.enumerations import DeviceType, ActionType
 from GridCalEngine.basic_structures import Logger, ListSet
 from GridCalEngine.data_logger import DataLogger
 
@@ -586,7 +586,7 @@ class Assets:
         """
         return self._lines
 
-    def add_line(self, obj: dev.Line, logger: Union[Logger, DataLogger] = Logger()):
+    def add_line(self, obj: dev.Line, logger: Union[Logger, DataLogger] = Logger()) -> dev.Line:
         """
         Add a line object
         :param obj: Line instance
@@ -696,7 +696,7 @@ class Assets:
         """
         return [elm.name for elm in self._transformers2w]
 
-    def add_transformer2w(self, obj: dev.Transformer2W):
+    def add_transformer2w(self, obj: dev.Transformer2W) -> dev.Transformer2W:
         """
         Add a transformer object
         :param obj: Transformer2W instance
@@ -705,6 +705,7 @@ class Assets:
         if self.time_profile is not None:
             obj.ensure_profiles_exist(self.time_profile)
         self._transformers2w.append(obj)
+        return obj
 
     def delete_transformer2w(self, obj: dev.Transformer2W):
         """
@@ -1015,7 +1016,7 @@ class Assets:
         self.delete_winding(obj.winding1)
         self.delete_winding(obj.winding2)
         self.delete_winding(obj.winding3)
-        self.delete_bus(obj.bus0, delete_associated=True)  # also remove the middle bus
+        self.delete_bus(obj.bus0, delete_associated=True)  # also delete the middle bus
 
     # ------------------------------------------------------------------------------------------------------------------
     # Windings
@@ -1248,7 +1249,7 @@ class Assets:
         :param delete_associated: Delete the associated branches and injections
         """
 
-        # remove associated Branches in reverse order
+        # delete associated Branches in reverse order
         for branch_list in self.get_branch_lists():
             for i in range(len(branch_list) - 1, -1, -1):
                 if branch_list[i].bus_from == obj:
@@ -1262,7 +1263,7 @@ class Assets:
                     else:
                         branch_list[i].bus_to = None
 
-        # remove the associated injection devices
+        # delete the associated injection devices
         for inj_list in self.get_injection_devices_lists():
             for i in range(len(inj_list) - 1, -1, -1):
                 if inj_list[i].bus == obj:
@@ -1271,23 +1272,23 @@ class Assets:
                     else:
                         inj_list[i].bus = None
 
-        # remove associations in connectivity nodes
+        # delete associations in connectivity nodes
         deleted_cn = set()
         for cn in self._connectivity_nodes:
             if cn.bus == obj:
                 deleted_cn.add(cn)
-                self.delete_connectivity_node(cn)  # remove the association
+                self.delete_connectivity_node(cn)  # delete the association
 
-        # remove associations in bus_bars
+        # delete associations in bus_bars
         for bb in self.bus_bars:
             if bb.cn in deleted_cn:
                 self.delete_bus_bar(bb)
 
-        # remove the bus itself
+        # delete the bus itself
         try:
             self._buses.remove(obj)
         except ValueError:
-            print(f"Could not remove {obj.name}")
+            print(f"Could not delete {obj.name}")
 
     def get_buses_by(self, filter_elements: List[Union[dev.Area, dev.Country, dev.Zone]]) -> List[dev.Bus]:
         """
@@ -1487,6 +1488,20 @@ class Assets:
             self._voltage_levels.remove(obj)
         except ValueError:
             pass
+
+    def get_voltage_level_buses(self, vl: dev.VoltageLevel) -> List[dev.Bus]:
+        """
+        Get the list of buses of this substation
+        :param vl:
+        :return:
+        """
+        lst: List[dev.Bus] = list()
+
+        for bus in self.buses:
+            if bus.voltage_level == vl:
+                lst.append(bus)
+
+        return lst
 
     # ------------------------------------------------------------------------------------------------------------------
     # Load
@@ -1887,6 +1902,16 @@ class Assets:
             self._batteries.remove(obj)
         except ValueError:
             pass
+
+    def get_batteries_indexing_dict(self) -> Dict[str, int]:
+        """
+        Get a dictionary that relates the battery uuid's with their index
+        :return: Dict[str, int]
+        """
+        gen_index_dict: Dict[str, int] = dict()
+        for k, elm in enumerate(self.batteries):
+            gen_index_dict[elm.idtag] = k  # associate the idtag to the index
+        return gen_index_dict
 
     # ------------------------------------------------------------------------------------------------------------------
     # Static generator
@@ -2549,7 +2574,7 @@ class Assets:
 
     def delete_line_template_dependency(self, obj):
         """
-        Search a branch template from lines and transformers and delete it
+        Search a branch template from lines and transformers and delete_with_dialogue it
         :param obj:
         :return:
         """
@@ -2718,7 +2743,7 @@ class Assets:
 
     def delete_transformer_template_dependency(self, obj: dev.TransformerType):
         """
-        Search a branch template from lines and transformers and delete it
+        Search a branch template from lines and transformers and delete_with_dialogue it
         :param obj:
         :return:
         """
@@ -2865,7 +2890,7 @@ class Assets:
         :return:
         """
         if len(selected_objects) > 1:
-            # remove the first SE from the list and keep it
+            # delete the first SE from the list and keep it
             base = selected_objects.pop(0)
 
             for elm in self.voltage_levels:
@@ -3374,7 +3399,7 @@ class Assets:
         except ValueError:
             pass
 
-        # delete references in the remedial action groups
+        # delete_with_dialogue references in the remedial action groups
         for rag in self._remedial_action_groups:
             if rag.conn_group is not None:
                 if rag.conn_group == obj:
@@ -3513,7 +3538,7 @@ class Assets:
         """
         Delete zone
         :param obj: index
-        :param del_group: delete the group?
+        :param del_group: delete_with_dialogue the group?
         """
         try:
             self._investments.remove(obj)
@@ -3887,6 +3912,13 @@ class Assets:
             index_dict[elm.idtag] = k  # associate the idtag to the index
         return index_dict
 
+    def get_technology_names(self) -> StrVec:
+        """
+
+        :return:
+        """
+        return np.array([elm.name for elm in self._technologies])
+
     # ------------------------------------------------------------------------------------------------------------------
     # Modelling authority
     # ------------------------------------------------------------------------------------------------------------------
@@ -4145,7 +4177,7 @@ class Assets:
                 for assoc in to_del:
                     elm.emissions.remove(assoc)
 
-        # delete the gas
+        # delete_with_dialogue the gas
         try:
             self._emission_gases.remove(obj)
         except ValueError:
@@ -4192,7 +4224,7 @@ class Assets:
         Delete fluid node
         :param obj: FluidNode
         """
-        # delete dependencies
+        # delete_with_dialogue dependencies
         for fluid_path in reversed(self._fluid_paths):
             if fluid_path.source == obj or fluid_path.target == obj:
                 self.delete_fluid_path(fluid_path)
@@ -4768,6 +4800,13 @@ class Assets:
         """
         return self.get_branch_names(add_vsc=True, add_hvdc=False, add_switch=False)
 
+    def get_branch_names_wo_hvdc_w_switch(self) -> StrVec:
+        """
+        Get all branch names without HVDC devices
+        :return: StrVec
+        """
+        return self.get_branch_names(add_vsc=True, add_hvdc=False, add_switch=True)
+
     def get_branch_names_wo_vsc_hvdc(self) -> StrVec:
         """
         Get all branch names without VSC nor HVDC devices
@@ -4788,6 +4827,13 @@ class Assets:
         :return: number
         """
         return self.get_branch_number(add_vsc=False, add_hvdc=False, add_switch=False)
+
+    def get_branch_number_wo_hvdc_w_switch(self) -> int:
+        """
+        return the number of Branches (with no HVDC)
+        :return: number
+        """
+        return self.get_branch_number(add_vsc=True, add_hvdc=False, add_switch=True)
 
     def get_branches_wo_hvdc_iter(self) -> Generator[BRANCH_TYPES, None, None]:
         """
@@ -4829,7 +4875,7 @@ class Assets:
         """
         Delete the dependencies that may come with a branch
         :param obj: branch object or any object
-        :param delete_groups: delete empty groups too?
+        :param delete_groups: delete_with_dialogue empty groups too?
         :return:
         """
         for elm in self.contingencies:
@@ -5673,7 +5719,7 @@ class Assets:
     def delete_element(self, obj: ALL_DEV_TYPES) -> None:
         """
         Get set of elements and their parent nodes
-        :param obj: device object to delete
+        :param obj: device object to delete_with_dialogue
         :return: Nothing
         """
 
@@ -5845,44 +5891,66 @@ class Assets:
         elif obj.device_type == DeviceType.FacilityDevice:
             self.delete_facility(obj)
 
+        elif obj.device_type == DeviceType.LineLocation:
+            pass
+
         else:
             raise Exception('Element type not understood ' + str(obj.device_type))
 
-    def add_or_replace_object(self, api_obj: ALL_DEV_TYPES, logger: Logger) -> bool:
+    def merge_object(self,
+                     api_obj: ALL_DEV_TYPES,
+                     all_elms_base_dict: Dict[str, ALL_DEV_TYPES],
+                     logger: Logger) -> bool:
         """
-        Add or replace an object based on the UUID
-        :param api_obj: Any asset
+        Add, Delete or Modify an object based on the UUID
+        :param api_obj: Any asset (from a diff presumably)
+        :param all_elms_base_dict: All elements dict from the base circuit (idtag-> object)
         :param logger: Logger object
         :return: replaced?
         """
 
-        object_type_list: List[ALL_DEV_TYPES] = self.get_elements_by_type(device_type=api_obj.device_type)
+        elm_from_base = all_elms_base_dict.get(api_obj.idtag, None)
 
-        found = False
-        found_idx = -1
-        for i, obj in enumerate(object_type_list):
-            if obj.idtag == api_obj.idtag:
-                found = True
-                found_idx = i
-                break
+        # if elm_from_base is None:
+        #     return False
+        # else:
 
-        if found:
-            # replace
-            object_type_list[found_idx] = api_obj
+        if api_obj.selected_to_merge:
 
-            logger.add_info("Element replaced",
-                            device_class=api_obj.device_type.value,
-                            device=api_obj.name)
+            if api_obj.action == ActionType.Add:
+                self.add_element(obj=api_obj)
+
+            elif api_obj.action == ActionType.Delete:
+
+                elm_from_base = all_elms_base_dict.get(api_obj.idtag, None)
+                if elm_from_base is not None:
+                    if elm_from_base.device_type == DeviceType.BusDevice:
+                        self.delete_bus(obj=elm_from_base, delete_associated=False)
+                    else:
+                        self.delete_element(obj=elm_from_base)
+
+
+            elif api_obj.action == ActionType.Modify:
+
+                elm_from_base = all_elms_base_dict.get(api_obj.idtag, None)
+
+                if elm_from_base is not None:
+
+                    for prop in api_obj.property_list:
+                        if prop.selected_to_merge:
+                            val = api_obj.get_property_value(prop=prop, t_idx=None)
+                            elm_from_base.set_property_value(prop=prop, value=val, t_idx=None)
+                else:
+                    self.add_element(obj=api_obj)
+
+
+            elif api_obj.action == ActionType.NoAction:
+                pass
+
+            return True
 
         else:
-            # add
-            self.add_element(obj=api_obj)
-
-            logger.add_info("Element added",
-                            device_class=api_obj.device_type.value,
-                            device=api_obj.name)
-
-        return found
+            return False
 
     def get_all_elements_iter(self) -> Generator[ALL_DEV_TYPES, None, None]:
         """
@@ -5900,7 +5968,7 @@ class Assets:
         """
         Get a dictionary of all elements
         :param: logger: Logger
-        :return: Dict[idtag] -> object
+        :return: Dict[idtag] -> object, ok
         """
         data = dict()
         ok = True
@@ -5966,7 +6034,7 @@ class Assets:
 
     def clear(self) -> None:
         """
-        Clear the multi-circuit (remove the bus and branch objects)
+        Clear the multi-circuit (delete the bus and branch objects)
         """
 
         for key, elm_list in self.template_objects_dict.items():

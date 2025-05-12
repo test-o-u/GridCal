@@ -15,6 +15,7 @@ from GridCalEngine.Compilers.circuit_to_bentayga import (BENTAYGA_AVAILABLE, ben
                                                          translate_bentayga_pf_results)
 from GridCalEngine.Compilers.circuit_to_newton_pa import (NEWTON_PA_AVAILABLE, newton_pa_pf,
                                                           translate_newton_pa_pf_results)
+from GridCalEngine.Compilers.circuit_to_gslv import (GSLV_AVAILABLE, gslv_pf, translate_gslv_pf_results)
 from GridCalEngine.Compilers.circuit_to_pgm import PGM_AVAILABLE, pgm_pf
 from GridCalEngine.enumerations import EngineType, SimulationTypes
 
@@ -39,7 +40,7 @@ class PowerFlowDriver(DriverTemplate):
         :param grid: MultiCircuit instance
         :param options: PowerFlowOptions instance (optional)
         :param opf_results: OptimalPowerFlowResults instance (optional)
-        :param engine: EngineType (i.e. EngineType.GridCal) (optional)
+        :param engine: EngineType (i.e., EngineType.GridCal) (optional)
         """
 
         DriverTemplate.__init__(self, grid=grid, engine=engine)
@@ -102,11 +103,29 @@ class PowerFlowDriver(DriverTemplate):
                                         value=loading[i] * 100.0,
                                         expected_value=100.0)
 
+        for i, elm in enumerate(self.grid.generators):
+            if not (elm.Qmin <= self.results.gen_q[i] <= elm.Qmax):
+                self.logger.add_warning("Generator Q out of bounds",
+                                        device=elm.name,
+                                        value=self.results.gen_q[i],
+                                        expected_value=f"[{elm.Qmin}, {elm.Qmax}]", )
+
+        for i, elm in enumerate(self.grid.batteries):
+            if not (elm.Qmin <= self.results.battery_q[i] <= elm.Qmax):
+                self.logger.add_warning("Battery Q out of bounds",
+                                        device=elm.name,
+                                        value=self.results.battery_q[i],
+                                        expected_value=f"[{elm.Qmin}, {elm.Qmax}]", )
+
     def run(self) -> None:
         """
         Pack run_pf for the QThread
         """
         self.tic()
+        if self.engine == EngineType.GSLV and not GSLV_AVAILABLE:
+            self.engine = EngineType.GridCal
+            self.logger.add_warning('Failed back to GridCal')
+
         if self.engine == EngineType.NewtonPA and not NEWTON_PA_AVAILABLE:
             self.engine = EngineType.GridCal
             self.logger.add_warning('Failed back to GridCal')
@@ -148,6 +167,17 @@ class PowerFlowDriver(DriverTemplate):
                                             bus_types=res.bus_types)
 
             self.results = translate_newton_pa_pf_results(self.grid, res)
+            self.results.area_names = [a.name for a in self.grid.areas]
+            self.convergence_reports = self.results.convergence_reports
+
+        elif self.engine == EngineType.GSLV:
+
+            res = gslv_pf(circuit=self.grid,
+                          pf_opt=self.options,
+                          time_series=False,
+                          logger=self.logger)
+
+            self.results = translate_gslv_pf_results(self.grid, res=res, logger=self.logger)
             self.results.area_names = [a.name for a in self.grid.areas]
             self.convergence_reports = self.results.convergence_reports
 

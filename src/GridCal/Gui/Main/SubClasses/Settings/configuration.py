@@ -129,6 +129,8 @@ class ConfigurationMain(ResultsMain):
 
             self.colour_diagrams()
 
+
+
     @staticmethod
     def config_file_path() -> str:
         """
@@ -179,7 +181,6 @@ class ConfigurationMain(ResultsMain):
                 }
             },
             "linear": {
-
                 "ptdf_threshold": self.ui.ptdf_threshold_doubleSpinBox,
                 "lodf_threshold": self.ui.lodf_threshold_doubleSpinBox
             },
@@ -211,6 +212,7 @@ class ConfigurationMain(ResultsMain):
                 "apply_temperature_correction": self.ui.temperature_correction_checkBox,
                 "apply_impedance_tolerances": self.ui.apply_impedance_tolerances_checkBox,
                 "add_pf_report": self.ui.addPowerFlowReportCheckBox,
+                "initialize_angles": self.ui.initialize_pf_angles_checkBox,
             },
             "optimal_power_flow": {
                 "method": self.ui.lpf_solver_comboBox,
@@ -468,7 +470,7 @@ class ConfigurationMain(ResultsMain):
         :param fcn: some PluginFunction
         """
 
-        # call the main fuinction of the plugin
+        # call the main function of the plugin
         ret = fcn.get_pointer_lambda(gui_instance=self)()
 
         if fcn.call_gui and ret is not None:

@@ -83,8 +83,6 @@ def interpret_line(raw_line: str, splitter=','):
     # Use re.split to apply the pattern
     elms = re.split(pattern, lne)
 
-    # elms = lne.split(splitter)
-
     for elm in elms:
 
         if "'" in elm:
@@ -92,7 +90,7 @@ def interpret_line(raw_line: str, splitter=','):
         else:
 
             if "/" in elm:
-                # the line might end with a comment "/ whatever" so we must remove the comment
+                # the line might end with a comment "/ whatever" so we must delete the comment
                 print("Comment detected:", elm, end="")
                 ss = elm.split("/")
                 elm = ss[0]
@@ -142,7 +140,7 @@ def read_and_split(file_name: str, text_func=None, progress_func=None) -> (List[
         for line_ in my_file:
 
             if line_[0] != '@':
-                # remove garbage
+                # delete garbage
                 lne: str = str(line_).strip()
 
                 if lne.startswith("program"):
@@ -274,7 +272,7 @@ def read_raw(filename, text_func=None, progress_func=None, logger=Logger()) -> P
     # header -> new grid
     # grid = PSSeGrid(interpret_line(sections[0]))
     grid = PsseCircuit()
-    grid.parse(sections_dict['info'][0])
+    grid.parse(sections_dict['info'][0], logger=logger)
 
     if grid.REV not in versions:
         msg = 'The PSSe version is not compatible. Compatible versions are:'
@@ -287,7 +285,7 @@ def read_raw(filename, text_func=None, progress_func=None, logger=Logger()) -> P
     # declare contents:
     # section_idx, objects_list, expected_data_length, ObjectT, lines per objects
 
-    # SEQUENCE ORDER:
+    # SEQUENCE ORDER:logger.add_warning("RAW header contains 3 elements instead of the expected 6")
     # 0:  Case Identification Data
     # 1:  Bus Data
     # 2:  Load Data

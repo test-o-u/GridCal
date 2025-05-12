@@ -29,6 +29,7 @@ from GridCalEngine.DataStructures.numerical_circuit import NumericalCircuit
 
 from GridCalEngine.Compilers.circuit_to_bentayga import BENTAYGA_AVAILABLE
 from GridCalEngine.Compilers.circuit_to_newton_pa import NEWTON_PA_AVAILABLE
+from GridCalEngine.Compilers.circuit_to_gslv import GSLV_AVAILABLE
 from GridCalEngine.Compilers.circuit_to_pgm import PGM_AVAILABLE
 import GridCal.Gui.gui_functions as gf
 import GridCal.Session.synchronization_driver as syncdrv
@@ -50,6 +51,7 @@ from GridCal.Gui.SyncDialogue.sync_dialogue import SyncDialogueWindow
 from GridCal.Gui.TowerBuilder.LineBuilderDialogue import TowerBuilderGUI
 from GridCal.Gui.Diagrams.generic_graphics import IS_DARK
 from GridCal.Gui.python_console import PythonConsole
+from GridCal.Gui.toast_widget import ToastManager
 
 
 def terminate_thread(thread):
@@ -127,7 +129,7 @@ class BaseMainGui(QMainWindow):
         self.lock_ui = False
         self.ui.progress_frame.setVisible(self.lock_ui)
 
-        self.stuff_running_now = list()
+        self.stuff_running_now: List[str] = list()
 
         self.session: SimulationSession = SimulationSession(name='GUI session')
 
@@ -136,6 +138,9 @@ class BaseMainGui(QMainWindow):
         self.project_directory = os.path.expanduser("~")
 
         self.current_boundary_set: str = ""
+
+        # toast manager
+        self.toast_manager = ToastManager(parent=self, position_top=False)
 
         # threads ------------------------------------------------------------------------------------------------------
         self.painter = None
@@ -178,6 +183,8 @@ class BaseMainGui(QMainWindow):
 
         # available engines --------------------------------------------------------------------------------------------
         engine_lst = [EngineType.GridCal]
+        if GSLV_AVAILABLE:
+            engine_lst.append(EngineType.GSLV)
         if NEWTON_PA_AVAILABLE:
             engine_lst.append(EngineType.NewtonPA)
         if BENTAYGA_AVAILABLE:
@@ -777,3 +784,35 @@ class BaseMainGui(QMainWindow):
         self.console.add_var('app', self)
         self.console.add_var('circuit', self.circuit)
         self.console.add_var('user_folder', get_create_gridcal_folder)
+
+    def show_toast(self, message: str, duration: int = 2000):
+        """
+        Show generic toast
+        :param message: Message to display
+        :param duration: duration in ms
+        """
+        self.toast_manager.show_toast(message=message, duration=duration, toast_type="gridcal")
+
+    def show_error_toast(self, message: str, duration: int = 2000):
+        """
+        Show error toast
+        :param message: Message to display
+        :param duration: duration in ms
+        """
+        self.toast_manager.show_error_toast(message=message, duration=duration)
+
+    def show_warning_toast(self, message: str, duration: int = 2000):
+        """
+        Show warning toast
+        :param message: Message to display
+        :param duration: duration in ms
+        """
+        self.toast_manager.show_warning_toast(message=message, duration=duration)
+
+    def show_info_toast(self, message: str, duration: int = 2000):
+        """
+        Show info toast
+        :param message: Message to display
+        :param duration: duration in ms
+        """
+        self.toast_manager.show_info_toast(message=message, duration=duration)
