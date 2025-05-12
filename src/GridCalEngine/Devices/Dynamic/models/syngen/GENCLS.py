@@ -24,9 +24,9 @@ class GENCLS(DynamicModelTemplate):
                                info='interface bus id',
                                id=[])
         
-        self.exciter_idx = IdxDynParam(symbol='Exciter', 
-                               info='exciter id per bus',
-                               id=[])
+        # self.exciter_idx = IdxDynParam(symbol='Exciter', 
+        #                        info='exciter id per bus',
+        #                        id=[])
         
         self.governor_idx = IdxDynParam(symbol='Governor',
                                info='governor id per bus',
@@ -57,9 +57,9 @@ class GENCLS(DynamicModelTemplate):
         #                       info='uncontrolled mechanical torque',
         #                       value=[])
         
-        # self.vf = NumDynParam(symbol='vf',
-        #                       info='uncontrolled exitation voltage',
-        #                       value=[]) 
+        self.vf = NumDynParam(symbol='vf',
+                              info='uncontrolled exitation voltage',
+                              value=[]) 
 
         # state variables
         self.delta = StatVar(name='delta', 
@@ -71,10 +71,10 @@ class GENCLS(DynamicModelTemplate):
                              eq='(-tm  + te  - D * (omega - 1))',
                              t_const=self.M)
         
-        self.vf = ExternState(name='vf',
-                              symbol='vf',
-                              src='vf',
-                              indexer=self.exciter_idx)
+        # self.vf = ExternState(name='vf',
+        #                       symbol='vf',
+        #                       src='vf',
+        #                       indexer=self.exciter_idx)
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',

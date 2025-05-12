@@ -6,7 +6,7 @@
 import numpy as np
 
 # Path to the system and event JSON
-SYSTEM_JSON_PATH = "GridCalEngine/Devices/Dynamic/io/data/test.json"
+SYSTEM_JSON_PATH = "GridCalEngine/Devices/Dynamic/io/data/test_governor.json"
 EVENTS_JSON_PATH = "GridCalEngine/Devices/Dynamic/io/event/events.json"
 
 # Models present in the Dynamic Simulation Engine
@@ -15,17 +15,14 @@ MODELS = list([
     ('line', ['ACLine']), 
     ('load', ['ExpLoad']),
     ('syngen', ['GENCLS']),
-    ('exciter', ['Exciter']),
+    # ('exciter', ['Exciter']),
     ('governor', ['Governor'])
 ])
 
 # Initial DAE state vectors
 X0 = {
     'delta': 0.0,
-    'omega': 1.0,
-    'vf': 0.9
-    # 'delta': 1.888852339,
-    # 'omega': 2
+    'omega': 1.0
 }
 
 Y0 = {
@@ -42,28 +39,15 @@ Y0 = {
     'te': 0.1,  # electromagnetic torque (pu)
     'Pe': 0.2,  # real power (pu)
     'Qe': 0.2,  # reactive power (pu)
-    'tm': 0.1  # mechanical torque (pu)
-    # 'a1': 1,
-    # 'a2': 0.9149,
-    # 'v1': 2,
-    # 'v2': 1.95877996,
-    # 'psid': 1.63030343,
-    # 'psiq':0.77634888,
-    # 'i_d': 4.16194885,
-    # 'i_q': 1.91335163,
-    # 'vd': 1.77634888,
-    # 'vq': 1.63030343,
-    # 'te': 4.03046412,
-    # 'Pe': 4.03046412,
-    # 'Qe': 2.28390768
+    'tm': 0.2  # mechanical torque (pu)
 }
 
 DAE_X0 = np.array(list(X0.values()))
 DAE_Y0 = np.array(list(Y0.values()))
 
 # Simulation parameters
-SIMULATION_TIME = 10 # Total simulation time (seconds)
-TIME_STEP = 0.01        # Time step for simulation (seconds)
+SIMULATION_TIME = 2 # Total simulation time (seconds)
+TIME_STEP = 0.1        # Time step for simulation (seconds)
 TOL = 1e-5             # Tolerance for numerical methods
 MAX_ITER = 1000           # Maximum iterations for numerical methods
 
@@ -72,4 +56,6 @@ STEADYSTATE_METHOD="steadystate"
 INTEGRATION_METHOD="trapezoid"
 
 # Performance boolean
-PERFORMANCE = False  # Set to True for performance testing, False for debugging
+PERFORMANCE = False 
+STEP_PLOT = False  
+TDS_PLOT = False   

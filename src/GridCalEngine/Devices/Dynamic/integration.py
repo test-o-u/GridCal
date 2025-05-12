@@ -7,9 +7,9 @@ import pdb
 import sys
 import numpy as np
 import scipy as sp
+import matplotlib.pyplot as plt
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
-import matplotlib.pyplot as plt
 
 class Integration:
     """
@@ -32,30 +32,31 @@ class Integration:
     
 
     @staticmethod
-    def step(dae, dt, method, tol, max_iter):
+    def step(dae, dt, method, tol, max_iter, step_plot):
         """
         Perform an implicit integration step with Newton-Raphson and real-time plotting.
         """
         x0, y0, f0 = dae.x.copy(), dae.y.copy(), dae.f.copy()
 
         # Setup plotting
-        residual_history = []
-        dx_history = []
-        dy_history = []
+        if step_plot:
+            residual_history = []
+            dx_history = []
+            dy_history = []
 
-        fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-        res_line, = ax[0].semilogy([], [], label='‖residual‖∞')
-        dx_line, = ax[1].plot([], [], label='‖Δx‖∞')
-        dy_line, = ax[1].plot([], [], label='‖Δy‖∞')
+            fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+            res_line, = ax[0].semilogy([], [], label='‖residual‖∞')
+            dx_line, = ax[1].plot([], [], label='‖Δx‖∞')
+            dy_line, = ax[1].plot([], [], label='‖Δy‖∞')
 
-        ax[0].set_title("Residual")
-        ax[1].set_title("Increments")
-        for a in ax:
-            a.grid(True)
-            a.legend()
+            ax[0].set_title("Residual")
+            ax[1].set_title("Increments")
+            for a in ax:
+                a.grid(True)
+                a.legend()
 
-        plt.ion()
-        plt.show()
+            plt.ion()
+            plt.show()
 
         try:
             for iteration in range(max_iter):
@@ -75,11 +76,11 @@ class Integration:
                 try:
                     inc = spsolve(jac, -residual)
                 except Exception as e:
-                    print(f"Linear solver failed at iteration {iteration}: {e}")
+                    print(f"Solver failed at iteration {iteration}: {e}")
                     break
 
-                dae.x += 0.5 * inc[:dae.nx]
-                dae.y += 0.5 * inc[dae.nx:]
+                dae.x += 0.1 * inc[:dae.nx]
+                dae.y += 0.1 * inc[dae.nx:]
 
                 dae.update_fg()
 
@@ -87,26 +88,28 @@ class Integration:
                 dx_norm = np.linalg.norm(inc[:dae.nx], np.inf)
                 dy_norm = np.linalg.norm(inc[dae.nx:], np.inf)
 
-                # Save for plotting
-                residual_history.append(residual_error)
-                dx_history.append(dx_norm)
-                dy_history.append(dy_norm)
+                if step_plot:
+                    # Save for plotting
+                    residual_history.append(residual_error)
+                    dx_history.append(dx_norm)
+                    dy_history.append(dy_norm)
 
-                # Update plot
-                x_vals = list(range(len(residual_history)))
-                res_line.set_data(x_vals, residual_history)
-                dx_line.set_data(x_vals, dx_history)
-                dy_line.set_data(x_vals, dy_history)
+                    # Update plot
+                    x_vals = list(range(len(residual_history)))
+                    res_line.set_data(x_vals, residual_history)
+                    dx_line.set_data(x_vals, dx_history)
+                    dy_line.set_data(x_vals, dy_history)
 
-                for a in ax:
-                    a.relim()
-                    a.autoscale_view()
+                    for a in ax:
+                        a.relim()
+                        a.autoscale_view()
 
                 plt.pause(0.01)
 
                 if residual_error < tol:
-                    plt.ioff()
-                    plt.close()
+                    if step_plot:
+                        plt.ioff()
+                        plt.close()
                     return True
 
         except KeyboardInterrupt:

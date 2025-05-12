@@ -3,6 +3,9 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import pdb
+import matplotlib.pyplot as plt
+
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.dyn_param import NumDynParam
 from GridCalEngine.Devices.Dynamic.integration import method_map
@@ -43,6 +46,8 @@ class TDS():
         self.method_tds = config.INTEGRATION_METHOD
         self.method_ss = config.STEADYSTATE_METHOD
 
+        self.tds_plot = config.TDS_PLOT
+
         # Initialize results list
         self.results = []
 
@@ -61,28 +66,93 @@ class TDS():
         # Run simulation
         #self.run_steadystate()
         self.run_tds()
-        self.get_results()
+        # self.get_results()
 
     def run_tds(self):
         """
         Performs the numerical integration using the chosen method.
         """
-        while self.t < self.t_final:
-            converged = self.integrator.step(
-                dae=self.system.dae,
-                dt=self.dt,
-                method=self.integrator,
-                tol=config.TOL,
-                max_iter=config.MAX_ITER
-            )
+        if self.tds_plot:
+            fig, axs = plt.subplots(3, 1, figsize=(8, 6), sharex=True)
 
-            if not converged:
-                raise RuntimeError(f"Integration step did not converge at time {self.t}.")
+            # Setup x[1] plot
+            line_x, = axs[0].plot([], [], label='x[1]')
+            axs[0].set_ylabel(r"$\omega$")
+            axs[0].legend()
+            axs[0].grid(True)
+            axs[0].set_ylim(0.9, 1.1)  # fixed y-axis range
+            axs[0].set_xlim(0, self.t_final) 
 
-            self.t += self.dt
-            self.results.append((self.t, self.system.dae.x.copy(), self.system.dae.y.copy()))
+            # Setup y[0] plot
+            line_y, = axs[1].plot([], [], label='y[0]', color='orange')
+            axs[1].set_ylabel(r'$P_{Gen}$')	
+            axs[1].legend()
+            axs[1].grid(True)
+            axs[1].set_ylim(-0.1, 2.0)
+            axs[1].set_xlim(0, self.t_final) 
 
-            self.get_events()
+            # Setup y[2] plot
+            line_param, = axs[2].plot([], [], label='y[2]', color='green')
+            axs[2].set_ylabel(r'$P_{Load}$')
+            axs[2].set_xlabel(r'Time [s]')
+            axs[2].legend()
+            axs[2].grid(True)
+            axs[2].set_ylim(-0.1, 2.0)
+            axs[2].set_xlim(0, self.t_final)  
+
+            plt.ion()
+            plt.tight_layout()
+            plt.show()
+
+            time_data, x_data = [], []
+            y_data, param_data = [], []
+
+        try:
+            while self.t < self.t_final:
+                converged = self.integrator.step(
+                    dae=self.system.dae,
+                    dt=self.dt,
+                    method=self.integrator,
+                    tol=config.TOL,
+                    max_iter=config.MAX_ITER,
+                    step_plot=config.STEP_PLOT
+                )
+
+                if not converged:
+                    if self.tds_plot:
+                        plt.ioff()
+                        plt.show()
+                    raise RuntimeError(f"Integration step did not converge at time {self.t}.")
+
+                if self.tds_plot:
+                    time_data.append(self.t)
+                    x_data.append(self.system.dae.x[1])
+                    y_data.append(self.system.dae.y[11])
+                    param_data.append(self.system.models['ExpLoad'].Pl0.value[0])
+
+                    # Update plots
+                    line_x.set_data(time_data, x_data)
+                    line_y.set_data(time_data, y_data)
+                    line_param.set_data(time_data, param_data)
+
+                    plt.pause(0.01)
+
+                self.t += self.dt
+                self.results.append((self.t, self.system.dae.x.copy(), self.system.dae.y.copy()))
+                
+                print(f"=====Time step: {self.t}==========\n")
+                print(f"Pe: {self.system.dae.y.copy()[11]}\n")
+                print(f"te: {self.system.dae.y.copy()[10]}\n")
+                print(f"tm: {self.system.dae.y.copy()[13]}\n")
+                print(f"==================================\n")
+
+                self.get_events()
+
+        finally:
+            if self.tds_plot:
+                plt.ioff()
+                plt.show()
+
 
     def run_steadystate(self):
         """

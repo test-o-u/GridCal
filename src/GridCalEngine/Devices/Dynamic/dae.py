@@ -308,12 +308,12 @@ class DAE:
         # Initialize pairs list to store global indices and values
         pairs = []
         for i in range(device.n):
-
+            
             for val, var_name in zip(local_values[i], variables_names_for_ordering):
-                address = self.addresses_list[device.index][self.variables_list[device.index].index(var_name)][i]
+                address = self.addresses_list[device.index][self.variables_list[device.index].index(var_name)][i] 
                 outputs_order_list[i].append(address)
                 pairs.append((address, val))
-                    
+     
         return pairs
 
     def assign_global_jac_positions(self, device, local_jacobian, positions, outputs_order_triplets, jac_type):
@@ -506,7 +506,7 @@ class DAE:
 
         for i in range(device.n):
 
-            for (func_index, var_index), (address_function, address_variable) in zip(positions, outputs_order_triplets[i]):
+            for (func_index, var_index), (address_function, address_variable) in zip(positions, outputs_order_triplets[i]): #TODO
                 val = local_jacobian[i][func_index][var_index]
                 address_func = address_function
                 address_var = address_variable

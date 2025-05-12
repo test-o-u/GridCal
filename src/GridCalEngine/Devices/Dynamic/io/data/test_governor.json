@@ -1,0 +1,55 @@
+{
+  "Bus": [
+    {
+      "bus_idx": 0,
+      "name": "Bus 1"
+    },
+    {
+      "bus_idx": 1,
+      "name": "Bus 2"
+    }
+  ],
+  "ACLine": [
+    {
+      "bus1_idx": 0,
+      "bus2_idx" : 1,
+      "name": "ACLine 1",
+      "g": 0.09,
+      "b": -20.99,
+      "bsh": -0.000001
+    }
+  ],
+  "GENCLS": [
+    {
+      "bus_idx": 0,
+      "exciter_idx": 0,
+      "governor_idx": 0,
+      "name": "GENCLS 1",
+      "fn": 50.0,
+      "D": 10,
+      "M": 2.0,
+      "ra": 0.003,
+      "xd": 0.3,
+      "vf": 1.0
+    }
+  ],
+  "ExpLoad": [
+    {
+      "bus_idx": 1,
+      "name": "Load 1",
+      "coeff_alfa": 0.0,
+      "coeff_beta": 0.0,
+      "Pl0": 0.099,
+      "Ql0": 0.198
+    }
+  ],
+  "Governor": [
+    {
+      "bus_idx": 0,
+      "device_idx": 0,
+      "name": "Governor 1",
+      "Kp": 4.0,
+      "omega_ref": 1.0
+    }
+  ]
+}
