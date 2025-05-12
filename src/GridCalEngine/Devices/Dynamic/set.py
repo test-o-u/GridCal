@@ -163,6 +163,12 @@ class SET:
 
             model.f_jac_args = generated_code.f_jac_args
             model.g_jac_args = generated_code.g_jac_args
+            model.jacobian_info = generated_code.jacobian_info
+            self.dae.ndfx += len(model.jacobian_info['dfx'])
+            self.dae.ndfy += len(model.jacobian_info['dfy'])
+            self.dae.ndgx += len(model.jacobian_info['dgx'])
+            self.dae.ndgy += len(model.jacobian_info['dgy'])
+
 
             for device in device_list:
                 # Increment the count of devices for this model

@@ -31,28 +31,28 @@ class SymProcess:
         self.model = model
 
         # Symbolic Parameters
-        self.sym_num_params = []
-        self.sym_idx_params = []
+        self.sym_num_params = list()
+        self.sym_idx_params = list()
 
         # Symbolic Variables
-        self.sym_state = []
-        self.sym_algeb = []
+        self.sym_state = list()
+        self.sym_algeb = list()
 
         # Symbolic Equations
-        self.f_args = []
-        self.g_args = []
-        self.f_list = []
-        self.g_list = []
+        self.f_args = list()
+        self.g_args = list()
+        self.f_list = list()
+        self.g_list = list()
         self.f_matrix = ()
         self.g_matrix = ()
         self.lambda_equations = {}
         self.variables_names_for_ordering = {}
 
         # Jacobians
-        self.f_jacobian_args = []
-        self.g_jacobian_args = []
-        self.jacob_states = []
-        self.jacob_algebs = []
+        self.f_jacobian_args = list()
+        self.g_jacobian_args = list()
+        self.jacob_states = list()
+        self.jacob_algebs = list()
         self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
         self.jacobian_store_equations = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
 

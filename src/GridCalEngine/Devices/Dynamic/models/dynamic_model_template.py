@@ -44,23 +44,24 @@ class DynamicModelTemplate(EditableDevice):
 
         # Symbolic processing engine utils
         self.sym = SymProcess(self)
-        self.stats = []
-        self.algebs = []
+        self.stats = list()
+        self.algebs = list()
 
         # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = {}
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
-        self.variables_list = []  # list of all the variables (including external)
-        self.state_vars_list = []  # list of all the state variables (including external)
-        self.algeb_vars_list = []  # list of all the algebraic variables (including external)
+        self.variables_list = list()  # list of all the variables (including external)
+        self.state_vars_list = list()  # list of all the state variables (including external)
+        self.algeb_vars_list = list()  # list of all the algebraic variables (including external)
 
         # Lists to store function arguments
         self.f_args = list()
-        self.g_arguments = list()
+        self.g_args = list()
 
         self.f_jac_arguments = list()
         self.g_jac_arguments = list()
+        self.jacobian_info = {}
 
         # Lists to store input values
         self.g_input_values = list()
