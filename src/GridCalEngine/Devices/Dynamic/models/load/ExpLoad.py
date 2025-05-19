@@ -54,16 +54,16 @@ class ExpLoad(DynamicModelTemplate):
         # TODO:
         # - check if naming make sense 
         # - indexing is missing 
-        self.a = ExternAlgeb(name='a',
-                             symbol = 'a',
-                             src='a',
+        self.p = ExternAlgeb(name='p',
+                             symbol = 'p',
+                             src='p',
                              indexer=self.bus, 
                              init_eq='', 
-                             eq='Pl0 * v ** coeff_alfa')  
+                             eq='Pl0 * q ** coeff_alfa')
         
-        self.v = ExternAlgeb(name='v',
-                             symbol = 'v',
-                             src='v',
+        self.q = ExternAlgeb(name='q',
+                             symbol = 'q',
+                             src='q',
                              indexer=self.bus,
                              init_eq='',
-                             eq='Ql0 * v ** coeff_beta')
+                             eq='Ql0 * q ** coeff_beta')

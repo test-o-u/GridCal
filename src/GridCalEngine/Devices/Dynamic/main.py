@@ -27,7 +27,7 @@ def main():
     """
     Main function to initialize and run the system simulation.
 
-    This function sets up logging, starts the dynamic simulation, and
+    This function sets up logging, starts the dynamic simulation, and nb
     logs the outcome. It handles and logs any exceptions raised during execution.
     :return:
     """

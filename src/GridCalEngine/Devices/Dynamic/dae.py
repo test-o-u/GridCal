@@ -172,10 +172,16 @@ class DAE:
                 device.g_inputs_order = np.zeros((device.n, len(device.g_args)), dtype = object)
 
                 # Initialize lists to store the addresses of the variables in the order of the input of the functions.
-                device.f_jac_inputs_order = [[] for i in range(device.n)]
-                device.g_jac_inputs_order = [[] for i in range(device.n)]
+                device.f_jac_inputs_order = np.zeros((device.n, len(device.f_jac_args)), dtype = object)
+                device.g_jac_inputs_order = np.zeros((device.n, len(device.g_jac_args)), dtype = object)
 
                 # Store input values in device
+
+                device.f_input_values = np.zeros((device.n, len(device.f_args)), dtype=object)
+                device.g_input_values = np.zeros((device.n, len(device.g_args)), dtype=object)
+                device.f_jac_input_values = np.zeros((device.n, len(device.f_jac_args)), dtype=object)
+                device.g_jac_input_values = np.zeros((device.n, len(device.g_jac_args)), dtype=object)
+
                 self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
@@ -185,8 +191,8 @@ class DAE:
                 local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions()
 
                 # Initialize lists to store addresses of the variables in the order og the output of the functions.
-                device.f_output_order = [[] for i in range(device.n)]
-                device.g_output_order = [[] for i in range(device.n)]
+                device.f_output_order = np.zeros_like(local_f_values, dtype = object)
+                device.g_output_order = np.zeros_like(local_g_values, dtype = object)
 
 
                 eq_type = 'f'
@@ -203,19 +209,19 @@ class DAE:
 
                 ### Jacobian update
                 # get local jacobians info and values
-                f_jacobians, g_jacobians, jacobian_info, jacobian_equations = device.calc_local_jacs()
+                jacobian, jacobian_info, jacobian_equations = device.calc_local_jacs()
 
                 # Initialize lists to store addresses of the variables in the order of the output of the functions.
-                device.dfx_jac_output_order = [[] for i in range(device.n)]
-                device.dfy_jac_output_order = [[] for i in range(device.n)]
-                device.dgx_jac_output_order = [[] for i in range(device.n)]
-                device.dgy_jac_output_order = [[] for i in range(device.n)]
+                device.dfx_jac_output_order = np.zeros((device.n, len(jacobian_info['dfx'])), dtype = object)
+                device.dfy_jac_output_order = np.zeros((device.n, len(jacobian_info['dfy'])), dtype = object)
+                device.dgx_jac_output_order = np.zeros((device.n, len(jacobian_info['dgx'])), dtype = object)
+                device.dgy_jac_output_order = np.zeros((device.n, len(jacobian_info['dgy'])), dtype = object)
 
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
                 equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, equations,
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dfx_jac_output_order)
                 for row, col, val, equ in triplets:
                     self.add_to_jacobian_init(self._dfx_jac_positions, self._dfx_jac_values, self._dfx_jac_equ,
@@ -225,7 +231,7 @@ class DAE:
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
                 equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, f_jacobians, positions, equations,
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dfy_jac_output_order)
                 for row, col, val, equ in triplets:
                     self.add_to_jacobian_init(self._dfy_jac_positions, self._dfy_jac_values, self._dfy_jac_equ,
@@ -235,7 +241,7 @@ class DAE:
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
                 equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, equations,
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dgx_jac_output_order)
                 for row, col, val, equ in triplets:
                     self.add_to_jacobian_init(self._dgx_jac_positions, self._dgx_jac_values, self._dgx_jac_equ,
@@ -245,7 +251,7 @@ class DAE:
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
                 equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, g_jacobians, positions, equations,
+                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dgy_jac_output_order)
                 for row, col, val, equ in triplets:
                     self.add_to_jacobian_init(self._dgy_jac_positions, self._dgy_jac_values, self._dgy_jac_equ,
@@ -259,7 +265,6 @@ class DAE:
         """
         # Initialize input values lists for f and g
         values = self.xy
-
         self.build_input_values(values, device, device.f_args, device.f_input_values, device.f_inputs_order)
         self.build_input_values(values, device, device.g_args, device.g_input_values, device.g_inputs_order)
         self.build_input_values(values, device, device.f_jac_args, device.f_jac_input_values, device.f_jac_inputs_order)
@@ -276,18 +281,19 @@ class DAE:
         :return:
         """
         # Initialize input values lists for f and g
+
         for j, arg in enumerate(arguments_list):
             for i in range(device.n):
                 if arg in device.variables_list:
-
                     inputs_order_list[i][j] = self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]
-                    input_values_list[i].append(
-                        values[self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]])
-                    pdb.set_trace()
+                    input_values_list[i][j] = values[self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]]
+
                 else:
                     inputs_order_list[i][j] = 'param'
                     param = getattr(device, arg)
-                    input_values_list[i].append(param.value[i])
+                    input_values_list[i][j] = param.value[i]
+
+
 
     def assign_global_f_g_positions(self, device, local_values, variables_names_for_ordering, outputs_order_list):
         """
@@ -302,10 +308,9 @@ class DAE:
         # Initialize pairs list to store global indices and values
         pairs = []
         for i in range(device.n):
-
-            for val, var_name in zip(local_values[i], variables_names_for_ordering):
+            for j, (val, var_name) in enumerate(zip(local_values[i], variables_names_for_ordering)):
                 address = self.addresses_list[device.index][self.variables_list[device.index].index(var_name)][i]
-                outputs_order_list[i].append(address)
+                outputs_order_list[i][j] = address
                 pairs.append((address, val))
 
         return pairs
@@ -319,17 +324,18 @@ class DAE:
         :param outputs_order_triplets: List to store the global output order
         :return: List of tuples containing global row, column, and value
         """
-        # Initialize triplets list to store global row, column, and value
+
         triplets = []
+
+
         for i in range(device.n):
+
             for j, (func_index, var_index) in enumerate(positions):
                 equation_str = sp.sympify(equations[j])
                 val = local_jacobian[i][func_index][var_index]
-                address_func = self.addresses_list[device.index][
-                    self.variables_list[device.index].index(device.variables_list[func_index])][i]
-                address_var = self.addresses_list[device.index][
-                    self.variables_list[device.index].index(device.variables_list[var_index])][i]
-                outputs_order_triplets[i].append((address_func, address_var))
+                address_func = self.addresses_list[device.index][self.variables_list[device.index].index(device.eqs_list[func_index])][i]
+                address_var = self.addresses_list[device.index][self.variables_list[device.index].index(device.vars_list[var_index])][i]
+                outputs_order_triplets[i][j]=(address_func, address_var)
                 triplets.append((address_func, address_var, val, equation_str))
 
         return triplets
@@ -357,16 +363,16 @@ class DAE:
         """
         in_positions = [row, col] in jac_positions.tolist()
         if in_positions:
-            arr = np.array(in_positions)
-            index = np.where(arr)[0]
-            jac_values[(index[0])] += value
-            jac_equations[(index[0])] = jac_equations[(index[0])] + equ
+            index = jac_positions.tolist().index([row, col])
+            jac_values[index] += value
+            jac_equations[index] = jac_equations[index] + equ
         else:
             index = np.where(jac_positions == 0)[0]
             jac_positions[index[0]] = [row, col]
             jac_values[index[0]] = value
             jac_equations[index[0]] = equ
             sparsity_set[index[0]] = [row, col]  # Store pattern
+
 
 
     def finalize_jacobians_init(self):
@@ -487,16 +493,17 @@ class DAE:
 
         for device in self.system.devices.values():
 
-            device.g_input_values = [[] for i in range(device.n)]
-            device.f_input_values = [[] for i in range(device.n)]
-            device.f_jac_input_values = [[] for i in range(device.n)]
-            device.g_jac_input_values = [[] for i in range(device.n)]
-
             if device.name != 'Bus':
+
+                device.f_input_values = np.zeros((device.n, len(device.f_args)), dtype=object)
+                device.g_input_values = np.zeros((device.n, len(device.g_args)), dtype=object)
+                device.f_jac_input_values = np.zeros((device.n, len(device.f_jac_args)), dtype=object)
+                device.g_jac_input_values = np.zeros((device.n, len(device.g_jac_args)), dtype=object)
+
                 self.get_fast_input_values(device)
 
-            # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
-            if device.name != 'Bus':
+                # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
+
                 ###f and g update
                 # get local f and g info and values
                 local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions()
@@ -513,12 +520,12 @@ class DAE:
 
                 ### Jacobian update
                 # get local jacobians info and values
-                f_jacobians, g_jacobians, jacobian_info, jacobian_equations = device.calc_local_jacs()
+                jacobian, jacobian_info, jacobian_equations = device.calc_local_jacs()
 
                 # calc dfx
                 jac_type = 'dfx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions,
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions,
                                                                  device.dfx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfx_jac_positions, self._dfx_jac_values, self.sparsity_fx, row, col, val)
@@ -526,7 +533,7 @@ class DAE:
                 # calc dfy
                 jac_type = 'dfy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, f_jacobians, positions,
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions,
                                                                  device.dfy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dfy_jac_positions, self._dfy_jac_values, self.sparsity_fy, row, col, val)
@@ -534,7 +541,7 @@ class DAE:
                 # calc dgx
                 jac_type = 'dgx'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions,
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions,
                                                                  device.dgx_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgx_jac_positions, self._dgx_jac_values, self.sparsity_gx, row, col, val)
@@ -542,7 +549,7 @@ class DAE:
                 # calc dgy
                 jac_type = 'dgy'
                 positions = jacobian_info[jac_type]
-                triplets = self.assign_fast_global_jac_positions(device, g_jacobians, positions,
+                triplets = self.assign_fast_global_jac_positions(device, jacobian, positions,
                                                                  device.dgy_jac_output_order)
                 for row, col, val in triplets:
                     self.add_to_jacobian(self._dgy_jac_positions, self._dgy_jac_values, self.sparsity_gy, row, col, val)
@@ -560,10 +567,8 @@ class DAE:
 
         self.build_fast_input_values(values, device, device.f_args, device.f_input_values, device.f_inputs_order)
         self.build_fast_input_values(values, device, device.g_args, device.g_input_values, device.g_inputs_order)
-        self.build_fast_input_values(values, device, device.f_jac_args, device.f_jac_input_values,
-                                     device.f_jac_inputs_order)
-        self.build_fast_input_values(values, device, device.g_jac_args, device.g_jac_input_values,
-                                     device.g_jac_inputs_order)
+        self.build_fast_input_values(values, device, device.f_jac_args, device.f_jac_input_values, device.f_jac_inputs_order)
+        self.build_fast_input_values(values, device, device.g_jac_args, device.g_jac_input_values, device.g_jac_inputs_order)
 
     def build_fast_input_values(self, values, device, arguments_list, input_values_list, inputs_order_list):
         """
@@ -578,10 +583,10 @@ class DAE:
         for j, arg in enumerate(arguments_list):
             for i in range(device.n):
                 if inputs_order_list[i][j] != 'param':
-                    input_values_list[i].append(values[inputs_order_list[i][j]])
+                    input_values_list[i][j] = values[inputs_order_list[i][j]]
                 else:
                     param = getattr(device, arg)
-                    input_values_list[i].append(param.value[i])
+                    input_values_list[i][j] = param.value[i]
 
     def assign_fast_global_f_g_positions(self, device, local_values, outputs_order_list):
         """
@@ -636,9 +641,8 @@ class DAE:
         """
         in_positions = [row, col] in jac_positions.tolist()
         if in_positions:
-            arr = np.array(in_positions)
-            index = np.where(arr)[0]
-            jac_values[(index[0])] += value
+            index = jac_positions.tolist().index([row, col])
+            jac_values[index] += value
         else:
             index = np.where(jac_positions == 0)[0]
             jac_positions[index[0]] = [row, col]

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-from typing import Union
+from typing import Union, List
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
@@ -24,6 +24,14 @@ class GENCLS(DynamicModelTemplate):
         """
         
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynSynchronousModel)
+
+        # to fill all the params and variables above from json file
+        self.idx_dyn_param: List[IdxDynParam] = list()
+        self.num_dyn_param: List[NumDynParam] = list()
+        self.stat_var: List[StatVar] = list()
+        self.algeb_var: List[AlgebVar] = list()
+        self.ext_state_var: List[ExternState] = list()
+        self.ext_algeb_var: List[ExternAlgeb] = list()
 
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
@@ -67,20 +75,20 @@ class GENCLS(DynamicModelTemplate):
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
                              init_eq='omega_0', 
-                             eq='(-tm / M + te / M - D / M * (omega - 1))')
+                             eq='(-tm / M + t_e / M - D / M * (omega - 1))')
 
         # algebraic variables
         self.psid = AlgebVar(name='psid',
                              symbol='psid',
                              init_eq='psid0',
                             #  eq='(ra * i_q + vq) - psid')
-                             eq='(-ra * i_q + vq) - psid')
+                             eq='(-ra * i_q + v_q) - psid')
         
         self.psiq = AlgebVar(name='psiq',
                              symbol='psiq',
                              init_eq='psiq0',
-                            #  eq='(ra * i_d + vd) - psiq')
-                             eq='(-ra * i_d + vd) - psiq')
+                            #  eq='(ra * i_d + v_d) - psiq')
+                             eq='(-ra * i_d + v_d) - psiq')
         
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
@@ -92,44 +100,44 @@ class GENCLS(DynamicModelTemplate):
                            init_eq='i_q0', 
                            eq='psiq + xd * i_q') # vd
                                                      
-        self.vd = AlgebVar(name='vd', 
-                           symbol='vd', 
-                           init_eq='vd0', 
-                           eq='v * sin(delta - a) - vd')  
+        self.v_d = AlgebVar(name='v_d',
+                           symbol='v_d',
+                           init_eq='v_d0',
+                           eq='q * sin(delta - p) - v_d')
                                     
-        self.vq = AlgebVar(name='vq', 
-                           symbol='vq', 
-                           init_eq='vq0', 
-                           eq='v * cos(delta - a) - vq')   
+        self.v_q = AlgebVar(name='v_q',
+                           symbol='v_q',
+                           init_eq='v_q0',
+                           eq='q * cos(delta - p) - v_q')
                                  
-        self.te = AlgebVar(name='te', 
-                           symbol='te', 
-                           init_eq='tm', 
-                           eq='(psid * i_q - psiq * i_d) - te')   
+        self.t_e = AlgebVar(name='t_e',
+                           symbol='t_e',
+                           init_eq='tm',
+                           eq='(psid * i_q - psiq * i_d) - t_e')
                      
-        self.Pe = AlgebVar(name='Pe',
-                           symbol='Pe', 
-                           init_eq='(vd0 * i_d0 + vq0 * i_q0)', 
-                           eq='(vd * i_d + vq * i_q) - Pe')       
+        self.P_e = AlgebVar(name='P_e',
+                           symbol='P_e',
+                           init_eq='(v_d0 * i_d0 + v_q0 * i_q0)',
+                           eq='(v_d * i_d + v_q * i_q) - P_e')
                                 
-        self.Qe = AlgebVar(name='Qe', 
-                           symbol='Qe', 
-                           init_eq='(vq0 * i_d0 - vd0 * i_q0)', 
-                           eq='(vq * i_d - vd * i_q) - Qe')
+        self.Q_e = AlgebVar(name='Q_e',
+                           symbol='Q_e',
+                           init_eq='(v_q0 * i_d0 - v_d0 * i_q0)',
+                           eq='(v_q * i_d - v_d * i_q) - Q_e')
 
-        self.a = ExternAlgeb(name='a',
-                             symbol='a',
-                             src='a',
+        self.p = ExternAlgeb(name='p',
+                             symbol='p',
+                             src='p',
                              indexer=self.bus,
                              init_eq='',
-                             eq='(vd * i_d + vq * i_q)')
+                             eq='(v_d * i_d + v_q * i_q)')
 
-        self.v = ExternAlgeb(name='v',
-                             symbol='v',
-                             src='v',
+        self.q = ExternAlgeb(name='q',
+                             symbol='q',
+                             src='q',
                              indexer=self.bus,
                              init_eq='',
-                             eq='(vq * i_d - vd * i_q)')
+                             eq='(v_q * i_d - v_d * i_q)')
 
 
         # network algebraic variables 

@@ -868,9 +868,14 @@ class DeviceType(Enum):
     BusOrBranch = "BusOrBranch"
 
     DynSynchronousModel = "DynSynchronousModel"
+
     DynBusModel = "DynBusModel"
+
     DynExpLoadModel = "DynExpLoadModel"
+
     DynACLineModel = "DynACLineModel"
+
+    UnlockModel = "UnlockModel"
 
     def __str__(self) -> str:
         return str(self.value)

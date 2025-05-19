@@ -78,8 +78,8 @@ class SymProcess:
         :return:
         """
         # Define symbolic variables
-        self.sym_state = [sp.Symbol(v.symbol) for v in self.model.stats]
-        self.sym_algeb = [sp.Symbol(v.symbol) for v in self.model.algebs]
+        self.sym_state_vars = [sp.Symbol(v.symbol) for v in self.model.state_vars]
+        self.sym_algeb_vars = [sp.Symbol(v.symbol) for v in self.model.algeb_vars]
 
     def generate_equations(self):
         """
@@ -92,7 +92,7 @@ class SymProcess:
             - Creates lambdified numerical functions for f and g
         :return:
         """
-        variables_f_g = [self.model.stats, self.model.algebs]
+        variables_f_g = [self.model.state_eqs, self.model.algeb_eqs]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
 
@@ -137,8 +137,8 @@ class SymProcess:
         Compute and lambdify Jacobian matrices for f and g equations.
         :return:
         """
-        sym_variables = self.sym_state + self.sym_algeb
-        all_variables = self.model.stats + self.model.algebs
+        sym_variables = self.sym_state_vars + self.sym_algeb_vars
+        all_variables = self.model.state_vars + self.model.algeb_vars
 
         # Compute Jacobian matrices
         f_jacobian_symbolic = self.f_matrix.jacobian(sym_variables) if len(self.f_matrix) > 0 else sp.Matrix([])
@@ -161,7 +161,7 @@ class SymProcess:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
                     self.jacobian_store_equations[eq_var_code].append(str(e_symbolic))
                 else:
-                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_vars_list), v_idx))
+                    self.jacobian_store_info[eq_var_code].append((e_idx + len(self.model.state_eqs), v_idx))
                     self.jacobian_store_equations[eq_var_code].append(str(e_symbolic))
 
         # store arguments for f_jacobian
