@@ -5,7 +5,7 @@
 from typing import Union, List
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, DynVar
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class GENCLS(DynamicModelTemplate):
@@ -33,10 +33,17 @@ class GENCLS(DynamicModelTemplate):
         self.ext_state_var: List[ExternState] = list()
         self.ext_algeb_var: List[ExternAlgeb] = list()
 
+        self.comp_name = list()
+        self.comp_code = list()
+
+        # connexion status
+        self.u = list()
+
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
                                info='interface bus id',
-                               id=[])
+                               id=[],
+                               connection_point = 'GENCLS')
         
         self.fn = NumDynParam(symbol='fn',
                               info='rated frequency',

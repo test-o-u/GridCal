@@ -5,6 +5,7 @@
 from __future__ import annotations
 import os
 import json
+import pdb
 
 from collections.abc import Callable
 from datetime import datetime
@@ -351,9 +352,11 @@ class FileOpen:
                         data = json.load(f)
 
                         if isinstance(data, dict):
+
                             if 'Red' in data.keys():
                                 self.circuit = load_iPA(self.file_name)
                             elif sum([x in data.keys() for x in ['type', 'version']]) == 2:
+
                                 version = int(float(data['version']))
 
                                 if data['type'] == 'Grid Exchange Json File' and 'profiles' in data.keys():
@@ -390,7 +393,6 @@ class FileOpen:
                         logger=self.logger,
                         adjust_taps_to_discrete_positions=self.options.adjust_taps_to_discrete_positions
                     )
-
                 elif file_extension.lower() == '.rawx':
                     pss_grid = parse_rawx(self.file_name, logger=self.logger)
                     self.circuit = psse_to_gridcal(

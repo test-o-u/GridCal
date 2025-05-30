@@ -21,6 +21,8 @@ class Bus(PhysicalDevice):
     def __init__(self, name="Bus",
                  idtag=None,
                  code='',
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
                  Vnom=10,
                  vmin=0.9,
                  vmax=1.1,
@@ -82,6 +84,12 @@ class Bus(PhysicalDevice):
                                 idtag=idtag,
                                 code=code,
                                 device_type=DeviceType.BusDevice)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model
 
         self.active = bool(active)
         self._active_prof = Profile(default_value=self.active, data_type=bool)

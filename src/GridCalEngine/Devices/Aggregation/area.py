@@ -38,7 +38,9 @@ class GenericAreaGroup(EditableDevice):
 
 class Area(GenericAreaGroup):
 
-    def __init__(self, name: str = 'Area', idtag: Union[str, None] = None, code: str = '', latitude=0.0, longitude=0.0):
+    def __init__(self, name: str = 'Area', idtag: Union[str, None] = None, code: str = '',
+                 dynamic_params: list = None, dynamic_model: str = "",
+                 latitude=0.0, longitude=0.0):
         """
         Area constructor
         :param name: name of the area
@@ -53,3 +55,9 @@ class Area(GenericAreaGroup):
                                   device_type=DeviceType.AreaDevice,
                                   latitude=latitude,
                                   longitude=longitude)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model

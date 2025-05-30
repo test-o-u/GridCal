@@ -21,7 +21,7 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str) :
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
@@ -69,24 +69,3 @@ class ExternAlgeb(ExternVar):
                            init_eq=init_eq,
                            eq=eq)
         self.var_type = 'y'
-
-class AliasAlgeb(ExternVar):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
-        self.var_type = 'y'
-
-
-class AliasState(ExternState):
-    def __init__(self, index: int, name: str, symbol: str, init_eq: str, eq: str):
-        DynVar.__init__(self,
-                        index=index,
-                        name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq)
-        self.var_type = 'x'

@@ -52,10 +52,12 @@ class DynamicModelTemplate(EditableDevice):
         # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = {}
 
+        # Lists of internal and external variables
+        self.internal_vars = list()
+        self.external_vars = list()
+
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
         self.variables_list = list()  # list of all the variables (including external)
-        self.state_vars_list = list()  # list of all the state variables (including external)
-        self.algeb_vars_list = list()  # list of all the algebraic variables (including external)
         self.state_eqs = list()
         self.state_vars = list()
         self.algeb_eqs = list()
@@ -112,31 +114,6 @@ class DynamicModelTemplate(EditableDevice):
         Also, it saves a list with all the variables of a model and creates a dictionary with an index as key and the variable name as value
         :return:
         """
-        # index = 0
-        # for key, elem in self.__dict__.items():
-        #     # assign an index to every variable in the model populating vars_index dictionary
-        #     if isinstance(elem, DynVar):
-        #         self.variables_list.append(elem.symbol)
-        #         self.vars_index[index] = elem.symbol
-        #         index += 1
-        #
-        #     if isinstance(elem, StatVar):
-        #         self.nx += 1
-        #         self.state_vars_list.append(elem.symbol)
-        #         self.stats.append(elem)
-        #
-        #     if isinstance(elem, AlgebVar):
-        #         self.ny += 1
-        #         self.algeb_vars_list.append(elem.symbol)
-        #         self.algebs.append(elem)
-        #
-        #     if isinstance(elem, ExternState):
-        #         self.state_vars_list.append(elem.symbol)
-        #         self.stats.append(elem)
-        #
-        #     if isinstance(elem, ExternAlgeb):
-        #         self.algeb_vars_list.append(elem.symbol)
-        #         self.algebs.append(elem)
 
         index = 0
         for key, elem in self.__dict__.items():
@@ -153,6 +130,7 @@ class DynamicModelTemplate(EditableDevice):
                     self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
                 self.vars_list.append(elem.symbol)
+                self.internal_vars.append(elem.symbol)
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
@@ -161,6 +139,7 @@ class DynamicModelTemplate(EditableDevice):
                     self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)
                 self.vars_list.append(elem.symbol)
+                self.internal_vars.append(elem.symbol)
 
             if isinstance(elem, ExternState):
                 if elem.eq != None:
@@ -168,6 +147,7 @@ class DynamicModelTemplate(EditableDevice):
                     self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
                 self.vars_list.append(elem.symbol)
+                self.external_vars.append(elem)
 
             if isinstance(elem, ExternAlgeb):
                 if elem.eq != None:
@@ -175,6 +155,7 @@ class DynamicModelTemplate(EditableDevice):
                     self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)
                 self.vars_list.append(elem.symbol)
+                self.external_vars.append(elem)
 
 
     def import_generated_code(self):

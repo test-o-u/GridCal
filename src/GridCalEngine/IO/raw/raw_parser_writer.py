@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import pdb
 import chardet
 import re
 import datetime
@@ -219,8 +220,10 @@ def check_end_of_impedance_table(row: List[int | float | str]) -> bool:
     else:
         return False
 
+
 def is_valid(value: float | int | str):
     return value is not None and isinstance(value, (int, float, str))
+
 
 def format_lines(data1: List[List[float | int | str]], logger: Logger) -> List[List[float | int | str]]:
     """
@@ -241,6 +244,7 @@ def format_lines(data1: List[List[float | int | str]], logger: Logger) -> List[L
         data.append(sublist)
 
     return data
+
 
 def read_raw(filename, text_func=None, progress_func=None, logger=Logger()) -> PsseCircuit:
     """

@@ -3,10 +3,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union
+from typing import Union, List
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, AliasState, DynVar
+from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb, DynVar
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
 
 class ExpLoad(DynamicModelTemplate):
@@ -25,10 +25,25 @@ class ExpLoad(DynamicModelTemplate):
     
         DynamicModelTemplate.__init__(self, name, code, idtag, device_type=DeviceType.DynExpLoadModel)
 
+        # to fill all the params and variables above from json file
+        self.idx_dyn_param: List[IdxDynParam] = list()
+        self.num_dyn_param: List[NumDynParam] = list()
+        self.stat_var: List[StatVar] = list()
+        self.algeb_var: List[AlgebVar] = list()
+        self.ext_state_var: List[ExternState] = list()
+        self.ext_algeb_var: List[ExternAlgeb] = list()
+
+        self.comp_name = list()
+        self.comp_code = list()
+
+        # connexion status
+        self.u = list()
+
         # parameters
-        self.bus = IdxDynParam(symbol='Bus', 
-                                info='Load bus',
-                                id=[])
+        self.bus = IdxDynParam(symbol='Bus',
+                               info='Load bus',
+                               id=[],
+                               connection_point = 'ExpLaod')
 
         self.coeff_alfa = NumDynParam(symbol='coeff_alfa',
                                 info='Active power load exponential coefficient.',

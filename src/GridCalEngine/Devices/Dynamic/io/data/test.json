@@ -1,18 +1,19 @@
 {
   "Bus": [
     {
-      "code": 0,
-      "name": "Bus 1"
+      "comp_code": 0,
+      "comp_name": "Bus 1"
     },
     {
-      "code": 1,
-      "name": "Bus 2"
+      "comp_code": 1,
+      "comp_name": "Bus 2"
     }
   ],
   "ACLine": [
     {
-      "code": 0,
-      "name": "ACLine 1",
+      "comp_code": 0,
+      "comp_name": "ACLine 1",
+      "u": 1,
       "g": 0.09,
       "b": -20.99,
       "bsh": -0.000001,
@@ -20,10 +21,35 @@
       "bus2" : 1
     }
   ],
+  "Slack": [
+    {
+      "comp_code": 0,
+      "comp_name": "GENCLS 1",
+      "u": 1,
+      "Sn": 1.0,
+      "Vn": 1,
+      "P_e0": 1.0,
+      "Q_e0": 1.0,
+      "pmax": 0.3,
+      "pmin": 0.0,
+      "qmax": 1.0,
+      "qmin": 0,
+      "q0": 0,
+      "vmax": 1.0,
+      "vmin": 0.0,
+      "ra": 0.5,
+      "xs": 0.5,
+      "p0": 0.5,
+      "busv0": 1,
+      "busa0": 0,
+      "bus": 0
+    }
+  ],
   "GENCLS": [
     {
-      "code": 0,
-      "name": "GENCLS 1",
+      "comp_code": 0,
+      "comp_name": "GENCLS 1",
+      "u": 1,
       "fn": 50.0,
       "D": 10,
       "M": 1.0,
@@ -36,8 +62,9 @@
   ],
   "ExpLoad": [
     {
-      "code": 0,
-      "name": "Load 1",
+      "comp_code": 0,
+      "comp_name": "Load 1",
+      "u": 1,
       "coeff_alfa": 0.0,
       "coeff_beta": 0.0,
       "Pl0": 0.099,

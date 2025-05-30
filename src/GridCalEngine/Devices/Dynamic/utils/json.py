@@ -3,7 +3,10 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import os
 import json
+import pdb
+
 
 def readjson(input_file):
     """
@@ -15,4 +18,17 @@ def readjson(input_file):
     with open(input_file, "r", encoding="utf-8") as f:
         json_in = json.load(f)
         return json_in
+
+def readjson_gridcal_int(input_dir):
+
+    parsed_jsons = list()
+    for item in os.listdir(input_dir):
+        file_path = input_dir + "/" + item
+        with open(file_path, "r", encoding="utf-8") as f:
+            json_in = json.load(f)
+        parsed_jsons.append(json_in)
+    return parsed_jsons
+
+
+
 
