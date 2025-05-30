@@ -919,6 +919,7 @@ class SubObjectType(Enum):
     Associations = "AssociationsList"
     ListOfWires = 'ListOfWires'
     AdmittanceMatrix = "Admittance Matrix"
+    DynamicModelType = "DynamicModule"
 
     def __str__(self) -> str:
         return str(self.value)

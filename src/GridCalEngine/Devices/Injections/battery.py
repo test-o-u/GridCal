@@ -85,12 +85,6 @@ class Battery(Generator):
                            srap_enabled=srap_enabled,
                            build_status=build_status)
 
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
-
         # type of this device
         self.device_type = DeviceType.BatteryDevice
 

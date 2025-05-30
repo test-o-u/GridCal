@@ -9,6 +9,8 @@ from typing import Dict, Union, List, Tuple, Any, Callable
 import pandas as pd
 import numpy as np
 from enum import EnumMeta as EnumType
+
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 import GridCalEngine.Devices as dev
@@ -411,6 +413,9 @@ def gridcal_object_to_json(elm: ALL_DEV_TYPES) -> Dict[str, str]:
             data[name] = obj.to_dict()
 
         elif prop.tpe == SubObjectType.AdmittanceMatrix:
+            data[name] = obj.to_dict()
+
+        elif prop.tpe == SubObjectType.DynamicModelType:
             data[name] = obj.to_dict()
 
         elif prop.tpe == SubObjectType.Array:
@@ -1133,6 +1138,12 @@ def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
                                     # get the line locations object and fill it with the json data
                                     adm_mat: SubObjectType.AdmittanceMatrix = elm.get_snapshot_value(prop=gc_prop)
                                     adm_mat.parse(property_value)
+
+                                elif gc_prop.tpe == SubObjectType.DynamicModelType:
+
+                                    # get the line locations object and fill it with the json data
+                                    dyn_module: DynamicModel = elm.get_snapshot_value(prop=gc_prop)
+                                    dyn_module.parse(property_value)
 
                                 elif gc_prop.tpe == SubObjectType.Associations:
 

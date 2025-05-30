@@ -80,6 +80,7 @@ dependencies = ['setuptools>=41.0.1',
                 "pymoo>=0.6",
                 "websockets",
                 "brotli",
+                "sympy",
                 "opencv-python>=4.10.0.84",
                 ]
 

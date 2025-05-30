@@ -48,11 +48,3 @@ class StaticGenerator(LoadParent):
                             opex=opex,
                             build_status=build_status,
                             device_type=DeviceType.StaticGeneratorDevice)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
-
-

@@ -41,7 +41,7 @@ class Slack(DynamicModelTemplate):
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
                                info='interface bus id',
-                               id=[],
+                               ident=[],
                                connection_point = 'Slack')
         
         self.Sn = NumDynParam(symbol='Sn',

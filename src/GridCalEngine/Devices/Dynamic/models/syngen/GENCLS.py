@@ -42,7 +42,7 @@ class GENCLS(DynamicModelTemplate):
         # parameters
         self.bus = IdxDynParam(symbol='Bus', 
                                info='interface bus id',
-                               id=[],
+                               ident=[],
                                connection_point = 'GENCLS')
         
         self.fn = NumDynParam(symbol='fn',

@@ -56,12 +56,6 @@ class Load(LoadParent):
                             build_status=build_status,
                             device_type=DeviceType.LoadDevice)
 
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
-
         self.G = float(G)
         self.B = float(B)
         self.Ir = float(Ir)

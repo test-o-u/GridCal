@@ -108,11 +108,6 @@ class Generator(GeneratorParent):
                                  build_status=build_status,
                                  device_type=DeviceType.GeneratorDevice)
 
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-        
-        # dynamic model
-        self.dynamic_model = dynamic_model
         
         # is the device active for active power dispatch?
         self.enabled_dispatch = bool(enabled_dispatch)

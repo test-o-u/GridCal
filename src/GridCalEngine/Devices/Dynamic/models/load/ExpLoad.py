@@ -42,7 +42,7 @@ class ExpLoad(DynamicModelTemplate):
         # parameters
         self.bus = IdxDynParam(symbol='Bus',
                                info='Load bus',
-                               id=[],
+                               ident=[],
                                connection_point = 'ExpLaod')
 
         self.coeff_alfa = NumDynParam(symbol='coeff_alfa',

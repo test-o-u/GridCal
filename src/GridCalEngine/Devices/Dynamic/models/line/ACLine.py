@@ -44,13 +44,15 @@ class ACLine(DynamicModelTemplate):
         # - ANDES separates ModeData from Model for efficieny reasons (I guess). What do we want to do?
         self.bus1 = IdxDynParam(symbol='Bus',
                                 info="idx of from bus",
-                                id=[],
-                                connection_point = 'ACLine_origin')
+                                ident=[],
+                                connection_point = 'ACLine_origin',
+                                name="")
         
         self.bus2 = IdxDynParam(symbol='Bus',
                                 info="idx of to bus",
-                                id=[],
-                                connection_point='ACLine_end')
+                                ident=[],
+                                connection_point='ACLine_end',
+                                name="")
 
         self.g = NumDynParam(symbol='g',
                              info='shared shunt conductance',

@@ -77,12 +77,6 @@ class ControllableShunt(ShuntParent):
                              build_status=build_status,
                              device_type=DeviceType.ControllableShuntDevice)
 
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
-
         self.is_controlled = bool(is_controlled)
         self.is_nonlinear = bool(is_nonlinear)
 

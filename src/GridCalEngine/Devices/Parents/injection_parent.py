@@ -14,6 +14,7 @@ from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Aggregation.facility import Facility
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 if TYPE_CHECKING:
     from GridCalEngine.Devices import Technology
@@ -105,6 +106,8 @@ class InjectionParent(PhysicalDevice):
 
         self._use_kw: bool = False
 
+        self._dynamic_model: DynamicModel = DynamicModel()
+
         self.register(key='bus', units='', tpe=DeviceType.BusDevice, definition='Connection bus', editable=False)
 
         self.register(key='cn', units='', tpe=DeviceType.ConnectivityNodeDevice,
@@ -136,7 +139,8 @@ class InjectionParent(PhysicalDevice):
 
         self.register(key='use_kw', units='', tpe=bool, definition='Consider the injections in kW and kVAr?')
 
-        #self._caja()
+        self.register(key='dynamic_model', units='', tpe=SubObjectType.DynamicModelType,
+                      definition='Dynamic model', display=False)
 
     @property
     def bus(self) -> Bus:
@@ -239,6 +243,10 @@ class InjectionParent(PhysicalDevice):
                                      .replace( "kVA", "MVA"))
         else:
             self._use_kw = val
+
+    @property
+    def dynamic_model(self) -> DynamicModel:
+        return self._dynamic_model
 
     def get_S(self) -> complex:
         """
