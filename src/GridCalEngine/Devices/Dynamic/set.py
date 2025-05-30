@@ -9,9 +9,13 @@ import pdb
 import time
 import logging
 import GridCalEngine.Devices.Dynamic.io.config as config
-from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam
+from GridCalEngine.Utils.MIP.SimpleMip import set_var_bounds
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
+import GridCalEngine.Devices.Dynamic.io.data
+
 
 
 class SET:
@@ -25,7 +29,7 @@ class SET:
         - Assigning addresses for variables used in simulations
     """
 
-    def __init__(self, system, models_list, data):
+    def __init__(self, system, models_list, data, gridcal_data):
         """
         SET class constructor
         initializes the SET class and prepares the system.
@@ -43,9 +47,57 @@ class SET:
 
         self.models_list = models_list
         self.data = data
-
-        self.import_models()
+        self.gridcal_data = gridcal_data
+        #self.import_models()
+        self.import_models_gridcal()
         self.system_prepare()
+
+    def import_models_gridcal(self):
+        """
+        Imports dynamic models and initializes their symbolic-numeric representations.
+        his method:
+        - Dynamically imports model classes from GridCalEngine
+        - Creates empty instances of each model and stores them in `self.models`
+        :return:
+        """
+        # iterate through parsed models input
+        for family in self.gridcal_data:
+            for model_dict in family:
+                model_instance = DynamicModel(name=model_dict["name"], code='', idtag='')
+                # model_instance.idx_dyn_param = model_dict['idx_dyn_param']
+                # model_instance.num_dyn_param = model_dict['num_dyn_param']
+                # model_instance.ext_dyn_param = model_dict['ext_dyn_param']
+                # model_instance.stat_var = model_dict['stat_var']
+                # model_instance.algeb_var = model_dict['algeb_var']
+                # model_instance.ext_state_var = model_dict['ext_state_var']
+                # model_instance.ext_algeb_var = model_dict['ext_algeb_var']
+
+                for idx_dyn_param_dict in model_dict['idx_dyn_param']:
+                    idx_dyn_param = IdxDynParam(idx_dyn_param_dict['info'], idx_dyn_param_dict['name'], idx_dyn_param_dict['symbol'], [0], "")
+                    setattr(model_instance, idx_dyn_param_dict['name'], idx_dyn_param)
+                for num_dyn_param_dict in model_dict['num_dyn_param']:
+                    num_dyn_param = NumDynParam(num_dyn_param_dict['info'], num_dyn_param_dict['name'], num_dyn_param_dict['symbol'], 0)
+                    setattr(model_instance, num_dyn_param_dict['symbol'],  num_dyn_param)
+                for ext_dyn_param_dict in model_dict['ext_dyn_param']:
+                    ext_dyn_param = ExtDynParam(ext_dyn_param_dict['info'], ext_dyn_param_dict['name'], ext_dyn_param_dict['symbol'], 0)
+                    setattr(model_instance, ext_dyn_param_dict['symbol'],  ext_dyn_param)
+                for stat_var_dict in model_dict['stat_var']:
+                    stat_var = StatVar(stat_var_dict['name'], stat_var_dict['symbol'], stat_var_dict['init_eq'], stat_var_dict['eq'])
+                    setattr(model_instance, stat_var_dict['symbol'],  stat_var)
+                for algeb_var_dict in model_dict['algeb_var']:
+                    algeb_var = AlgebVar(algeb_var_dict['name'], algeb_var_dict['symbol'], algeb_var_dict['init_eq'], algeb_var_dict['eq'])
+                    setattr(model_instance, algeb_var_dict['symbol'],  algeb_var)
+                for ext_state_var_dict in model_dict['ext_state_var']:
+                    indexer = getattr(model_instance, ext_state_var_dict['indexer'])
+                    ext_state_var = ExternState(ext_state_var_dict['name'], ext_state_var_dict['symbol'], ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'], ext_state_var_dict['eq'])
+                    setattr(model_instance, ext_state_var_dict['symbol'],  ext_state_var)
+                for ext_algeb_var_dict in model_dict['ext_algeb_var']:
+                    indexer = getattr(model_instance, ext_algeb_var_dict['indexer'])
+                    ext_algeb_var = ExternAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'], ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'], ext_algeb_var_dict['eq'])
+                    setattr(model_instance, ext_algeb_var_dict['symbol'],  ext_algeb_var)
+
+                self.models[model_instance.name] = model_instance
+
 
     def import_models(self):
         """
@@ -96,7 +148,9 @@ class SET:
 
         # Step 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
-        self.create_devices(self.data)
+        #self.create_devices(self.data)
+        self.create_devices_gridcal_int(self.gridcal_data)
+        self.devices.move_to_end('Bus', last=False)
         dev_end = time.perf_counter()
         dev_time = dev_end - dev_st  # Store device creation time
 
@@ -137,62 +191,119 @@ class SET:
                 # Import each model dynamically
                 f.write(f"from . import {model_name}\n")
 
+    def create_devices_gridcal_int(self, gridcal_data):
+        """
+        Populates vectorized model instances with device data from a parsed JSON file.
+        :param data: A dictionary with model names as keys and lists of device data as values
+        :return:
+        """
+        pflow_dev = ['Bus', 'ACLine', 'ExpLoad', 'Slack']
+        sim_dev = ['Bus', 'ACLine', 'ExpLoad', 'GENCLS']
+
+        device_index = 1
+        for family in gridcal_data:
+            for device in family:
+                if device["name"] in sim_dev:
+
+                    # Retrieve the corresponding model instance
+                    model = self.models[device["name"]]
+                    # Save system devices
+                    self.devices[device["name"]] = model
+                    # set device index
+                    if device["name"] == "Bus":
+                        model.index = 0
+                    else:
+                        model.index = device_index
+                        device_index += 1
+
+                    # Save arguments for the updating functions
+                    generated_code = model.import_generated_code()
+
+                    model.f_args = generated_code.f_args
+                    model.g_args = generated_code.g_args
+
+                    model.f_jac_args = generated_code.f_jac_args
+                    model.g_jac_args = generated_code.g_jac_args
+                    model.jacobian_info = generated_code.jacobian_info
+                    self.dae.ndfx += len(model.jacobian_info['dfx'])
+                    self.dae.ndfy += len(model.jacobian_info['dfy'])
+                    self.dae.ndgx += len(model.jacobian_info['dgx'])
+                    self.dae.ndgy += len(model.jacobian_info['dgy'])
+
+                    for attribute_type_list in device.items():
+
+                        if attribute_type_list[0] in ("idx_dyn_param", "num_dyn_param"):
+                            for attribute in attribute_type_list[1]:
+
+                                if hasattr(model, attribute["name"]):
+                                    param = getattr(model, attribute["name"])
+
+                                    # Store parameter values in the appropriate structure: either IdxDynParam or NumDynParam
+                                    if isinstance(param, IdxDynParam):
+                                        param.id = attribute["id"]
+                                        param.connection_point = attribute["connection_point"]
+                                    if isinstance(param, NumDynParam):
+                                        param.value = attribute["value"]
+                    model.n = len(device["comp_name"])
+                    # calculate nx and ny and save it in dae
+                    self.dae.nx += model.n * model.nx
+                    self.dae.ny += model.n * model.ny
+
     def create_devices(self, data):
         """
         Populates vectorized model instances with device data from a parsed JSON file.
         :param data: A dictionary with model names as keys and lists of device data as values
         :return:
         """
+        pflow_dev = ['Bus', 'ACLine', 'ExpLoad', 'Slack']
+        sim_dev = ['Bus', 'ACLine', 'ExpLoad', 'GENCLS']
 
         device_index = 0
         for model_name, device_list in data.items():
 
-            # Retrieve the corresponding model instance
-            model = self.models[model_name]
-            # Save system devices
-            self.devices[model_name] = model
-            # set device index
-            model.index = device_index
-            device_index += 1
+            if model_name in sim_dev:
 
-            # Save arguments for the updating functions
-            generated_code = model.import_generated_code()
+                # Retrieve the corresponding model instance
+                model = self.models[model_name]
+                # Save system devices
+                self.devices[model_name] = model
+                # set device index
+                model.index = device_index
+                device_index += 1
 
-            model.f_args = generated_code.f_args
-            model.g_args = generated_code.g_args
+                # Save arguments for the updating functions
+                generated_code = model.import_generated_code()
 
-            model.f_jac_args = generated_code.f_jac_args
-            model.g_jac_args = generated_code.g_jac_args
-            model.jacobian_info = generated_code.jacobian_info
-            self.dae.ndfx += len(model.jacobian_info['dfx'])
-            self.dae.ndfy += len(model.jacobian_info['dfy'])
-            self.dae.ndgx += len(model.jacobian_info['dgx'])
-            self.dae.ndgy += len(model.jacobian_info['dgy'])
+                model.f_args = generated_code.f_args
+                model.g_args = generated_code.g_args
+
+                model.f_jac_args = generated_code.f_jac_args
+                model.g_jac_args = generated_code.g_jac_args
+                model.jacobian_info = generated_code.jacobian_info
+                self.dae.ndfx += len(model.jacobian_info['dfx'])
+                self.dae.ndfy += len(model.jacobian_info['dfy'])
+                self.dae.ndgx += len(model.jacobian_info['dgx'])
+                self.dae.ndgy += len(model.jacobian_info['dgy'])
 
 
-            for device in device_list:
-                # Increment the count of devices for this model
-                model.n += 1
+                for device in device_list:
+                    # Increment the count of devices for this model
 
-                for param_name, value in device.items():
-                    if hasattr(model, param_name):
-                        param = getattr(model, param_name)
+                    for param_name, value in device.items():
+                        if hasattr(model, param_name):
+                            param = getattr(model, param_name)
 
-                        # Store parameter values in the appropriate structure: either IdxDynParam or NumDynParam
-                        if isinstance(param, IdxDynParam):
-                            param.id.append(value)
-                        elif isinstance(param, NumDynParam):
-                            param.value.append(value)
-
-            # calculate nx and ny and save it in dae
-            self.dae.nx += model.n * model.nx
-            self.dae.ny += model.n * model.ny
-
-            # Initialize the lists that will store the input values of the equations corresponding to this device
-            model.g_input_values = [[] for i in range(model.n)]
-            model.f_input_values = [[] for i in range(model.n)]
-            model.f_jac_input_values = [[] for i in range(model.n)]
-            model.g_jac_input_values = [[] for i in range(model.n)]
+                            # Store parameter values in the appropriate structure: either IdxDynParam or NumDynParam
+                            if isinstance(param, list):
+                                param.insert(model.n, value)
+                            if isinstance(param, IdxDynParam):
+                                param.id.insert(model.n, value)
+                            if isinstance(param, NumDynParam):
+                                param.value.insert(model.n,value)
+                    model.n += 1
+                # calculate nx and ny and save it in dae
+                self.dae.nx += model.n * model.nx
+                self.dae.ny += model.n * model.ny
 
     def set_addresses(self):
         """
@@ -219,6 +330,20 @@ class SET:
             # Store parameters and assign addresses
             for var_list in model_instance.__dict__.values():
 
+                # check device connection to the grid
+                if isinstance(var_list, IdxDynParam):
+                    connection_element = var_list.symbol
+                    connection_point = var_list.connection_point
+                    connection_id = connection_point + '_' + connection_element
+                    connecting_vars = [var.src for var in model_instance.external_vars if var.indexer.symbol == connection_element and var.indexer.connection_point == connection_point]
+                    if all(var in self.devices[connection_element].internal_vars for var in connecting_vars):
+                    #if connecting_vars == self.devices[connection_element].internal_vars:
+                        self.system.connections.append(connection_id)
+                    else:
+                        model_instance.u = [0] * model_instance.n
+                        self.system.connections.append(connection_id)
+                    pdb.set_trace()
+
                 # state varibles first
                 if isinstance(var_list, StatVar):
                     indices = list(range(self.global_states_id, self.global_states_id + model_instance.n))
@@ -235,7 +360,7 @@ class SET:
                     self.global_states_id += model_instance.n  # Move global index forward
 
                     # Cache reference for faster lookup
-                    states_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+                    states_ref_map[(model_instance.name, var_list.name)] = indices
 
                     # Construct DAE lhs matrix
                     if var_list.t_const != 1.0:
@@ -272,7 +397,7 @@ class SET:
                     device_addresses_list.append(indices)
 
                     # Cache reference for faster lookup
-                    algeb_ref_map[(model_instance.__class__.__name__, var_list.name)] = indices
+                    algeb_ref_map[(model_instance.name, var_list.name)] = indices
 
                 # external algebraic variables
                 if isinstance(var_list, ExternAlgeb):

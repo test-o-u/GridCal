@@ -425,7 +425,10 @@ class DAE:
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i] = sparsity_set[i]
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) !=0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
 
         if jac_type == 'dfy':
@@ -433,14 +436,20 @@ class DAE:
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][1] = sparsity_set[i][1]-self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         if jac_type == 'dgx':
             values = jac_values.tolist()
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         if jac_type == 'dgy':
             values = jac_values.tolist()
@@ -448,7 +457,10 @@ class DAE:
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
                 sparsity_set[i][1] = sparsity_set[i][1] - self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         for j, (row, col) in enumerate(sparsity_set):
             jacobian_equations[row, col] = equations[j]
@@ -687,26 +699,38 @@ class DAE:
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i] = sparsity_set[i]
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         if jac_type == 'dfy':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][1] = sparsity_set[i][1] - self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         if jac_type == 'dgx':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         if jac_type == 'dgy':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
                 sparsity_set[i][1] = sparsity_set[i][1] - self.nx
-            rows, cols = zip(*sparsity_set)
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
 
         return coo_matrix((values, (rows, cols)), shape=shape)
 

@@ -4,11 +4,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
+from collections import OrderedDict
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.dae import DAE
 from GridCalEngine.Devices.Dynamic.set import SET
 from GridCalEngine.Devices.Dynamic.tds import TDS
-from GridCalEngine.Devices.Dynamic.utils.json import readjson
+from GridCalEngine.Devices.Dynamic.utils.json import readjson, readjson_gridcal_int
 
 
 class System:
@@ -30,8 +31,10 @@ class System:
         """
 
         self.models = {}  # Dictionary mapping model names to their instances.
-        self.devices = {}  # Dictionary of instantiated device objects.
+        self.devices = OrderedDict()  # Dictionary of instantiated device objects.
+        self.connections = list() # List of well connected elements.
         self.data = readjson(config.SYSTEM_JSON_PATH)  # Parsed JSON configuration data.
+        self.gridcal_data = readjson_gridcal_int(config.SYSTEM_GRIDCAL_JSON_PATH)
         self.models_list = config.MODELS  # List of abstract model types to be processed.
 
         # Instanciate DAE object
@@ -42,7 +45,7 @@ class System:
 
         # Setup the system
         try:
-            self.setup = SET(self, self.models_list, self.data)  # System setup handler.
+            self.setup = SET(self, self.models_list, self.data, self.gridcal_data)  # System setup handler.
         except Exception as e:
             logging.info(f"An error occurred while setting-up the SET: {e}", exc_info=True)
 

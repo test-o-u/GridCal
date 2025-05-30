@@ -13,7 +13,10 @@ class Battery(Generator):
     Battery
     """
 
-    def __init__(self, name='batt', idtag=None, P=0.0, power_factor=0.8, vset=1.0,
+    def __init__(self, name='batt', idtag=None,
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
+                 P=0.0, power_factor=0.8, vset=1.0,
                  is_controlled=True, Qmin=-9999, Qmax=9999, Snom=9999, Enom=9999,
                  Pmin=-9999, Pmax=9999,
                  Cost=1.0, active=True, Sbase=100,
@@ -81,6 +84,12 @@ class Battery(Generator):
                            opex=opex,
                            srap_enabled=srap_enabled,
                            build_status=build_status)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model
 
         # type of this device
         self.device_type = DeviceType.BatteryDevice

@@ -19,22 +19,27 @@ class DynParam:
 
 
 class NumDynParam(DynParam):
-    def __init__(self, info: str, symbol: str, value: float):
+    def __init__(self, info: str, name:str, symbol: str, value: float):
 
         DynParam.__init__(self, symbol=symbol,
                           info=info)
+        self.name = name
         self.value=value
 
 
 class IdxDynParam(DynParam):
-    def __init__(self, info: str, symbol: str, id: int):
+    def __init__(self, info: str, name: str, symbol: str, id: list(), connection_point: object = str) -> None:
 
         DynParam.__init__(self, symbol=symbol,
                           info=info)
+        self.name = name
         self.id=id
+        self.connection_point = connection_point
 
-class ExtParam(NumDynParam):
-    def __init__(self, info: str, symbol: str):
+class ExtDynParam(NumDynParam):
+    def __init__(self, info: str, name: str, symbol: str, value: float):
 
-        NumDynParam.__init__(self, symbol=symbol,
-                             info=info)
+        NumDynParam.__init__(self, info=info, name = name, symbol=symbol,
+                              value = value)
+        self.name = name
+        self.value = value

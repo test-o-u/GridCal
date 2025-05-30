@@ -136,7 +136,7 @@ class InjectionParent(PhysicalDevice):
 
         self.register(key='use_kw', units='', tpe=bool, definition='Consider the injections in kW and kVAr?')
 
-        self._caja()
+        #self._caja()
 
     @property
     def bus(self) -> Bus:

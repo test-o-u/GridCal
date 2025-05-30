@@ -22,6 +22,8 @@ class Generator(GeneratorParent):
                  name='gen',
                  idtag: Union[str, None] = None,
                  code: str = '',
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
                  P: float = 0.0,
                  power_factor: float = 0.8,
                  vset: float = 1.0,
@@ -53,6 +55,8 @@ class Generator(GeneratorParent):
                  build_status: BuildStatus = BuildStatus.Commissioned):
         """
         Generator.
+        :type dynamic_params: list()
+        :type dynamic_model: str
         :param name: Name of the generator
         :param idtag: UUID code
         :param code: secondary code
@@ -104,6 +108,12 @@ class Generator(GeneratorParent):
                                  build_status=build_status,
                                  device_type=DeviceType.GeneratorDevice)
 
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+        
+        # dynamic model
+        self.dynamic_model = dynamic_model
+        
         # is the device active for active power dispatch?
         self.enabled_dispatch = bool(enabled_dispatch)
 

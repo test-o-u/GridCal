@@ -11,6 +11,8 @@ from GridCalEngine.Devices.Parents.shunt_parent import ShuntParent
 class Shunt(ShuntParent):
 
     def __init__(self, name='shunt', idtag=None, code='',
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
                  G=0.0, B=0.0, active=True,
                  mttf=0.0, mttr=0.0,
                  G0=0, B0=0,
@@ -51,3 +53,9 @@ class Shunt(ShuntParent):
                              opex=opex,
                              build_status=build_status,
                              device_type=DeviceType.ShuntDevice)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model

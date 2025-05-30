@@ -42,6 +42,8 @@ def accept_line_connection(V1: float, V2: float, branch_connection_voltage_toler
 class Line(BranchParent):
 
     def __init__(self,
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
                  bus_from: Bus = None,
                  bus_to: Bus = None,
                  cn_from: ConnectivityNode = None,
@@ -135,6 +137,12 @@ class Line(BranchParent):
                               opex=opex,
                               cost=cost,
                               device_type=DeviceType.LineDevice)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model
 
         # line length in km
         self._length = float(length)

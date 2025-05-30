@@ -10,7 +10,10 @@ from GridCalEngine.Devices.Parents.load_parent import LoadParent
 
 class StaticGenerator(LoadParent):
 
-    def __init__(self, name='StaticGen', idtag=None, code='', P=0.0, Q=0.0, active=True,
+    def __init__(self, name='StaticGen', idtag=None, code='',
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
+                 P=0.0, Q=0.0, active=True,
                  mttf=0.0, mttr=0.0, Cost=1200.0,
                  capex=0, opex=0, build_status: BuildStatus = BuildStatus.Commissioned):
         """
@@ -45,5 +48,11 @@ class StaticGenerator(LoadParent):
                             opex=opex,
                             build_status=build_status,
                             device_type=DeviceType.StaticGeneratorDevice)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model
 
 

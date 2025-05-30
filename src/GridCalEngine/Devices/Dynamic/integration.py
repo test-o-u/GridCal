@@ -93,12 +93,15 @@ class Integration:
             jac = method.calc_jac(dae)
             residual = np.vstack((dae.f.reshape(-1, 1), dae.g.reshape(-1, 1)))
 
+            pdb.set_trace()
+
+
             # Solve linear system
             inc = spsolve(jac, -residual)
 
             # Update variables
             dae.x += 0.5 * inc[:dae.nx]
-            dae.y += 0. * inc[dae.nx:]
+            dae.y += 0.5 * inc[dae.nx:]
 
             # Recompute f and g
             dae.update_fg()

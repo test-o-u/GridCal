@@ -44,7 +44,7 @@ class TDS():
         # Initialize simulatoin
         self.system.dae.initilize_fg()
         # Run simulation
-        # self.run_steadystate()
+        #self.run_steadystate()
         self.run_tds()
         self.save_simulation_data()
 

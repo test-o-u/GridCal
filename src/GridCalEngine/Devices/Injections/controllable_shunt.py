@@ -21,6 +21,8 @@ class ControllableShunt(ShuntParent):
                  name='Controllable Shunt',
                  idtag: Union[None, str] = None,
                  code: str = '',
+                 dynamic_params: list = None,
+                 dynamic_model: str = "",
                  is_nonlinear: bool = False,
                  number_of_steps: int = 1,
                  step: int = 1,
@@ -74,6 +76,12 @@ class ControllableShunt(ShuntParent):
                              opex=opex,
                              build_status=build_status,
                              device_type=DeviceType.ControllableShuntDevice)
+
+        # dynamic parameters
+        self.dynamic_params = dynamic_params
+
+        # dynamic model
+        self.dynamic_model = dynamic_model
 
         self.is_controlled = bool(is_controlled)
         self.is_nonlinear = bool(is_nonlinear)
