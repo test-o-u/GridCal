@@ -217,7 +217,7 @@ class AvailableTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
 
         # OPF results
         self.results = AvailableTransferCapacityTimeSeriesResults(
-            br_names=self.grid.get_branch_names_wo_hvdc(),
+            br_names=self.grid.get_branch_names(add_hvdc=False, add_vsc=False, add_switch=True),
             bus_names=self.grid.get_bus_names(),
             rates=self.grid.get_branch_rates_prof_wo_hvdc(),
             contingency_rates=self.grid.get_branch_contingency_rates_prof_wo_hvdc(),
@@ -275,7 +275,7 @@ class AvailableTransferCapacityTimeSeriesDriver(TimeSeriesDriverTemplate):
             nc = compile_numerical_circuit_at(circuit=self.grid, t_idx=t)
 
             linear_analysis = LinearAnalysis(
-                numerical_circuit=nc,
+                nc=nc,
                 distributed_slack=True,
                 correct_values=False,
             )

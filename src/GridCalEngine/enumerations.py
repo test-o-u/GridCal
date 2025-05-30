@@ -1113,8 +1113,10 @@ class InvestmentsEvaluationObjectives(Enum):
     """
     PowerFlow = 'PowerFlow'
     TimeSeriesPowerFlow = 'TimeSeriesPowerFlow'
-    OptimalPowerFlow = 'OptimalPowerFlow'
-    TimeSeriesOptimalPowerFlow = 'TimeSeriesOptimalPowerFlow'
+    # OptimalPowerFlow = 'OptimalPowerFlow'
+    # TimeSeriesOptimalPowerFlow = 'TimeSeriesOptimalPowerFlow'
+    GenerationAdequacy = "Adequacy"
+    SimpleDispatch = "Simple dispatch"
     FromPlugin = 'From Plugin'
 
     def __str__(self):
@@ -1385,6 +1387,10 @@ class ResultTypes(Enum):
     PTDF = 'PTDF'
     PTDFBusVoltageSensitivity = 'Bus voltage sensitivity'
     LODF = 'LODF'
+    HvdcPTDF = "HVDC PTDF"
+    HvdcODF = "HVDC ODF"
+    VscPTDF = "Vsc PTDF"
+    VscODF = "Vsc ODF"
 
     MaxOverloads = 'Maximum contingency flow'
     ContingencyFlows = 'Contingency flow'
@@ -1560,6 +1566,9 @@ class ResultTypes(Enum):
     InvestmentsIterationsPlot = 'Iterations plot'
     InvestmentsParetoPlotNSGA2 = 'Pareto plot NSGA2'
 
+    # reliability
+    ReliabilityLoleResults = "LOLE"
+
     def __str__(self):
         return self.value
 
@@ -1616,6 +1625,7 @@ class SimulationTypes(Enum):
     InvestmentsEvaluation_run = 'Investments evaluation'
     TopologyProcessor_run = 'Topology Processor'
     NodalCapacityTimeSeries_run = 'Nodal capacity time series'
+    Reliability_run = "Reliability"
 
     NoSim = "No simulation"
 
@@ -1827,6 +1837,37 @@ class BranchGroupTypes(Enum):
         """
         try:
             return BranchGroupTypes[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+
+class CascadeType(Enum):
+    PowerFlow = "PowerFlow",
+    LatinHypercube = "LHS"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+
+        :param s:
+        :return:
+        """
+        try:
+            return CascadeType[s]
         except KeyError:
             return s
 

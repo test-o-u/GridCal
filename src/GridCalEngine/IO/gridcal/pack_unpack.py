@@ -634,7 +634,7 @@ class CreatedOnTheFly:
         :return:
         """
         con_group = dev.ContingencyGroup(name=elm.name)
-        conn = dev.Contingency(device_idtag=elm.idtag, prop=ContingencyOperationTypes.Active, group=con_group)
+        conn = dev.Contingency(device=elm, prop=ContingencyOperationTypes.Active, group=con_group)
 
         self.contingency_groups.append(con_group)
         self.contingencies.append(conn)
@@ -1008,7 +1008,9 @@ def search_and_apply_json_profile(json_entry: Dict[str, Dict[str, Union[str, Uni
             # the profile was not found, so we fill it with the default stuff
             profile.fill(property_value)
         else:
-            get_profile_from_dict(profile=profile, data=json_profile, collection=collection)
+            get_profile_from_dict(profile=profile,
+                                  data=json_profile,
+                                  collection=collection)
 
 
 def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
@@ -1186,16 +1188,33 @@ def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
 
                                 try:
                                     val = gc_prop.tpe(property_value)
-                                    elm.set_snapshot_value(gc_prop.name, val)
-                                    search_and_apply_json_profile(json_entry=json_entry,
-                                                                  gc_prop=gc_prop,
-                                                                  elm=elm,
-                                                                  property_value=val)
 
-                                except ValueError:
-                                    logger.add_error(f'Cannot cast value to {gc_prop.tpe}',
+                                    try:
+                                        elm.set_snapshot_value(gc_prop.name, val)
+
+                                    except ValueError as e:
+                                        logger.add_error(f'Cannot set the snapshot',
+                                                         device=elm.name,
+                                                         value=property_value,
+                                                         comment=str(e))
+
+                                    try:
+                                        search_and_apply_json_profile(json_entry=json_entry,
+                                                                      gc_prop=gc_prop,
+                                                                      elm=elm,
+                                                                      property_value=val)
+
+                                    except ValueError as e:
+                                        logger.add_error(f'Cannot set the profile',
+                                                         device=elm.name,
+                                                         value=property_value,
+                                                         comment=str(e))
+
+                                except ValueError as e:
+                                    logger.add_error(f'Cannot cast the value to the snapshot',
                                                      device=elm.name,
-                                                     value=property_value)
+                                                     value=property_value,
+                                                     comment=str(e))
 
                             else:
                                 raise Exception(f'Unsupported property type: {gc_prop.tpe}')
@@ -1517,6 +1536,10 @@ def parse_gridcal_data(data: GRIDCAL_FILE_TYPE,
 
     if text_func is not None:
         text_func("Done!")
+
+    # search contingencies, investments and remedial actions pointed devices
+    # and remove those that point nowhere
+    circuit.refine_pointer_objects(logger=logger)
 
     if circuit.has_time_series:
         circuit.ensure_profiles_exist()

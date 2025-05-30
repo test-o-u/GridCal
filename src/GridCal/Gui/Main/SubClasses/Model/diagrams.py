@@ -715,13 +715,22 @@ class DiagramsMain(CompiledArraysMain):
                                              bus_active=bus_active,
                                              loadings=results.loading,
                                              types=results.bus_types,
+
                                              Sf=results.Sf,
                                              St=results.St,
                                              br_active=br_active,
+
                                              hvdc_Pf=results.hvdc_Pf,
                                              hvdc_Pt=-results.hvdc_Pf,
                                              hvdc_loading=results.hvdc_loading,
                                              hvdc_active=hvdc_active,
+
+                                             vsc_Pf=results.vsc_Pf,
+                                             vsc_Pt=-results.vsc_Pf,
+                                             vsc_Qt=np.zeros_like(results.vsc_Pf),
+                                             vsc_loading=results.vsc_loading,
+                                             vsc_active=vsc_active,
+
                                              fluid_node_p2x_flow=results.fluid_node_p2x_flow,
                                              fluid_node_current_level=results.fluid_node_current_level,
                                              fluid_node_spillage=results.fluid_node_spillage,
@@ -2329,7 +2338,7 @@ class DiagramsMain(CompiledArraysMain):
 
                     for i in self.contingency_checks_diag.selected_indices:
                         elm = selected[i]
-                        con = dev.Contingency(device_idtag=elm.idtag,
+                        con = dev.Contingency(device=elm,
                                               code=elm.code,
                                               name="Contingency " + elm.name,
                                               prop=ContingencyOperationTypes.Active,
@@ -2368,7 +2377,7 @@ class DiagramsMain(CompiledArraysMain):
 
                     for i in self.ra_checks_diag.selected_indices:
                         elm = selected[i]
-                        ra = dev.RemedialAction(device_idtag=elm.idtag,
+                        ra = dev.RemedialAction(device=elm,
                                                 code=elm.code,
                                                 name="RA " + elm.name,
                                                 prop=ContingencyOperationTypes.Active,
@@ -2412,11 +2421,10 @@ class DiagramsMain(CompiledArraysMain):
                     # add the selection as investments to the group
                     for i in self.investment_checks_diag.selected_indices:
                         elm = selected[i]
-                        con = dev.Investment(device_idtag=elm.idtag,
+                        con = dev.Investment(device=elm,
                                              code=elm.code,
                                              name=elm.type_name + ": " + elm.name,
                                              CAPEX=0.0,
-                                             OPEX=0.0,
                                              group=group)
                         self.circuit.add_investment(con)
             else:

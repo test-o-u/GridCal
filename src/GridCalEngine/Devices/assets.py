@@ -8,7 +8,7 @@ import pandas as pd
 from typing import List, Dict, Tuple, Union, Any, Set, Generator
 import datetime as dateslib
 
-from GridCalEngine.basic_structures import IntVec, StrVec
+from GridCalEngine.basic_structures import IntVec, StrVec, Vec
 import GridCalEngine.Devices as dev
 from GridCalEngine.Devices.types import ALL_DEV_TYPES, BRANCH_TYPES, INJECTION_DEVICE_TYPES, FLUID_TYPES
 from GridCalEngine.Devices.Parents.editable_device import GCPROP_TYPES
@@ -401,6 +401,13 @@ class Assets:
         """
         self._time_profile = pd.to_datetime(arr, unit='s')
 
+    def get_time_deltas_in_hours(self) -> Vec:
+        """
+        Get the time increments in hours
+        :return: array of time deltas where the first delta is 1
+        """
+        return np.r_[1.0, np.diff(self.get_unix_time() / 3600)]
+
     def get_time_profile_as_list(self):
         """
         Get the profiles dictionary
@@ -786,6 +793,20 @@ class Assets:
         except ValueError:
             pass
 
+    def get_hvdc_dict(self) -> Dict[str, dev.HvdcLine]:
+        """
+        Get dictionary of HVDC lines
+        :return: idtag -> HvdcLine
+        """
+        return {elm.idtag: elm for elm in self.hvdc_lines}
+
+    def get_hvdc_index_dict(self) -> Dict[str, int]:
+        """
+        Get dictionary of HVDC lines
+        :return: idtag -> HvdcLine
+        """
+        return {elm.idtag: i for i, elm in enumerate(self.hvdc_lines)}
+
     # ------------------------------------------------------------------------------------------------------------------
     # VSC
     # ------------------------------------------------------------------------------------------------------------------
@@ -852,6 +873,20 @@ class Assets:
             self.delete_groupings_with_object(obj=obj)
         except ValueError:
             pass
+
+    def get_vsc_dict(self) -> Dict[str, dev.VSC]:
+        """
+        Get dictionary of VSC converters
+        :return: idtag -> VSC
+        """
+        return {elm.idtag: elm for elm in self.vsc_devices}
+
+    def get_vsc_index_dict(self) -> Dict[str, int]:
+        """
+        Get index dictionary of VSC lines
+        :return: idtag -> i
+        """
+        return {elm.idtag: i for i, elm in enumerate(self.vsc_devices)}
 
     # ------------------------------------------------------------------------------------------------------------------
     # UPFC
@@ -3840,7 +3875,7 @@ class Assets:
 
         return res
 
-    def get_investmenst_by_groups_index_dict(self) -> Dict[int, List[dev.Investment]]:
+    def get_investment_by_groups_index_dict(self) -> Dict[int, List[dev.Investment]]:
         """
         Get a dictionary of investments goups and their
         :return: Dict[investment group index] = list of investments
@@ -3857,6 +3892,24 @@ class Assets:
                 inv_list.append(inv)
 
         return res
+
+    def get_capex_by_investment_group(self) -> Vec:
+        """
+        Get array of CAPEX costs per investment group
+        :return:
+        """
+
+        # we initialize with the capex of the group, then we add the capex of the individual investments
+        capex = np.array([elm.CAPEX for elm in self.investments_groups])
+
+        # pre-compute the capex of each investment group
+        d = self.get_investment_by_groups_index_dict()
+
+        for i, investments in d.items():
+            for investment in investments:
+                capex[i] += investment.CAPEX
+
+        return capex
 
     # ------------------------------------------------------------------------------------------------------------------
     # Technology
@@ -4625,7 +4678,7 @@ class Assets:
         :param add_switch: Include the list of Switch?
         :return: list of branch devices lists
         """
-        lst = [
+        lst: List[List[BRANCH_TYPES]] = [
             self._lines,
             self._dc_lines,
             self._transformers2w,
@@ -4739,9 +4792,23 @@ class Assets:
         :param add_vsc: Include the list of VSC?
         :param add_hvdc: Include the list of HvdcLine?
         :param add_switch: Include the list of Switch?
-        :return:
+        :return: Branch object to index
         """
         return {b: i for i, b in enumerate(self.get_branches_iter(add_vsc=add_vsc,
+                                                                  add_hvdc=add_hvdc,
+                                                                  add_switch=add_switch))}
+
+    def get_branches_index_dict2(self, add_vsc: bool = True,
+                                add_hvdc: bool = True,
+                                add_switch: bool = False) -> Dict[str, int]:
+        """
+        Get the branch to index dictionary
+        :param add_vsc: Include the list of VSC?
+        :param add_hvdc: Include the list of HvdcLine?
+        :param add_switch: Include the list of Switch?
+        :return: Branch idtag to index
+        """
+        return {b.idtag: i for i, b in enumerate(self.get_branches_iter(add_vsc=add_vsc,
                                                                   add_hvdc=add_hvdc,
                                                                   add_switch=add_switch))}
 
@@ -5298,6 +5365,9 @@ class Assets:
 
         elif device_type == DeviceType.FluidP2XDevice:
             return self._p2xs
+
+        elif device_type == DeviceType.FluidInjectionDevice:
+            return self.get_fluid_injections()
 
         elif device_type == DeviceType.PMeasurementDevice:
             return self.get_p_measurements()
@@ -6360,3 +6430,27 @@ class Assets:
         """
         for elm in self.get_all_elements_iter():
             elm.replace_objects(old_object=old_object, new_obj=new_obj, logger=logger)
+
+    def refine_pointer_objects(self, logger: Logger):
+        """
+        Find the device types of pointer objects
+        :param logger:
+        :return:
+        """
+        d, ok = self.get_all_elements_dict(logger=logger)
+        objects_to_remove = list()
+
+        for lst in [self.investments, self.remedial_actions, self.contingencies]:
+            for elm in lst:
+                pointed = d.get(elm.device_idtag, None)
+                if pointed is None:
+                    logger.add_error("Reference not found, element deleted",
+                                     device_class=elm.device_type.value,
+                                     value=elm.device_idtag)
+                    objects_to_remove.append(elm)
+                else:
+                    elm.set_device(pointed)
+
+        # Delete the elements that don't point to the right element
+        for elm in objects_to_remove:
+            self.delete_element(obj=elm)

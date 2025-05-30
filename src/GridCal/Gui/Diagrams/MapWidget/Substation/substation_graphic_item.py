@@ -20,7 +20,7 @@ from GridCal.Gui.object_model import ObjectsModel
 from GridCal.Gui.Diagrams.MapWidget.Substation.voltage_level_graphic_item import VoltageLevelGraphicItem
 from GridCal.Gui.Diagrams.SchematicWidget import schematic_widget
 
-from GridCalEngine.Devices.types import ALL_DEV_TYPES
+from GridCalEngine.Devices.types import ALL_DEV_TYPES, INJECTION_DEVICE_TYPES, BRANCH_TYPES
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices import VoltageLevel
 from GridCalEngine.Devices.Substation.substation import Substation
@@ -656,18 +656,10 @@ class SubstationGraphicItem(NodeTemplate, QGraphicsRectItem):
                                 line.bus_to = recipient_buses[line.bus_to.Vnom]
                                 line_graphic = self.editor.graphics_manager.query(elm=line)
                                 line_graphic.calculate_total_length()
-                        for load in self.editor.circuit.loads:
-                            if load.bus in removed_buses:
-                                load.bus = recipient_buses[load.bus.Vnom]
-                        for gen in self.editor.circuit.generators:
-                            if gen.bus in removed_buses:
-                                gen.bus = recipient_buses[gen.bus.Vnom]
-                        for sh in self.editor.circuit.shunts:
-                            if sh.bus in removed_buses:
-                                sh.bus = recipient_buses[sh.bus.Vnom]
-                        for csh in self.editor.circuit.controllable_shunts:
-                            if csh.bus in removed_buses:
-                                csh.bus = recipient_buses[csh.bus.Vnom]
+
+                        for inj in self.editor.circuit.get_injection_devices_iter():
+                            if inj.bus in removed_buses:
+                                inj.bus = recipient_buses[inj.bus.Vnom]
 
                         for bus in removed_buses:
                             self.editor.circuit.delete_bus(obj=bus, delete_associated=False)
@@ -803,22 +795,54 @@ class SubstationGraphicItem(NodeTemplate, QGraphicsRectItem):
         :return:
         """
         associated_buses = self.editor.circuit.get_substation_buses(substation=self.api_object)
-        associated_buses_graphics = list()
         associated_lines_graphics: List[MapLineContainer] = list()
+        for line in self.editor.circuit.lines:
+            if line.bus_to in associated_buses or line.bus_from in associated_buses:
+                associated_lines_graphics.append(self.editor.graphics_manager.query(elm=line))
 
         # TODO: Connectivity nodes / busbars? Probably this is only when dealing with the schematic
 
-        for bus in associated_buses:
-            associated_buses_graphics.append(self.editor.graphics_manager.query(elm=bus))
+        # for bus in associated_buses:
+        #     associated_buses_graphics.append(self.editor.graphics_manager.query(elm=bus))
 
-        for segment in self.get_hosting_line_segments():
-            associated_lines_graphics.append(segment.container)
+        # for segment in self.get_hosting_line_segments():
+        #     associated_lines_graphics.append(segment.container)
 
         return self.voltage_level_graphics + associated_lines_graphics
+
+
+    def get_associated_devices(self) -> List[ALL_DEV_TYPES]:
+        """
+        This function returns all the api_object devices associated with the selected graphic object.
+        :return: List of the associated devices.
+        """
+        associated_vl = [vl.api_object for vl in self.voltage_level_graphics]
+        associated_buses = self.editor.circuit.get_substation_buses(substation=self.api_object)
+        associated_branches: List[BRANCH_TYPES] = list()
+        associated_shunts: List[INJECTION_DEVICE_TYPES] = list()
+
+        for branch in self.editor.circuit.get_branches():
+            if branch.bus_to in associated_buses or branch.bus_from in associated_buses:
+                associated_branches.append(branch)
+
+        for inj in self.editor.circuit.get_injection_devices_iter():
+            if inj.bus in associated_buses:
+                associated_shunts.append(inj)
+
+        # TODO: Connectivity nodes / busbars? Probably this is only when dealing with the schematic
+
+        # for bus in associated_buses:
+        #     associated_buses_graphics.append(self.editor.graphics_manager.query(elm=bus))
+
+        # for segment in self.get_hosting_line_segments():
+        #     associated_lines_graphics.append(segment.container)
+
+        return associated_vl + associated_branches + associated_shunts + associated_buses
 
     def delete(self):
         """
 
         :return:
         """
+
         self.editor.delete_with_dialogue(selected=[self], delete_from_db=False)

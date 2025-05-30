@@ -15,7 +15,7 @@ from GridCalEngine.Utils.ThirdParty.gslv.gslv_activation import (pg, build_statu
                                                                  GSLV_AVAILABLE, GSLV_VERSION,
                                                                  GSLV_RECOMMENDED_VERSION)
 from GridCalEngine.DataStructures.branch_parent_data import BranchParentData
-from GridCalEngine.basic_structures import IntVec, Vec
+from GridCalEngine.basic_structures import IntVec, Vec, ConvergenceReport
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 import GridCalEngine.Devices as dev
@@ -572,7 +572,7 @@ def convert_investment(
                          device_idtag=elm.device_idtag,
                          group=groups_dict[elm.group],
                          CAPEX=elm.CAPEX,
-                         OPEX=elm.OPEX,
+                         OPEX=0.0,
                          status=elm.status, )
 
 
@@ -2381,14 +2381,14 @@ def translate_gslv_pf_results(grid: MultiCircuit, res: "pg.PowerFlowResults", lo
     """
     results = PowerFlowResults(
         n=grid.get_bus_number(),
-        m=grid.get_branch_number_wo_hvdc(),
+        m=grid.get_branch_number(add_switch=True, add_vsc=False, add_hvdc=False),
         n_hvdc=grid.get_hvdc_number(),
         n_vsc=grid.get_vsc_number(),
         n_gen=grid.get_generators_number(),
         n_batt=grid.get_batteries_number(),
         n_sh=grid.get_shunt_like_device_number(),
         bus_names=grid.get_bus_names(),
-        branch_names=grid.get_branch_names(add_switch=True),
+        branch_names=grid.get_branch_names(add_switch=True, add_vsc=False, add_hvdc=False),
         hvdc_names=grid.get_hvdc_names(),
         vsc_names=grid.get_vsc_names(),
         gen_names=grid.get_generator_names(),
@@ -2427,10 +2427,18 @@ def translate_gslv_pf_results(grid: MultiCircuit, res: "pg.PowerFlowResults", lo
     results.battery_q = res.battery_q[0, :]
     results.shunt_q = res.shunt_q[0, :]
 
+    report = ConvergenceReport()
+    report.add(method=SolverType.NR,
+               error=res.error_values[0],
+               elapsed=res.elapsed,
+               iterations=0,
+               converged=res.converged_values[0])
+
+    results.convergence_reports.append(report)
     # logger.add_info("gslv time", value=res.time_array[0])
 
-    # results.bus_area_indices = grid.get_bus_area_indices()
-    # results.area_names = [a.name for a in grid.areas]
+    results.bus_area_indices = grid.get_bus_area_indices()
+    results.area_names = [a.name for a in grid.areas]
     # results.bus_types = convert_bus_types(res.bus_types[0])  # this is a list of lists
 
     # for rep in res.stats[0]:
