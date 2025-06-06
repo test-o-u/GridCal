@@ -1,0 +1,48 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
+
+import sys
+from PySide6 import QtWidgets
+
+from GridCal.Gui.gui_functions import get_icon_list_model
+from GridCal.Gui.RmsModelEditor.rms_model_editor import Ui_MainWindow
+import GridCalEngine.Devices as dev
+
+
+class RmsModelEditorGUI(QtWidgets.QDialog):
+
+    def __init__(self, model: dev.DynamicModel, parent=None, ):
+        """
+
+        :param parent:
+        """
+        QtWidgets.QDialog.__init__(self, parent)
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        self.setWindowTitle('RMS Model editor')
+
+        self.model = model
+
+        self._list_mdl = get_icon_list_model(
+            lst=[
+                ("Index dynamic parameters", ":/Icons/icons/dyn.svg"),
+                ("Numeric dynamic parameters", ":/Icons/icons/dyn.svg"),
+                ("External dynamic parameters", ":/Icons/icons/dyn.svg"),
+                ("State variables", ":/Icons/icons/dyn.svg"),
+                ("Algebraic variables", ":/Icons/icons/dyn.svg"),
+                ("External state variables", ":/Icons/icons/dyn.svg"),
+                ("External algebraic variables", ":/Icons/icons/dyn.svg")
+            ]
+        )
+        self.ui.listView.setModel(self._list_mdl)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    md = dev.DynamicModel()
+    window = RmsModelEditorGUI(md)
+    window.resize(1.61 * 700.0, 600.0)  # golden ratio
+    window.show()
+    sys.exit(app.exec())

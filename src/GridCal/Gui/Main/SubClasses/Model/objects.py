@@ -25,6 +25,7 @@ from GridCal.Gui.Analysis.object_plot_analysis import object_histogram_analysis
 from GridCal.Gui.messages import yes_no_question, error_msg, warning_msg, info_msg
 from GridCal.Gui.Main.SubClasses.Model.diagrams import DiagramsMain
 from GridCal.Gui.TowerBuilder.LineBuilderDialogue import TowerBuilderGUI
+from GridCal.Gui.RmsModelEditor.rms_model_editor_dialogue import RmsModelEditorGUI
 from GridCal.Gui.general_dialogues import LogsDialogue
 from GridCal.Gui.SystemScaler.system_scaler import SystemScaler
 from GridCal.Gui.Diagrams.MapWidget.grid_map_widget import GridMapWidget, make_diagram_from_substations
@@ -907,6 +908,13 @@ class ObjectsTableMain(DiagramsMain):
                     self.tower_builder_window.setModal(True)
                     self.tower_builder_window.resize(int(1.81 * 700.0), 700)
                     self.tower_builder_window.exec()
+
+                elif elm_type == DeviceType.DynModel.value:
+
+                    self.rms_model_Editor_window = RmsModelEditorGUI(model=self.circuit.rms_models[idx],)
+                    self.rms_model_Editor_window.setModal(True)
+                    self.rms_model_Editor_window.resize(int(1.81 * 700.0), 700)
+                    self.rms_model_Editor_window.exec()
 
                 else:
 
