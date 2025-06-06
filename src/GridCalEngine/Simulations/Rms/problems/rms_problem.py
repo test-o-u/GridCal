@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 import sympy as sym
 import scipy.sparse as sp
-from GridCalEngine.Simulations.Dynamic.model.rms_model_store import RmsModelStore
+from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
 
 
 def build_dfx(jac_values, sparsity_set, n_rows: int, n_cols: int):

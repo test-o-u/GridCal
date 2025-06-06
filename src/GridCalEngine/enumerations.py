@@ -1632,7 +1632,7 @@ class SimulationTypes(Enum):
     TopologyProcessor_run = 'Topology Processor'
     NodalCapacityTimeSeries_run = 'Nodal capacity time series'
     Reliability_run = "Reliability"
-    Dynamic_run = "Dynamic"
+    RmsDynamic_run = "RMS Dynamic"
 
     NoSim = "No simulation"
 

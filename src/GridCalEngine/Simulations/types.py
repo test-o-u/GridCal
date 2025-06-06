@@ -39,6 +39,7 @@ from GridCalEngine.Simulations.NodalCapacity.nodal_capacity_ts_driver import (No
                                                                               NodalCapacityTimeSeriesResults)
 from GridCalEngine.Simulations.Topology.node_groups_driver import NodeGroupsDriver
 from GridCalEngine.Simulations.Reliability.reliability_driver import ReliabilityStudyDriver, ReliabilityResults
+from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver, RmsResults
 
 DRIVER_OBJECTS = Union[
     AvailableTransferCapacityDriver,
@@ -63,7 +64,8 @@ DRIVER_OBJECTS = Union[
     InputsAnalysisDriver,
     InvestmentsEvaluationDriver,
     NodalCapacityTimeSeriesDriver,
-    ReliabilityStudyDriver
+    ReliabilityStudyDriver,
+    RmsSimulationDriver
 ]
 
 RESULTS_OBJECTS = Union[
@@ -88,5 +90,6 @@ RESULTS_OBJECTS = Union[
     InputsAnalysisResults,
     InvestmentsEvaluationResults,
     NodalCapacityTimeSeriesResults,
-    ReliabilityResults
+    ReliabilityResults,
+    RmsResults
 ]

@@ -8,7 +8,7 @@ import numpy as np
 from scipy.sparse import bmat, identity, csc_matrix
 from scipy.sparse.linalg import spsolve
 from GridCalEngine.basic_structures import Vec
-from GridCalEngine.Simulations.Dynamic.problems.rms_problem import RmsProblem
+from GridCalEngine.Simulations.Rms.problems.rms_problem import RmsProblem
 
 
 class Integration:

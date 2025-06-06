@@ -14,7 +14,7 @@ from GridCalEngine.enumerations import EngineType, SimulationTypes
 
 class DynamicDriver(DriverTemplate):
     name = 'Power Flow'
-    tpe = SimulationTypes.Dynamic_run
+    tpe = SimulationTypes.RmsDynamic_run
 
     """
     Dynamic wrapper to use with Qt
