@@ -136,13 +136,11 @@ def api_keys_path() -> str:
     return pth
 
 
-
-def load_function_from_file_path(file_path: str, function_name: str):
+def load_file_as_module(file_path: str):
     """
     Dynamically load a function from a Python file at a given file path.
 
     :param file_path: The path to the Python (.py) file.
-    :param function_name: The name of the function to load from the file.
     :return: The loaded function object.
     :raises FileNotFoundError: If the specified file does not exist.
     :raises ImportError: If the module cannot be imported.
@@ -171,6 +169,68 @@ def load_function_from_file_path(file_path: str, function_name: str):
         spec.loader.exec_module(module)
     except Exception as e:
         raise ImportError(f"Failed to execute module '{file_path}': {e}") from e
+
+
+    return module
+
+
+def load_function_from_module(module, function_name: str):
+    """
+    Dynamically load a function from a Python file at a given file path.
+    :param module: some python module
+    :param function_name: The name of the function to load from the file.
+    :return: The loaded function object.
+    :raises FileNotFoundError: If the specified file does not exist.
+    :raises ImportError: If the module cannot be imported.
+    :raises AttributeError: If the function does not exist in the module.
+    :raises TypeError: If the retrieved attribute is not callable.
+    """
+
+    # Retrieve the function from the module
+    if not hasattr(module, function_name):
+        raise AttributeError(f"The function '{function_name}' does not exist in module")
+
+    func = getattr(module, function_name)
+
+    if not callable(func):
+        raise TypeError(f"'{function_name}' in module is not callable")
+
+    return func
+
+def load_var_from_module(module, var_name: str):
+    """
+    Dynamically load a function from a Python file at a given file path.
+    :param module: some python module
+    :param var_name: The name of the variable to load from the file.
+    :return: The loaded function object.
+    :raises FileNotFoundError: If the specified file does not exist.
+    :raises ImportError: If the module cannot be imported.
+    :raises AttributeError: If the function does not exist in the module.
+    :raises TypeError: If the retrieved attribute is not callable.
+    """
+
+    # Retrieve the function from the module
+    if not hasattr(module, var_name):
+        raise AttributeError(f"The variable '{var_name}' does not exist in module")
+
+    func = getattr(module, var_name)
+
+    return func
+
+
+def load_function_from_file_path(file_path: str, function_name: str):
+    """
+    Dynamically load a function from a Python file at a given file path.
+
+    :param file_path: The path to the Python (.py) file.
+    :param function_name: The name of the function to load from the file.
+    :return: The loaded function object.
+    :raises FileNotFoundError: If the specified file does not exist.
+    :raises ImportError: If the module cannot be imported.
+    :raises AttributeError: If the function does not exist in the module.
+    :raises TypeError: If the retrieved attribute is not callable.
+    """
+    module = load_file_as_module(file_path=file_path)
 
     # Retrieve the function from the module
     if not hasattr(module, function_name):

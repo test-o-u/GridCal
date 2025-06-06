@@ -1048,6 +1048,7 @@ class StudyResultsType(Enum):
     NetTransferCapacity = 'NetTransferCapacity'
     NetTransferCapacityTimeSeries = 'NetTransferCapacityTimeSeries'
     StochasticPowerFlow = 'StochasticPowerFlow'
+    RmsSimulation = "RmsSimulation"
 
     def __str__(self):
         return self.value

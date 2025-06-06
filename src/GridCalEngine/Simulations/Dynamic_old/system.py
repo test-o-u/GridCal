@@ -5,8 +5,7 @@
 
 import logging
 from collections import OrderedDict
-import GridCalEngine.Devices.Dynamic.io.config as config
-from GridCalEngine.Simulations.Dynamic.dae import DAE
+from GridCalEngine.Simulations.Dynamic.problems.rms_problem import DAE
 from GridCalEngine.Simulations.Dynamic.set import SET
 from GridCalEngine.Simulations.Dynamic.tds import TDS
 

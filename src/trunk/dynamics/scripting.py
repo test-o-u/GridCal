@@ -12,7 +12,7 @@ from GridCalEngine.Devices.Dynamic.main import start_dynamic
 from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.Devices.Parents.branch_parent import BranchParent
 from GridCalEngine.Devices.Parents.injection_parent import InjectionParent
-from GridCalEngine.Simulations.Dynamic.dinamic_driver import DynamicDriver
+from GridCalEngine.Simulations.Dynamic.rms_driver import RmsSimulationDriver
 
 # grid data, this data will be automatically generated when the user builds the grid.
 
@@ -441,7 +441,7 @@ grid.add_load(bus2, api_obj=Load1)
 
 # Once the grid is built we can access dynamic models and create the dynamic system
 
-Dynamic_simulation = DynamicDriver(grid)
+Dynamic_simulation = RmsSimulationDriver(grid)
 
 Dynamic_simulation.run()
 

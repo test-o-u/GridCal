@@ -5,17 +5,21 @@
 
 import numpy as np
 from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
-from GridCalEngine.Simulations.Dynamic.symprocess import SymProcess
-from GridCalEngine.IO.file_system import get_create_dynamics_model_folder, load_function_from_file_path
+from GridCalEngine.Simulations.Dynamic.model.symbolic_process import SymProcess
+from GridCalEngine.IO.file_system import (get_create_dynamics_model_folder, load_file_as_module,
+                                          load_function_from_module)
 
 
-class DynamicModelStore:
+class RmsModelStore:
 
     def __init__(self, dynamic_model: DynamicModel, grid_id: str):
         """
 
-        :param dynamic_model: DynamicModel
+        :param dynamic_model:
+        :param grid_id:
         """
+        self.name = dynamic_model.name
+
         # Device index for ordering devices in the system (used to relate variables with their addresses)
         self.index = int
 
@@ -132,16 +136,20 @@ class DynamicModelStore:
             self.external_vars.append(elem)
 
         folder_to_save = get_create_dynamics_model_folder(grid_id=grid_id)
-        sym_process = SymProcess(dynamic_model=dynamic_model, folder_to_save=folder_to_save)
+        sym_process = SymProcess(dynamic_model=self, folder_to_save=folder_to_save)
+        file_path = sym_process.generate() # does all the symbolic operations needed
 
-        sym_process.generate_symbols()
-        sym_process.generate_equations()
-        sym_process.generate_jacobians()
-        file_path = sym_process.generate_code()
-        self._f_update_ptr = load_function_from_file_path(file_path=file_path, function_name="f_update")
-        self._g_update_ptr = load_function_from_file_path(file_path=file_path, function_name="g_update")
-        self._f_ia_ptr = load_function_from_file_path(file_path=file_path, function_name="f_ia")
-        self._g_ia_ptr = load_function_from_file_path(file_path=file_path, function_name="g_ia")
+        self._variables_names_for_ordering = sym_process.variables_names_for_ordering
+        self._jacobian_info = sym_process.jacobian_store_info
+        self._jacobian_equations = sym_process.jacobian_store_equations
+        self._variables_names_for_ordering_f = self._variables_names_for_ordering['f']
+        self._variables_names_for_ordering_g = self._variables_names_for_ordering['g']
+
+        self._module = load_file_as_module(file_path=file_path)
+        self._f_update_ptr = load_function_from_module(module=self._module, function_name="f_update")
+        self._g_update_ptr = load_function_from_module(module=self._module, function_name="g_update")
+        self._f_ia_ptr = load_function_from_module(module=self._module, function_name="f_ia")
+        self._g_ia_ptr = load_function_from_module(module=self._module, function_name="g_ia")
 
     def calc_f_g_functions(self):
         """
@@ -165,20 +173,14 @@ class DynamicModelStore:
                 for j in range(len(self.algeb_eqs)):
                     g_values_device[i][j] = g_values[j]
 
-        variables_names_for_ordering_f = generated_code.variables_names_for_ordering['f']
-        variables_names_for_ordering_g = generated_code.variables_names_for_ordering['g']
-
-        return f_values_device, g_values_device, variables_names_for_ordering_f, variables_names_for_ordering_g
+        return (f_values_device, g_values_device,
+                self._variables_names_for_ordering_f, self._variables_names_for_ordering_g)
 
     def calc_local_jacs(self):
         """
 
         :return:
         """
-
-        jacobian_info = generated_code.jacobian_info
-        jacobian_equations = generated_code.jacobian_equations
-
         f_jacobians = np.zeros((self.n, len(self.state_eqs), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.algeb_eqs), len(self.variables_list)))
 
@@ -198,4 +200,4 @@ class DynamicModelStore:
 
         jacobian = np.concatenate((f_jacobians, g_jacobians), axis=1)
 
-        return jacobian, jacobian_info, jacobian_equations
+        return jacobian, self._jacobian_info, self._jacobian_equations

@@ -8,7 +8,7 @@ import inspect
 import pprint
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
-from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
+from GridCalEngine.Simulations.Dynamic.model.rms_model_store import RmsModelStore
 
 
 class SymProcess:
@@ -22,12 +22,12 @@ class SymProcess:
         - Exports Python code for numerical model evaluation
     """
 
-    def __init__(self, dynamic_model: DynamicModel, folder_to_save: str):
+    def __init__(self, dynamic_model: RmsModelStore, folder_to_save: str):
         """
         SymProcess class constructor
         :param dynamic_model: The model instance containing variables and equations
         """
-        self.model: DynamicModel = dynamic_model
+        self.model: RmsModelStore = dynamic_model
         self.folder_to_save = folder_to_save
 
         # Symbolic Parameters
@@ -56,6 +56,10 @@ class SymProcess:
         self.jacobian_store_info = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
         self.jacobian_store_equations = {'dfx': [], 'dfy': [], 'dgx': [], 'dgy': []}
 
+        # Converts model variables into symbolic expressions.
+        self.sym_state_vars = list()
+        self.sym_algeb_vars = list()
+
     def generate(self):
         """
         Perform full symbolic processing pipeline.
@@ -70,7 +74,7 @@ class SymProcess:
         self.generate_symbols()
         self.generate_equations()
         self.generate_jacobians()
-        self.generate_code()
+        return self.generate_code()
 
     def generate_symbols(self):
         """

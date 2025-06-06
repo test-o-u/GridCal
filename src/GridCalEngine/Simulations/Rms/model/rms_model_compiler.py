@@ -2,20 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+from typing import List
 import os
 import importlib
 import pdb
 import time
 import logging
-import GridCalEngine.Devices.Dynamic.io.config as config
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Devices.multi_circuit import MultiCircuit
+from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
-from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
 
-class DynamicModelsCompiler:
+class RmsModelsCompiler:
     """
     System set-up class
 
@@ -26,26 +25,16 @@ class DynamicModelsCompiler:
         - Assigning addresses for variables used in simulations
     """
 
-    def __init__(self, system, devices_list):
+    def __init__(self, grid: MultiCircuit):
         """
         SET class constructor
         initializes the SET class and prepares the system.
-        :param system: the system instance containing models and devices
-        :param models_list: List of tuples, each containing a category and a list of model names
-        :param data: Parsed JSON structure where keys are model names and values are lists of device data
+        :param grid: MultiCircuit
 
         """
 
-        self.system = system
-        self.dae = self.system.dae
-
-        self.models = self.system.models
-        self.devices = self.system.devices
-        self.devices_list = devices_list
-        #self.import_models()
-        #self.import_models_gridcal()
-        self.import_models_from_devices_list()
-        self.system_prepare()
+        self.grid = grid
+        self.models_list: List[RmsModelStore] = list()
 
     def import_models_gridcal(self):
         """
@@ -68,35 +57,43 @@ class DynamicModelsCompiler:
                 # model_instance.ext_algeb_var = model_dict['ext_algeb_var']
 
                 for idx_dyn_param_dict in model_dict['idx_dyn_param']:
-                    idx_dyn_param = IdxDynParam(idx_dyn_param_dict['info'], idx_dyn_param_dict['name'], idx_dyn_param_dict['symbol'], [0], "")
+                    idx_dyn_param = IdxDynParam(idx_dyn_param_dict['info'], idx_dyn_param_dict['name'],
+                                                idx_dyn_param_dict['symbol'], [0], "")
                     setattr(model_instance, idx_dyn_param_dict['name'], idx_dyn_param)
                 for num_dyn_param_dict in model_dict['num_dyn_param']:
-                    num_dyn_param = NumDynParam(num_dyn_param_dict['info'], num_dyn_param_dict['name'], num_dyn_param_dict['symbol'], 0)
-                    setattr(model_instance, num_dyn_param_dict['symbol'],  num_dyn_param)
+                    num_dyn_param = NumDynParam(num_dyn_param_dict['info'], num_dyn_param_dict['name'],
+                                                num_dyn_param_dict['symbol'], 0)
+                    setattr(model_instance, num_dyn_param_dict['symbol'], num_dyn_param)
                 for ext_dyn_param_dict in model_dict['ext_dyn_param']:
-                    ext_dyn_param = ExtDynParam(ext_dyn_param_dict['info'], ext_dyn_param_dict['name'], ext_dyn_param_dict['symbol'], 0)
-                    setattr(model_instance, ext_dyn_param_dict['symbol'],  ext_dyn_param)
+                    ext_dyn_param = ExtDynParam(ext_dyn_param_dict['info'], ext_dyn_param_dict['name'],
+                                                ext_dyn_param_dict['symbol'], 0)
+                    setattr(model_instance, ext_dyn_param_dict['symbol'], ext_dyn_param)
                 for stat_var_dict in model_dict['stat_var']:
-                    stat_var = StatVar(stat_var_dict['name'], stat_var_dict['symbol'], stat_var_dict['init_eq'], stat_var_dict['eq'])
-                    setattr(model_instance, stat_var_dict['symbol'],  stat_var)
+                    stat_var = StatVar(stat_var_dict['name'], stat_var_dict['symbol'], stat_var_dict['init_eq'],
+                                       stat_var_dict['eq'])
+                    setattr(model_instance, stat_var_dict['symbol'], stat_var)
                 for algeb_var_dict in model_dict['algeb_var']:
-                    algeb_var = AlgebVar(algeb_var_dict['name'], algeb_var_dict['symbol'], algeb_var_dict['init_eq'], algeb_var_dict['eq'])
-                    setattr(model_instance, algeb_var_dict['symbol'],  algeb_var)
+                    algeb_var = AlgebVar(algeb_var_dict['name'], algeb_var_dict['symbol'], algeb_var_dict['init_eq'],
+                                         algeb_var_dict['eq'])
+                    setattr(model_instance, algeb_var_dict['symbol'], algeb_var)
                 for ext_state_var_dict in model_dict['ext_state_var']:
                     indexer = getattr(model_instance, ext_state_var_dict['indexer'])
-                    ext_state_var = ExternState(ext_state_var_dict['name'], ext_state_var_dict['symbol'], ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'], ext_state_var_dict['eq'])
-                    setattr(model_instance, ext_state_var_dict['symbol'],  ext_state_var)
+                    ext_state_var = ExternState(ext_state_var_dict['name'], ext_state_var_dict['symbol'],
+                                                ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'],
+                                                ext_state_var_dict['eq'])
+                    setattr(model_instance, ext_state_var_dict['symbol'], ext_state_var)
                 for ext_algeb_var_dict in model_dict['ext_algeb_var']:
                     indexer = getattr(model_instance, ext_algeb_var_dict['indexer'])
-                    ext_algeb_var = ExternAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'], ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'], ext_algeb_var_dict['eq'])
-                    setattr(model_instance, ext_algeb_var_dict['symbol'],  ext_algeb_var)
+                    ext_algeb_var = ExternAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'],
+                                                ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'],
+                                                ext_algeb_var_dict['eq'])
+                    setattr(model_instance, ext_algeb_var_dict['symbol'], ext_algeb_var)
 
                 self.models[model_instance.name] = model_instance
 
     def import_models_from_devices_list(self):
         for device in self.devices_list:
             self.models[device.comp_name[0]] = device
-
 
     def import_models(self):
         """
@@ -147,7 +144,7 @@ class DynamicModelsCompiler:
 
         # Step 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
-        #self.create_devices(self.data)
+        # self.create_devices(self.data)
         self.create_devices()
         self.devices.move_to_end('Bus', last=False)
         dev_end = time.perf_counter()
@@ -157,8 +154,9 @@ class DynamicModelsCompiler:
         add_st = time.perf_counter()
         self.set_addresses()
         # demo
-        logging.info(f"Addresses created for {self.dae.nx+self.dae.ny} internal variables")
-        logging.info(f"Printing list of variables and addresses" + '\n\n' + f"Variables: {self.dae.variables_list} " + '\n\n' + f"Addresses: {self.dae.addresses_list} ")
+        logging.info(f"Addresses created for {self.dae.nx + self.dae.ny} internal variables")
+        logging.info(
+            f"Printing list of variables and addresses" + '\n\n' + f"Variables: {self.dae.variables_list} " + '\n\n' + f"Addresses: {self.dae.addresses_list} ")
 
         add_end = time.perf_counter()
         add_time = add_end - add_st  # Store addressing time
@@ -261,7 +259,6 @@ class DynamicModelsCompiler:
         for model in self.system.models():
 
             if model.name in sim_dev:
-
                 # Save system devices
                 self.devices[model.name] = model
                 # set device index
@@ -281,8 +278,6 @@ class DynamicModelsCompiler:
                 self.dae.ndfy += len(model.jacobian_info['dfy'])
                 self.dae.ndgx += len(model.jacobian_info['dgx'])
                 self.dae.ndgy += len(model.jacobian_info['dgy'])
-
-
 
                 model.n = 1
                 # calculate nx and ny and save it in dae
@@ -319,9 +314,10 @@ class DynamicModelsCompiler:
                     connection_element = var_list.symbol
                     connection_point = var_list.connection_point
                     connection_id = connection_point + '_' + connection_element
-                    connecting_vars = [var.src for var in model_instance.external_vars if var.indexer.symbol == connection_element and var.indexer.connection_point == connection_point]
+                    connecting_vars = [var.src for var in model_instance.external_vars if
+                                       var.indexer.symbol == connection_element and var.indexer.connection_point == connection_point]
                     if all(var in self.devices[connection_element].internal_vars for var in connecting_vars):
-                    #if connecting_vars == self.devices[connection_element].internal_vars:
+                        # if connecting_vars == self.devices[connection_element].internal_vars:
                         self.system.connections.append(connection_id)
                     else:
                         model_instance.u = [0] * model_instance.n
