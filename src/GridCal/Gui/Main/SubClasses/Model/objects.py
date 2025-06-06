@@ -159,6 +159,7 @@ class ObjectsTableMain(DiagramsMain):
             DeviceType.UnderGroundLineDevice.value: ":/Icons/icons/ac_line.svg",
             DeviceType.SequenceLineDevice.value: ":/Icons/icons/ac_line.svg",
             DeviceType.TransformerTypeDevice.value: ":/Icons/icons/to_transformer.svg",
+            DeviceType.DynModel.value: ":/Icons/icons/dyn_gray.svg",
         }
 
         db_tree_model = gf.get_tree_model(d=self.circuit.get_template_objects_str_dict(),
@@ -868,6 +869,12 @@ class ObjectsTableMain(DiagramsMain):
                 name = f'Facility {self.circuit.get_facility_number()}'
                 obj = dev.Facility(name=name)
                 self.circuit.add_facility(obj)
+
+            elif elm_type == DeviceType.DynModel.value:
+
+                name = f'RMS model {self.circuit.get_rms_models_number()}'
+                obj = dev.DynamicModel(name=name)
+                self.circuit.add_rms_model(obj)
 
             else:
                 info_msg("This object does not support table-like addition.\nUse the schematic instead.")

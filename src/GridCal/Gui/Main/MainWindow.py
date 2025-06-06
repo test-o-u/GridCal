@@ -4819,6 +4819,7 @@ class Ui_mainWindow(object):
         self.menuSimulations.addSeparator()
         self.menuSimulations.addAction(self.actionShort_Circuit)
         self.menuSimulations.addAction(self.actionVoltage_stability)
+        self.menuSimulations.addAction(self.actionRMS_simulation)
         self.menuSimulations.addSeparator()
         self.menuSimulations.addAction(self.actionOPF)
         self.menuSimulations.addAction(self.actionOpf_to_Power_flow)

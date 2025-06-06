@@ -3,12 +3,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from typing import List, Dict, Any
+from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 from GridCalEngine.Devices.Parents.editable_device import parse_idtag
 
 
-class DynamicModel:
+class DynamicModel(EditableDevice):
     "This class contains the parameters and variables needed to construct a dynamic model"
 
     def __init__(self, name: str = "", idtag: str | None = None):
@@ -16,10 +17,10 @@ class DynamicModel:
         DynamicModel class constructor
         :param name: Name of the Model
         """
-
-        self.name = name
-
-        self._idtag = parse_idtag(val=idtag)
+        super().__init__(name=name,
+                         idtag=idtag,
+                         code="",
+                         device_type=DeviceType.DynModel, )
 
         # connexion status
         self.u: List[int] = list()
@@ -169,5 +170,3 @@ class DynamicModel:
 
     def get_ext_algeb_var(self, val: str):
         return self.ext_algeb_var[val]
-
-
