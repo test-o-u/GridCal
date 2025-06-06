@@ -5,11 +5,10 @@
 
 import os
 import inspect
-import pdb
 import pprint
 import sympy as sp
 from sympy.utilities.lambdify import lambdify
-from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
+from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 
 
 class SymProcess:
@@ -23,12 +22,13 @@ class SymProcess:
         - Exports Python code for numerical model evaluation
     """
 
-    def __init__(self, model):
+    def __init__(self, dynamic_model: DynamicModel, folder_to_save: str):
         """
         SymProcess class constructor
-        :param model: The model instance containing variables and equations
+        :param dynamic_model: The model instance containing variables and equations
         """
-        self.model = model
+        self.model: DynamicModel = dynamic_model
+        self.folder_to_save = folder_to_save
 
         # Symbolic Parameters
         self.sym_num_params = list()
@@ -208,10 +208,8 @@ class SymProcess:
             - Sparsity pattern (Jacobian info)
         :return: The path to the generated Python file
         """
-
-        generated_module_path = get_generated_module_path()
         filename = f"{self.model.name}.py"
-        file_path = os.path.join(generated_module_path, filename)
+        file_path = os.path.join(self.folder_to_save, filename)
 
         with open(file_path, 'w') as f:
             f.write("from numba import njit\n")

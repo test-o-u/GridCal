@@ -2,20 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-import pdb
-import sympy as sp
-from sympy.matrices import zeros, ones
-from sympy import preview
-from sympy import pprint
-import logging
 
 import numpy as np
-import GridCalEngine.Devices.Dynamic.io.config as config
-from scipy.sparse import coo_matrix, diags
-from collections import defaultdict
+import sympy as sym
+import scipy.sparse as sp
+import logging
+
+from GridCalEngine.Simulations.Dynamic.dynamic_model_store import DynamicModelStore
+from GridCalEngine.Simulations.Dynamic.dynamic_system_store import DynamicSystemStore
 
 
-class DAE:
+class DifferentialAlgebraicEquation:
     """
     DAE (Differential-Algebraic Equation) class to store and manage.
 
@@ -26,14 +23,14 @@ class DAE:
         - Store sparsity patterns
     """
 
-    def __init__(self, system):
+    def __init__(self, system: DynamicSystemStore):
         """
         DAE class constructor
         Initialize DAE object with required containers and defaults.
         :param system: The simulation system object to which this DAE is tied
         """
 
-        self.system = system
+        self.system: DynamicSystemStore = system
 
         # List to store variables internal variables of the system (used to analyze simulation data)
         self.internal_variables_list = list()
@@ -66,20 +63,20 @@ class DAE:
 
         # Lists to accumulate Jacobian positions, values and equations
 
-        self._dfx_jac_positions = np.zeros((self.ndfx), dtype = object)
-        self._dfy_jac_positions = np.zeros((self.ndfy), dtype = object)
-        self._dgx_jac_positions = np.zeros((self.ndgx), dtype = object)
-        self._dgy_jac_positions = np.zeros((55), dtype = object)
+        self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
+        self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
+        self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
+        self._dgy_jac_positions = np.zeros(55, dtype=object)  # TODO: investigate 2-pass sizing
 
-        self._dfx_jac_values = np.zeros((self.ndfx))
-        self._dfy_jac_values = np.zeros((self.ndfy))
-        self._dgx_jac_values = np.zeros((self.ndgx))
-        self._dgy_jac_values = np.zeros((55))
+        self._dfx_jac_values = np.zeros(self.ndfx)
+        self._dfy_jac_values = np.zeros(self.ndfy)
+        self._dgx_jac_values = np.zeros(self.ndgx)
+        self._dgy_jac_values = np.zeros(55)  # TODO: investigate 2-pass sizing
 
-        self._dfx_jac_equ = np.zeros((self.ndfx), dtype = object)
-        self._dfy_jac_equ = np.zeros((self.ndfy), dtype = object)
-        self._dgx_jac_equ = np.zeros((self.ndgx), dtype = object)
-        self._dgy_jac_equ = np.zeros((55), dtype = object)
+        self._dfx_jac_equ = np.zeros(self.ndfx, dtype=object)
+        self._dfy_jac_equ = np.zeros(self.ndfy, dtype=object)
+        self._dgx_jac_equ = np.zeros(self.ndgx, dtype=object)
+        self._dgy_jac_equ = np.zeros(55, dtype=object)  # TODO: investigate 2-pass sizing
 
         # Sparse Jacobian values
         self.dfx = None
@@ -94,12 +91,12 @@ class DAE:
         self.dgy_equ = None
 
         # Sets to store sparsity pattern
-        self.sparsity_fx = np.zeros((self.ndfx), dtype=object)
-        self.sparsity_fy = np.zeros((self.ndfy), dtype=object)
-        self.sparsity_gx = np.zeros((self.ndgx), dtype=object)
-        self.sparsity_gy = np.zeros((55), dtype=object)
+        self.sparsity_fx = np.zeros(self.ndfx, dtype=object)
+        self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
+        self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
+        self.sparsity_gy = np.zeros(55, dtype=object)
 
-        # NOTE: To change!
+        # TODO: To change!
         self.Tf = list()
 
     def initilize_fg(self):
@@ -144,36 +141,35 @@ class DAE:
         self.f = np.zeros(self.nx)
         self.g = np.zeros(self.ny)
 
-        self.sparsity_fx = np.zeros((self.ndfx), dtype = object)
-        self.sparsity_fy = np.zeros((self.ndfy), dtype = object)
-        self.sparsity_gx = np.zeros((self.ndgx), dtype = object)
-        self.sparsity_gy = np.zeros((55), dtype = object)
+        self.sparsity_fx = np.zeros(self.ndfx, dtype=object)
+        self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
+        self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
+        self.sparsity_gy = np.zeros(55, dtype=object)
 
-        self._dfx_jac_positions = np.zeros((self.ndfx), dtype = object)
-        self._dfy_jac_positions = np.zeros((self.ndfy), dtype = object)
-        self._dgx_jac_positions = np.zeros((self.ndgx), dtype = object)
-        self._dgy_jac_positions = np.zeros((55), dtype = object)
+        self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
+        self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
+        self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
+        self._dgy_jac_positions = np.zeros(55, dtype=object)
 
-        self._dfx_jac_values = np.zeros((self.ndfx))
-        self._dfy_jac_values = np.zeros((self.ndfy))
-        self._dgx_jac_values = np.zeros((self.ndgx))
-        self._dgy_jac_values = np.zeros((55))
+        self._dfx_jac_values = np.zeros(self.ndfx)
+        self._dfy_jac_values = np.zeros(self.ndfy)
+        self._dgx_jac_values = np.zeros(self.ndgx)
+        self._dgy_jac_values = np.zeros(55)
 
-        self._dfx_jac_equ = np.zeros((self.ndfx), dtype = object)
-        self._dfy_jac_equ = np.zeros((self.ndfy), dtype = object)
-        self._dgx_jac_equ = np.zeros((self.ndgx), dtype = object)
-        self._dgy_jac_equ = np.zeros((55), dtype = object)
+        self._dfx_jac_equ = np.zeros(self.ndfx, dtype=object)
+        self._dfy_jac_equ = np.zeros(self.ndfy, dtype=object)
+        self._dgx_jac_equ = np.zeros(self.ndgx, dtype=object)
+        self._dgy_jac_equ = np.zeros(55, dtype=object)
 
         for device in self.system.devices.values():
             if device.name != 'Bus':
+                # Initialize lists to store the addresses of the variables in the order of the input of the functions.
+                device.f_inputs_order = np.zeros((device.n, len(device.f_args)), dtype=object)
+                device.g_inputs_order = np.zeros((device.n, len(device.g_args)), dtype=object)
 
                 # Initialize lists to store the addresses of the variables in the order of the input of the functions.
-                device.f_inputs_order = np.zeros((device.n, len(device.f_args)), dtype = object)
-                device.g_inputs_order = np.zeros((device.n, len(device.g_args)), dtype = object)
-
-                # Initialize lists to store the addresses of the variables in the order of the input of the functions.
-                device.f_jac_inputs_order = np.zeros((device.n, len(device.f_jac_args)), dtype = object)
-                device.g_jac_inputs_order = np.zeros((device.n, len(device.g_jac_args)), dtype = object)
+                device.f_jac_inputs_order = np.zeros((device.n, len(device.f_jac_args)), dtype=object)
+                device.g_jac_inputs_order = np.zeros((device.n, len(device.g_jac_args)), dtype=object)
 
                 # Store input values in device
 
@@ -191,9 +187,8 @@ class DAE:
                 local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions()
 
                 # Initialize lists to store addresses of the variables in the order og the output of the functions.
-                device.f_output_order = np.zeros_like(local_f_values, dtype = object)
-                device.g_output_order = np.zeros_like(local_g_values, dtype = object)
-
+                device.f_output_order = np.zeros_like(local_f_values, dtype=object)
+                device.g_output_order = np.zeros_like(local_g_values, dtype=object)
 
                 eq_type = 'f'
                 pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f,
@@ -212,10 +207,10 @@ class DAE:
                 jacobian, jacobian_info, jacobian_equations = device.calc_local_jacs()
 
                 # Initialize lists to store addresses of the variables in the order of the output of the functions.
-                device.dfx_jac_output_order = np.zeros((device.n, len(jacobian_info['dfx'])), dtype = object)
-                device.dfy_jac_output_order = np.zeros((device.n, len(jacobian_info['dfy'])), dtype = object)
-                device.dgx_jac_output_order = np.zeros((device.n, len(jacobian_info['dgx'])), dtype = object)
-                device.dgy_jac_output_order = np.zeros((device.n, len(jacobian_info['dgy'])), dtype = object)
+                device.dfx_jac_output_order = np.zeros((device.n, len(jacobian_info['dfx'])), dtype=object)
+                device.dfy_jac_output_order = np.zeros((device.n, len(jacobian_info['dfy'])), dtype=object)
+                device.dgx_jac_output_order = np.zeros((device.n, len(jacobian_info['dgx'])), dtype=object)
+                device.dgy_jac_output_order = np.zeros((device.n, len(jacobian_info['dgy'])), dtype=object)
 
                 # calc dfx
                 jac_type = 'dfx'
@@ -257,18 +252,19 @@ class DAE:
                     self.add_to_jacobian_init(self._dgy_jac_positions, self._dgy_jac_values, self._dgy_jac_equ,
                                               self.sparsity_gy, row, col, val, equ)
 
-    def get_input_values(self, device):
+    def get_input_values(self, device: DynamicModelStore):
         """
          Get the input values for the device.
         :param device: The device object for which to get the input values
         :return:
         """
         # Initialize input values lists for f and g
-        values = self.xy
-        self.build_input_values(values, device, device.f_args, device.f_input_values, device.f_inputs_order)
-        self.build_input_values(values, device, device.g_args, device.g_input_values, device.g_inputs_order)
-        self.build_input_values(values, device, device.f_jac_args, device.f_jac_input_values, device.f_jac_inputs_order)
-        self.build_input_values(values, device, device.g_jac_args, device.g_jac_input_values, device.g_jac_inputs_order)
+        self.build_input_values(self.xy, device, device.f_args, device.f_input_values, device.f_inputs_order)
+        self.build_input_values(self.xy, device, device.g_args, device.g_input_values, device.g_inputs_order)
+        self.build_input_values(self.xy, device, device.f_jac_args, device.f_jac_input_values,
+                                device.f_jac_inputs_order)
+        self.build_input_values(self.xy, device, device.g_jac_args, device.g_jac_input_values,
+                                device.g_jac_inputs_order)
 
     def build_input_values(self, values, device, arguments_list, input_values_list, inputs_order_list):
         """
@@ -285,15 +281,15 @@ class DAE:
         for j, arg in enumerate(arguments_list):
             for i in range(device.n):
                 if arg in device.variables_list:
-                    inputs_order_list[i][j] = self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]
-                    input_values_list[i][j] = values[self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]]
+                    inputs_order_list[i][j] = \
+                        self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]
+                    input_values_list[i][j] = values[
+                        self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]]
 
                 else:
                     inputs_order_list[i][j] = 'param'
                     param = getattr(device, arg)
                     input_values_list[i][j] = param.value[i]
-
-
 
     def assign_global_f_g_positions(self, device, local_values, variables_names_for_ordering, outputs_order_list):
         """
@@ -327,15 +323,20 @@ class DAE:
 
         triplets = []
 
-
         for i in range(device.n):
 
             for j, (func_index, var_index) in enumerate(positions):
-                equation_str = sp.sympify(equations[j])
+                equation_str = sym.sympify(equations[j])
                 val = local_jacobian[i][func_index][var_index]
-                address_func = self.addresses_list[device.index][self.variables_list[device.index].index(device.eqs_list[func_index])][i]
-                address_var = self.addresses_list[device.index][self.variables_list[device.index].index(device.vars_list[var_index])][i]
-                outputs_order_triplets[i][j]=(address_func, address_var)
+                address_func = \
+                    self.addresses_list[device.index][
+                        self.variables_list[device.index].index(device.eqs_list[func_index])][
+                        i]
+                address_var = \
+                    self.addresses_list[device.index][
+                        self.variables_list[device.index].index(device.vars_list[var_index])][
+                        i]
+                outputs_order_triplets[i][j] = (address_func, address_var)
                 triplets.append((address_func, address_var, val, equation_str))
 
         return triplets
@@ -373,8 +374,6 @@ class DAE:
             jac_equations[index[0]] = equ
             sparsity_set[index[0]] = [row, col]  # Store pattern
 
-
-
     def finalize_jacobians_init(self):
         """
         Finalize and build all Jacobian matrices as sparse matrices
@@ -383,7 +382,7 @@ class DAE:
         """
 
         self.dfx, self.dfx_equ = self.build_sparse_matrix_init(self._dfx_jac_positions, self._dfx_jac_values,
-                                                               self._dfx_jac_equ,self.sparsity_fx,
+                                                               self._dfx_jac_equ, self.sparsity_fx,
                                                                (self.nx, self.nx), 'dfx')
 
         self.dfy, self.dfy_equ = self.build_sparse_matrix_init(self._dfy_jac_positions, self._dfy_jac_values,
@@ -398,7 +397,7 @@ class DAE:
 
         self.dgy, self.dgy_equ = self.build_sparse_matrix_init(self._dgy_jac_positions, self._dgy_jac_values,
                                                                self._dgy_jac_equ,
-                                                                self.sparsity_gy,
+                                                               self.sparsity_gy,
                                                                (self.ny, self.ny), 'dgy')
 
     def build_sparse_matrix_init(self, jac_positions, jac_values, jac_equations, sparsity_set, shape, jac_type):
@@ -412,36 +411,34 @@ class DAE:
         :return:
         """
 
-
-
         # Enable pretty/LaTeX printing
-        sp.init_printing(use_latex=True)
+        sym.init_printing(use_latex=True)
 
         # Create a symbolic matrix
-        jacobian_equations = zeros(shape[0], shape[1])
+        jacobian_equations = sym.zeros(shape[0], shape[1])
 
         if jac_type == 'dfx':
             values = jac_values.tolist()
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i] = sparsity_set[i]
-            if len(sparsity_set) !=0:
-                rows, cols = zip(*sparsity_set)
-            else:
-                rows, cols = [], []
-
-
-        if jac_type == 'dfy':
-            values = jac_values.tolist()
-            equations = jac_equations.tolist()
-            for i in range(len(sparsity_set)):
-                sparsity_set[i][1] = sparsity_set[i][1]-self.nx
             if len(sparsity_set) != 0:
                 rows, cols = zip(*sparsity_set)
             else:
                 rows, cols = [], []
 
-        if jac_type == 'dgx':
+
+        elif jac_type == 'dfy':
+            values = jac_values.tolist()
+            equations = jac_equations.tolist()
+            for i in range(len(sparsity_set)):
+                sparsity_set[i][1] = sparsity_set[i][1] - self.nx
+            if len(sparsity_set) != 0:
+                rows, cols = zip(*sparsity_set)
+            else:
+                rows, cols = [], []
+
+        elif jac_type == 'dgx':
             values = jac_values.tolist()
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
@@ -451,7 +448,7 @@ class DAE:
             else:
                 rows, cols = [], []
 
-        if jac_type == 'dgy':
+        elif jac_type == 'dgy':
             values = jac_values.tolist()
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
@@ -462,10 +459,13 @@ class DAE:
             else:
                 rows, cols = [], []
 
+        else:
+            raise ValueError(f"jac_type is not expected: {jac_type}")
+
         for j, (row, col) in enumerate(sparsity_set):
             jacobian_equations[row, col] = equations[j]
 
-        return coo_matrix((values, (rows, cols)), shape=shape), jacobian_equations
+        return sp.coo_matrix((values, (rows, cols)), shape=shape), jacobian_equations
 
     def update_fg(self):
         """
@@ -488,20 +488,20 @@ class DAE:
         self.f = np.zeros(self.nx)
         self.g = np.zeros(self.ny)
 
-        self.sparsity_fx = np.zeros((self.ndfx), dtype=object)
-        self.sparsity_fy = np.zeros((self.ndfy), dtype=object)
-        self.sparsity_gx = np.zeros((self.ndgx), dtype=object)
-        self.sparsity_gy = np.zeros((55), dtype=object)
+        self.sparsity_fx = np.zeros(self.ndfx, dtype=object)
+        self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
+        self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
+        self.sparsity_gy = np.zeros(55, dtype=object)
 
-        self._dfx_jac_positions = np.zeros((self.ndfx), dtype = object)
-        self._dfy_jac_positions = np.zeros((self.ndfy), dtype = object)
-        self._dgx_jac_positions = np.zeros((self.ndgx), dtype = object)
-        self._dgy_jac_positions = np.zeros((55), dtype = object)
+        self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
+        self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
+        self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
+        self._dgy_jac_positions = np.zeros(55, dtype=object)
 
-        self._dfx_jac_values = np.zeros((self.ndfx))
-        self._dfy_jac_values = np.zeros((self.ndfy))
-        self._dgx_jac_values = np.zeros((self.ndgx))
-        self._dgy_jac_values = np.zeros((55))
+        self._dfx_jac_values = np.zeros(self.ndfx)
+        self._dfy_jac_values = np.zeros(self.ndfy)
+        self._dgx_jac_values = np.zeros(self.ndgx)
+        self._dgy_jac_values = np.zeros(55)
 
         for device in self.system.devices.values():
 
@@ -579,8 +579,10 @@ class DAE:
 
         self.build_fast_input_values(values, device, device.f_args, device.f_input_values, device.f_inputs_order)
         self.build_fast_input_values(values, device, device.g_args, device.g_input_values, device.g_inputs_order)
-        self.build_fast_input_values(values, device, device.f_jac_args, device.f_jac_input_values, device.f_jac_inputs_order)
-        self.build_fast_input_values(values, device, device.g_jac_args, device.g_jac_input_values, device.g_jac_inputs_order)
+        self.build_fast_input_values(values, device, device.f_jac_args, device.f_jac_input_values,
+                                     device.f_jac_inputs_order)
+        self.build_fast_input_values(values, device, device.g_jac_args, device.g_jac_input_values,
+                                     device.g_jac_inputs_order)
 
     def build_fast_input_values(self, values, device, arguments_list, input_values_list, inputs_order_list):
         """
@@ -668,22 +670,21 @@ class DAE:
         :return:
         """
 
-
         self.dfx = self.build_sparse_matrix(self._dfx_jac_positions, self._dfx_jac_values,
-                                                               self.sparsity_fx,
-                                                               (self.nx, self.nx), 'dfx')
+                                            self.sparsity_fx,
+                                            (self.nx, self.nx), 'dfx')
 
         self.dfy = self.build_sparse_matrix(self._dfy_jac_positions, self._dfy_jac_values,
-                                                               self.sparsity_fy,
-                                                               (self.nx, self.ny), 'dfy')
+                                            self.sparsity_fy,
+                                            (self.nx, self.ny), 'dfy')
 
         self.dgx = self.build_sparse_matrix(self._dgx_jac_positions, self._dgx_jac_values,
-                                                               self.sparsity_gx,
-                                                               (self.ny, self.nx), 'dgx')
+                                            self.sparsity_gx,
+                                            (self.ny, self.nx), 'dgx')
 
         self.dgy = self.build_sparse_matrix(self._dgy_jac_positions, self._dgy_jac_values,
-                                                                self.sparsity_gy,
-                                                               (self.ny, self.ny), 'dgy')
+                                            self.sparsity_gy,
+                                            (self.ny, self.ny), 'dgy')
 
     def build_sparse_matrix(self, jac_positions, jac_values, sparsity_set, shape, jac_type):
         """
@@ -704,7 +705,7 @@ class DAE:
             else:
                 rows, cols = [], []
 
-        if jac_type == 'dfy':
+        elif jac_type == 'dfy':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][1] = sparsity_set[i][1] - self.nx
@@ -713,7 +714,7 @@ class DAE:
             else:
                 rows, cols = [], []
 
-        if jac_type == 'dgx':
+        elif jac_type == 'dgx':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
@@ -722,7 +723,7 @@ class DAE:
             else:
                 rows, cols = [], []
 
-        if jac_type == 'dgy':
+        elif jac_type == 'dgy':
             values = jac_values.tolist()
             for i in range(len(sparsity_set)):
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
@@ -732,12 +733,15 @@ class DAE:
             else:
                 rows, cols = [], []
 
-        return coo_matrix((values, (rows, cols)), shape=shape)
+        else:
+            raise ValueError(f"undefined jac_type :( {jac_type}")
 
-    def finalize_tconst_matrix(self):
+        return sp.coo_matrix((values, (rows, cols)), shape=shape)
+
+    def get_tconst_matrix(self):
         """
         Build a sparse diagonal matrix from the Tf list.
         Typically used for time constant scaling in integration.
         :return:
         """
-        self.Tf = diags(self.Tf)
+        return sp.diags(self.Tf)

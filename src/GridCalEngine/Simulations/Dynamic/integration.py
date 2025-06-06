@@ -5,10 +5,9 @@
 import pdb
 import sys
 import numpy as np
-import scipy as sp
 from scipy.sparse import bmat, identity
 from scipy.sparse.linalg import spsolve
-from scipy import linalg
+from GridCalEngine.basic_structures import Vec
 
 
 class Integration:
@@ -17,7 +16,7 @@ class Integration:
     """
 
     @staticmethod
-    def calc_jac(dae, dt):
+    def calc_jac(dae, dt: float):
         """
         Calculates the Jacobian according to integration method.
         :param dae: DAE class
@@ -27,7 +26,7 @@ class Integration:
         pass
 
     @staticmethod
-    def calc_f_res(x, f, Tf, h, x0, f0):
+    def calc_f_res(x: Vec, f: Vec, Tf, h: float, x0: Vec, f0: Vec):
         """
         Calculates the state residual according to integration method.
         :param x: states variables values array

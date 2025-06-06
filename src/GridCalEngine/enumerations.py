@@ -1354,7 +1354,6 @@ class ResultTypes(Enum):
 
     ShuntReactivePower = 'Shunt reactive power'
 
-
     BusVoltagePolarPlot = 'Voltage plot'
     BusNodalCapacity = "Nodal capacity"
 
@@ -1874,6 +1873,69 @@ class CascadeType(Enum):
         """
         try:
             return CascadeType[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+
+class DynamicVarType(Enum):
+    x = "x",
+    y = "y"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+
+        :param s:
+        :return:
+        """
+        try:
+            return DynamicVarType[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+
+
+class DynamicIntegrationMethod(Enum):
+    Trapezoid = "Trapezoid",
+    BackEuler = "BackEuler"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+
+        :param s:
+        :return:
+        """
+        try:
+            return DynamicIntegrationMethod[s]
         except KeyError:
             return s
 
