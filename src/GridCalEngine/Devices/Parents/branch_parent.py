@@ -17,7 +17,7 @@ from GridCalEngine.Devices.Parents.physical_device import PhysicalDevice
 from GridCalEngine.Devices.Aggregation.branch_group import BranchGroup
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.admittance_matrix import AdmittanceMatrix
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 
 if TYPE_CHECKING:
     from GridCalEngine.Devices.types import CONNECTION_TYPE

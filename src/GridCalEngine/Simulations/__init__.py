@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from GridCalEngine.Simulations.ContinuationPowerFlow import *
-from GridCalEngine.Simulations.Dynamic import *
+from GridCalEngine.Simulations.Rms import *
 from GridCalEngine.Simulations.Stochastic import *
 from GridCalEngine.Simulations.PowerFlow import *
 from GridCalEngine.Simulations.ShortCircuitStudies import *

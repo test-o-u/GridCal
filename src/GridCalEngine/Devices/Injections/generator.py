@@ -9,7 +9,6 @@ import pandas as pd
 from typing import Union
 from matplotlib import pyplot as plt
 
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.enumerations import DeviceType, BuildStatus, SubObjectType
 from GridCalEngine.Devices.Associations.association import Associations

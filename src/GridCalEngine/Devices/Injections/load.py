@@ -9,7 +9,6 @@ from matplotlib import pyplot as plt
 from GridCalEngine.enumerations import DeviceType, BuildStatus
 from GridCalEngine.Devices.Parents.load_parent import LoadParent
 from GridCalEngine.Devices.profile import Profile
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class Load(LoadParent):

@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from typing import Union, List
 
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode

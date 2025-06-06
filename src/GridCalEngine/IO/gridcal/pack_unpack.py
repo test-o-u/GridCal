@@ -10,12 +10,12 @@ import pandas as pd
 import numpy as np
 from enum import EnumMeta as EnumType
 
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 import GridCalEngine.Devices as dev
 from GridCalEngine.Devices.Parents.editable_device import GCProp
 from GridCalEngine.Devices.profile import Profile
+from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 from GridCalEngine.Devices.types import ALL_DEV_TYPES, GRIDCAL_FILE_TYPE
 from GridCalEngine.enumerations import (DiagramType, DeviceType, SubObjectType, TapPhaseControl, TapModuleControl,
                                         ContingencyOperationTypes)

@@ -14,7 +14,7 @@ from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Aggregation.facility import Facility
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 
 if TYPE_CHECKING:
     from GridCalEngine.Devices import Technology

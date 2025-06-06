@@ -7,11 +7,10 @@ from typing import Union
 import numpy as np
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode
-from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
+from GridCalEngine.enumerations import BuildStatus, DeviceType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Parents.injection_parent import InjectionParent
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class GeneratorParent(InjectionParent):

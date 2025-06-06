@@ -14,7 +14,7 @@ from GridCalEngine.Devices.Aggregation import Area, Zone, Country
 from GridCalEngine.Devices.Substation.substation import Substation
 from GridCalEngine.Devices.Substation.voltage_level import VoltageLevel
 from GridCalEngine.Devices.profile import Profile
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 
 
 class Bus(PhysicalDevice):
