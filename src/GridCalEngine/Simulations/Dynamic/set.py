@@ -148,12 +148,10 @@ class SET:
         symb_end = time.perf_counter()
         symb_time = symb_end - symb_st  # Store symbolic processing time
 
-        pdb.set_trace()
-
         # Step 2: Create vectorized model instances for device storage
         dev_st = time.perf_counter()
         #self.create_devices(self.data)
-        self.create_devices_gridcal_int(self.gridcal_data)
+        self.create_devices()
         self.devices.move_to_end('Bus', last=False)
         dev_end = time.perf_counter()
         dev_time = dev_end - dev_st  # Store device creation time
@@ -253,7 +251,7 @@ class SET:
                     self.dae.nx += model.n * model.nx
                     self.dae.ny += model.n * model.ny
 
-    def create_devices(self, data):
+    def create_devices(self):
         """
         Populates vectorized model instances with device data from a parsed JSON file.
         :param data: A dictionary with model names as keys and lists of device data as values
@@ -263,14 +261,12 @@ class SET:
         sim_dev = ['Bus', 'ACLine', 'ExpLoad', 'GENCLS']
 
         device_index = 0
-        for model_name, device_list in data.items():
+        for model in self.system.models():
 
-            if model_name in sim_dev:
+            if model.name in sim_dev:
 
-                # Retrieve the corresponding model instance
-                model = self.models[model_name]
                 # Save system devices
-                self.devices[model_name] = model
+                self.devices[model.name] = model
                 # set device index
                 model.index = device_index
                 device_index += 1
@@ -290,21 +286,8 @@ class SET:
                 self.dae.ndgy += len(model.jacobian_info['dgy'])
 
 
-                for device in device_list:
-                    # Increment the count of devices for this model
 
-                    for param_name, value in device.items():
-                        if hasattr(model, param_name):
-                            param = getattr(model, param_name)
-
-                            # Store parameter values in the appropriate structure: either IdxDynParam or NumDynParam
-                            if isinstance(param, list):
-                                param.insert(model.n, value)
-                            if isinstance(param, IdxDynParam):
-                                param.id.insert(model.n, value)
-                            if isinstance(param, NumDynParam):
-                                param.value.insert(model.n,value)
-                    model.n += 1
+                model.n = 1
                 # calculate nx and ny and save it in dae
                 self.dae.nx += model.n * model.nx
                 self.dae.ny += model.n * model.ny

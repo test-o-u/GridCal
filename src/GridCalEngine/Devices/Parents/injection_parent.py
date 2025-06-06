@@ -55,8 +55,7 @@ class InjectionParent(PhysicalDevice):
                  capex: float,
                  opex: float,
                  build_status: BuildStatus,
-                 device_type: DeviceType,
-                 _dynamic_model: DynamicModel = None):
+                 device_type: DeviceType):
         """
         InjectionTemplate
         :param name: Name of the device
@@ -107,7 +106,7 @@ class InjectionParent(PhysicalDevice):
 
         self._use_kw: bool = False
 
-        self._dynamic_model: DynamicModel = _dynamic_model
+        self._dynamic_model: DynamicModel = DynamicModel()
 
         self.register(key='bus', units='', tpe=DeviceType.BusDevice, definition='Connection bus', editable=False)
 
@@ -248,6 +247,11 @@ class InjectionParent(PhysicalDevice):
     @property
     def dynamic_model(self) -> DynamicModel:
         return self._dynamic_model
+
+    @dynamic_model.setter
+    def dynamic_model(self, value: DynamicModel):
+        if isinstance(value, DynamicModel):
+            self._dynamic_model = value
 
     def get_S(self) -> complex:
         """

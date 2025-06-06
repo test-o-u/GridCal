@@ -24,7 +24,6 @@ class Generator(GeneratorParent):
                  name: object = 'gen',
                  idtag: Union[str, None] = None,
                  code: str = '',
-                 _dynamic_model: DynamicModel = None,
                  P: float = 0.0,
                  power_factor: float = 0.8,
                  vset: float = 1.0,
@@ -107,8 +106,7 @@ class Generator(GeneratorParent):
                                  opex=opex,
                                  srap_enabled=srap_enabled,
                                  build_status=build_status,
-                                 device_type=DeviceType.GeneratorDevice,
-                                 _dynamic_model= _dynamic_model)
+                                 device_type=DeviceType.GeneratorDevice)
         
         # is the device active for active power dispatch?
         self.enabled_dispatch = bool(enabled_dispatch)

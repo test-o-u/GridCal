@@ -74,8 +74,7 @@ class Line(BranchParent):
                  capex=0,
                  opex=0,
                  circuit_idx: int = 0,
-                 build_status: BuildStatus = BuildStatus.Commissioned,
-                 _dynamic_model: DynamicModel = None):
+                 build_status: BuildStatus = BuildStatus.Commissioned):
         """
         AC current Line
         :param bus_from: "From" :ref:`bus<Bus>` object
@@ -136,8 +135,7 @@ class Line(BranchParent):
                               capex=capex,
                               opex=opex,
                               cost=cost,
-                              device_type=DeviceType.LineDevice,
-                              _dynamic_model=_dynamic_model)
+                              device_type=DeviceType.LineDevice)
 
         # line length in km
         self._length = float(length)

@@ -18,7 +18,6 @@ class Load(LoadParent):
     """
 
     def __init__(self, name='Load', idtag=None, code='',
-                 _dynamic_model: DynamicModel = None,
                  G=0.0, B=0.0, Ir=0.0, Ii=0.0, P=0.0, Q=0.0, Cost=1200.0,
                  active=True, mttf=0.0, mttr=0.0, capex=0, opex=0,
                  build_status: BuildStatus = BuildStatus.Commissioned):
@@ -55,8 +54,7 @@ class Load(LoadParent):
                             capex=capex,
                             opex=opex,
                             build_status=build_status,
-                            device_type=DeviceType.LoadDevice,
-                            _dynamic_model=_dynamic_model)
+                            device_type=DeviceType.LoadDevice)
 
         self.G = float(G)
         self.B = float(B)

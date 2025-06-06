@@ -67,8 +67,7 @@ class BranchParent(PhysicalDevice):
                  opex: float,
                  cost: float,
                  device_type: DeviceType,
-                 color: str | None = None,
-                 _dynamic_model: DynamicModel = None):
+                 color: str | None = None):
         """
 
         :param name: name of the branch
@@ -152,7 +151,7 @@ class BranchParent(PhysicalDevice):
         # group of this branch
         self.group: Union[BranchGroup, None] = None
 
-        self._dynamic_model: DynamicModel = _dynamic_model
+        self._dynamic_model: DynamicModel = DynamicModel()
 
         self.register('bus_from', units="", tpe=DeviceType.BusDevice,
                       definition='Name of the bus at the "from" side', editable=False)
@@ -206,6 +205,11 @@ class BranchParent(PhysicalDevice):
     @property
     def dynamic_model(self) -> DynamicModel:
         return self._dynamic_model
+
+    @dynamic_model.setter
+    def dynamic_model(self, value:DynamicModel):
+        if isinstance(value, DynamicModel):
+            self._dynamic_model = value
 
 
     @property

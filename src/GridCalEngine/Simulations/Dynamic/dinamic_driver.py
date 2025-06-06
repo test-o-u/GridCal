@@ -40,7 +40,6 @@ class DynamicDriver(DriverTemplate):
 
         DriverTemplate.__init__(self, grid=grid, engine=engine)
 
-        self.grid = grid
 
     def run(self):
         """

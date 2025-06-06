@@ -383,54 +383,60 @@ load_data = {
 np.set_printoptions(precision=4)
 grid = MultiCircuit()
 
-MyBus1 = DynamicModel()
-MyBus1.parse(bus1_data)
-
-MyBus2 = DynamicModel()
-MyBus2.parse(bus2_data)
-
-MyBranch1 = DynamicModel()
-MyBranch1.parse(branch_data)
-
-MySlackGenerator1 = DynamicModel()
-MySlackGenerator1.parse(slack_gen_data)
-
-MySynGenerator1 = DynamicModel()
-MySynGenerator1.parse(syn_gen_data)
-
-MyLoad1 = DynamicModel()
-MyLoad1.parse(load_data)
+# MyBus1 = DynamicModel()
+# MyBus1.parse(bus1_data)
+#
+# MyBus2 = DynamicModel()
+# MyBus2.parse(bus2_data)
+#
+# MyBranch1 = DynamicModel()
+# MyBranch1.parse(branch_data)
+#
+# MySlackGenerator1 = DynamicModel()
+# MySlackGenerator1.parse(slack_gen_data)
+#
+# MySynGenerator1 = DynamicModel()
+# MySynGenerator1.parse(syn_gen_data)
+#
+# MyLoad1 = DynamicModel()
+# MyLoad1.parse(load_data)
 
 
 
 
 # Add the buses and the generators and loads attached
-bus1 = Bus('Bus 1', Vnom=20, _dynamic_model= MyBus1)
+bus1 = Bus('Bus 1', Vnom=20)
+bus1.dynamic_model.parse(bus1_data)
 grid.add_bus(bus1)
 
-bus2 = Bus('Bus 2', Vnom=20, _dynamic_model= MyBus2)
+bus2 = Bus('Bus 2', Vnom=20)
+bus2.dynamic_model.parse(bus2_data)
 grid.add_bus(bus2)
 
-# add branches (Lines in this case)
-# Branch1 = Branch(bus1, bus2, 'line 1-2', r=0.05, x=0.11, b=0.02, _dynamic_model=MyBranch1)
-# grid.add_branch(Branch1)
+#add branches (Lines in this case)
+line1 = Line(bus_from=bus1, bus_to=bus2, name='line 1-2', r=0.05, x=0.11, b=0.02)
+line1.dynamic_model.parse(branch_data)
+grid.add_line(line1)
 
-gen1 = StaticGenerator(name="slack_gen_1", P=4.0, Q=2, _dynamic_model= MySlackGenerator1)
+gen1 = StaticGenerator(name="slack_gen_1", P=4.0, Q=2)
+gen1.dynamic_model.parse(slack_gen_data)
 grid.add_static_generator(bus=bus1, api_obj=gen1)
 
-gen2 = Generator('Sync Generator', vset=1.0, _dynamic_model= MySynGenerator1)
+gen2 = Generator('Sync Generator', vset=1.0)
+gen2.dynamic_model.parse(syn_gen_data)
 grid.add_generator(bus1, api_obj=gen2)
 
-Load1 = Load('load_1', P=40, Q=20, _dynamic_model= MyLoad1)
+Load1 = Load('load_1', P=40, Q=20)
+Load1.dynamic_model.parse(load_data)
 grid.add_load(bus2, api_obj=Load1)
 
 # to access elements of the grid:
     #grid._generators
     #grid._loads...
-
+#
 # for item in grid.items():
 #     pdb.set_trace()
-#     dynamic_model = item._dynamic_model
+#     dynamic_model = item.dynamic_model
 #     dynamic_model_name = dynamic_model.name
 
 # Once the grid is built we can access dynamic models and create the dynamic system

@@ -38,8 +38,7 @@ class GeneratorParent(InjectionParent):
                  opex: float,
                  srap_enabled: bool,
                  build_status: BuildStatus,
-                 device_type: DeviceType,
-                 _dynamic_model: DynamicModel = None):
+                 device_type: DeviceType):
         """
 
         :param name: Name of the device
@@ -74,8 +73,7 @@ class GeneratorParent(InjectionParent):
                                  capex=capex,
                                  opex=opex,
                                  build_status=build_status,
-                                 device_type=device_type,
-                                 _dynamic_model=_dynamic_model)
+                                 device_type=device_type)
 
 
         self.control_bus = control_bus

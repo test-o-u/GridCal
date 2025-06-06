@@ -45,8 +45,7 @@ class Bus(PhysicalDevice):
                  longitude=0.0,
                  latitude=0.0,
                  Vm0=1,
-                 Va0=0,
-                 _dynamic_model: DynamicModel = None):
+                 Va0=0):
         """
         The Bus object is the container of all the possible devices that can be attached to
         a bus bar or Substation. Such objects can be loads, voltage controlled generators,
@@ -172,7 +171,7 @@ class Bus(PhysicalDevice):
         self.ph_n: bool = True
         self.is_grounded: bool = True
 
-        self._dynamic_model: DynamicModel = _dynamic_model
+        self._dynamic_model: DynamicModel = DynamicModel()
 
         self.register(key='active', units='', tpe=bool, definition='Is the bus active? used to disable the bus.',
                       profile_name='active_prof')
@@ -232,6 +231,11 @@ class Bus(PhysicalDevice):
     @property
     def dynamic_model(self) -> DynamicModel:
         return self._dynamic_model
+
+    @dynamic_model.setter
+    def dynamic_model(self, value: DynamicModel):
+        if isinstance(value, DynamicModel):
+            self._dynamic_model = value
 
     @property
     def active_prof(self) -> Profile:

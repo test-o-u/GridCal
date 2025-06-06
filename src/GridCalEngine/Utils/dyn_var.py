@@ -116,7 +116,7 @@ class StatVar(DynVar):
 
 
 class ExternVar(DynVar):
-    def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: int = -1,
+    def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "",
                  init_eq: str = "", eq: str = ""):
         DynVar.__init__(self, name=name,
                         symbol=symbol,
@@ -150,7 +150,7 @@ class ExternState(ExternVar):
                  name: str = "",
                  symbol: str = "",
                  src: str = "",
-                 indexer: int = -1,
+                 indexer: str = "",
                  init_eq: str = "",
                  eq: str = ""):
         ExternVar.__init__(self, name=name,
@@ -181,7 +181,7 @@ class ExternState(ExternVar):
 
 class ExternAlgeb(ExternVar):
     def __init__(self, name: str = "", symbol: str = "", src: str = "",
-                 indexer: int = -1, init_eq: str = "", eq: str = ""):
+                 indexer: str = "", init_eq: str = "", eq: str = ""):
         """
 
         :param name:

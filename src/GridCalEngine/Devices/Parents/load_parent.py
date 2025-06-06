@@ -36,8 +36,7 @@ class LoadParent(InjectionParent):
                  capex: float,
                  opex: float,
                  build_status: BuildStatus,
-                 device_type: DeviceType,
-                 _dynamic_model: DynamicModel = None):
+                 device_type: DeviceType):
 
         """
         LoadLikeTemplate
@@ -71,8 +70,7 @@ class LoadParent(InjectionParent):
                                  capex=capex,
                                  opex=opex,
                                  build_status=build_status,
-                                 device_type=device_type,
-                                 _dynamic_model=_dynamic_model)
+                                 device_type=device_type)
 
         self.P = float(P)
         self._P_prof = Profile(default_value=self.P, data_type=float)
