@@ -18,7 +18,10 @@ class ReliabilityStudyDriver(DriverTemplate):
     name = 'Reliability analysis'
     tpe = SimulationTypes.Reliability_run
 
-    def __init__(self, grid: MultiCircuit, pf_options: PowerFlowOptions,
+    def __init__(self,
+                 grid: MultiCircuit,
+                 pf_options: PowerFlowOptions,
+                 time_indices=None,
                  n_sim: int = 1000000):
         """
         ContinuationPowerFlowDriver constructor
@@ -36,7 +39,7 @@ class ReliabilityStudyDriver(DriverTemplate):
         self.results = ReliabilityResults(nsim=n_sim)
 
         self.greedy_dispatch_inputs = GreedyDispatchInputs(grid=grid,
-                                                           time_indices=None,
+                                                           time_indices=time_indices,
                                                            logger=self.logger)
 
         self.__cancel__ = False
@@ -103,6 +106,7 @@ class ReliabilityStudyDriver(DriverTemplate):
             batt_energy_max=self.greedy_dispatch_inputs.batt_energy_max,
             batt_eff_charge=self.greedy_dispatch_inputs.batt_eff_charge,
             batt_eff_discharge=self.greedy_dispatch_inputs.batt_eff_discharge,
+            batt_cost=self.greedy_dispatch_inputs.batt_cost,
             batt_soc0=self.greedy_dispatch_inputs.batt_soc0,
             batt_soc_min=self.greedy_dispatch_inputs.batt_soc_min,
             dt=self.greedy_dispatch_inputs.dt,
@@ -119,18 +123,3 @@ class ReliabilityStudyDriver(DriverTemplate):
 
     def cancel(self):
         self.__cancel__ = True
-
-
-if __name__ == '__main__':
-    import GridCalEngine.api as gce
-    from matplotlib import pyplot as plt
-
-    fname = "/home/santi/Documentos/Git/eRoots/tonga_planning/model_conversion_and_validation/Tongatapu/models/Tongatapu_v4_2024_ts.gridcal"
-
-    grid_ = gce.open_file(fname)
-    options_ = PowerFlowOptions()
-    problem = ReliabilityStudyDriver(grid=grid_, pf_options=options_, n_sim=1000)
-    problem.run()
-
-    plt.plot(problem.results.lole_evolution)
-    plt.show()

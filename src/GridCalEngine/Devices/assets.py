@@ -600,7 +600,7 @@ class Assets:
         :param logger: Logger to record events
         """
         if obj.should_this_be_a_transformer(branch_connection_voltage_tolerance=0.1, logger=logger):
-            tr = obj.get_equivalent_transformer()
+            tr = obj.get_equivalent_transformer(index=self.time_profile)
             self.add_transformer2w(tr)
         else:
             if self.time_profile is not None:
@@ -1285,7 +1285,7 @@ class Assets:
         """
 
         # delete associated Branches in reverse order
-        for branch_list in self.get_branch_lists():
+        for branch_list in self.get_branch_lists(add_vsc=True, add_hvdc=True, add_switch=True):
             for i in range(len(branch_list) - 1, -1, -1):
                 if branch_list[i].bus_from == obj:
                     if delete_associated:
@@ -4647,7 +4647,7 @@ class Assets:
         elif obj.device_type == DeviceType.BranchDevice:
 
             if obj.should_this_be_a_transformer():
-                self.add_transformer2w(obj.get_equivalent_transformer())
+                self.add_transformer2w(obj.get_equivalent_transformer(index=self.time_profile))
             else:
                 self.add_line(obj.get_equivalent_line())
         else:
@@ -4661,7 +4661,7 @@ class Assets:
 
             **obj** (:ref:`Branch<branch>`): :ref:`Branch<branch>` object
         """
-        for branch_list in self.get_branch_lists():
+        for branch_list in self.get_branch_lists(add_vsc=True, add_hvdc=True, add_switch=True):
             try:
                 branch_list.remove(obj)
                 self.delete_groupings_with_object(obj=obj)
@@ -4698,8 +4698,8 @@ class Assets:
 
         return lst
 
-    def get_branches(self, add_vsc: bool = True, add_hvdc: bool = True,
-                     add_switch: bool = False) -> List[BRANCH_TYPES]:
+    def get_branches(self, add_vsc: bool = False, add_hvdc: bool = False,
+                     add_switch: bool = True) -> List[BRANCH_TYPES]:
         """
         Return all the branch objects
         :param add_vsc: Include the list of VSC?
@@ -4727,9 +4727,9 @@ class Assets:
             for elm in lst:
                 yield elm
 
-    def get_branch_number(self, add_vsc: bool = True,
-                          add_hvdc: bool = True,
-                          add_switch: bool = False) -> int:
+    def get_branch_number(self, add_vsc: bool = False,
+                          add_hvdc: bool = False,
+                          add_switch: bool = True) -> int:
         """
         return the number of Branches (of all types)
         :param add_vsc: Include the list of VSC?
@@ -4799,8 +4799,8 @@ class Assets:
                                                                   add_switch=add_switch))}
 
     def get_branches_index_dict2(self, add_vsc: bool = True,
-                                add_hvdc: bool = True,
-                                add_switch: bool = False) -> Dict[str, int]:
+                                 add_hvdc: bool = True,
+                                 add_switch: bool = False) -> Dict[str, int]:
         """
         Get the branch to index dictionary
         :param add_vsc: Include the list of VSC?
@@ -4809,8 +4809,8 @@ class Assets:
         :return: Branch idtag to index
         """
         return {b.idtag: i for i, b in enumerate(self.get_branches_iter(add_vsc=add_vsc,
-                                                                  add_hvdc=add_hvdc,
-                                                                  add_switch=add_switch))}
+                                                                        add_hvdc=add_hvdc,
+                                                                        add_switch=add_switch))}
 
     def get_branches_dict(self, add_vsc: bool = True,
                           add_hvdc: bool = True,
@@ -4845,98 +4845,6 @@ class Assets:
             F[i] = bus_dict[elm.bus_from]
             T[i] = bus_dict[elm.bus_to]
         return F, T
-
-    def get_branches_wo_hvdc(self) -> list[BRANCH_TYPES]:
-        """
-        Return all the real branch objects.
-        :return: lines + transformers 2w
-        """
-        return self.get_branches(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branches_wo_vsc_hvdc(self) -> list[BRANCH_TYPES]:
-        """
-        Return all the real branch objects.
-        :return: lines + transformers 2w
-        """
-        return self.get_branches(add_vsc=False, add_hvdc=False, add_switch=False)
-
-    def get_branch_names_wo_hvdc(self) -> StrVec:
-        """
-        Get all branch names without HVDC devices
-        :return: StrVec
-        """
-        return self.get_branch_names(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branch_names_wo_hvdc_w_switch(self) -> StrVec:
-        """
-        Get all branch names without HVDC devices
-        :return: StrVec
-        """
-        return self.get_branch_names(add_vsc=True, add_hvdc=False, add_switch=True)
-
-    def get_branch_names_wo_vsc_hvdc(self) -> StrVec:
-        """
-        Get all branch names without VSC nor HVDC devices
-        :return: StrVec
-        """
-        return self.get_branch_names(add_vsc=False, add_hvdc=False, add_switch=False)
-
-    def get_branch_number_wo_hvdc(self) -> int:
-        """
-        return the number of Branches (of all types)
-        :return: number
-        """
-        return self.get_branch_number(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branch_number_wo_vsc_hvdc(self) -> int:
-        """
-        return the number of Branches (of all types)
-        :return: number
-        """
-        return self.get_branch_number(add_vsc=False, add_hvdc=False, add_switch=False)
-
-    def get_branch_number_wo_hvdc_w_switch(self) -> int:
-        """
-        return the number of Branches (with no HVDC)
-        :return: number
-        """
-        return self.get_branch_number(add_vsc=True, add_hvdc=False, add_switch=True)
-
-    def get_branches_wo_hvdc_iter(self) -> Generator[BRANCH_TYPES, None, None]:
-        """
-        Iterator all the real branch objects.
-        :return: lines + transformers 2w + hvdc
-        """
-        return self.get_branches_iter(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branches_wo_vsc_hvdc_iter(self) -> Generator[BRANCH_TYPES, None, None]:
-        """
-        Iterator all the real branch objects.
-        :return: lines + transformers 2w + hvdc + vsc
-        """
-        return self.get_branches_iter(add_vsc=False, add_hvdc=False, add_switch=False)
-
-    def get_branches_wo_hvdc_index_dict(self) -> Dict[BRANCH_TYPES, int]:
-        """
-        Get the branch to index dictionary
-        :return:
-        """
-        return self.get_branches_index_dict(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branches_wo_hvdc_dict(self) -> Dict[str, int]:
-        """
-        Get dictionary of branches (excluding HVDC)
-        the key is the idtag, the value is the branch position
-        :return: Dict[str, int]
-        """
-        return self.get_branches_dict(add_vsc=True, add_hvdc=False, add_switch=False)
-
-    def get_branch_number_wo_hvdc_FT(self) -> Tuple[IntVec, IntVec]:
-        """
-        get the from and to arrays of indices
-        :return: IntVec, IntVec
-        """
-        return self.get_branch_FT(add_vsc=True, add_hvdc=False, add_switch=False)
 
     def delete_groupings_with_object(self, obj: BRANCH_TYPES, delete_groups: bool = True):
         """
@@ -5391,7 +5299,7 @@ class Assets:
             return self.get_load_like_devices()
 
         elif device_type == DeviceType.BranchDevice:
-            return self.get_branches_wo_hvdc()
+            return self.get_branches(add_hvdc=False, add_vsc=False, add_switch=True)
 
         elif device_type == DeviceType.ShuntLikeDevice:
             return self.get_shunt_like_devices()
@@ -6034,22 +5942,36 @@ class Assets:
             for elm in elements:
                 yield elm
 
-    def get_all_elements_dict(self, logger=Logger()) -> Tuple[Dict[str, ALL_DEV_TYPES], bool]:
+    def get_all_elements_dict(self,
+                              use_secondary_key: bool = False,
+                              use_rdfid: bool = False,
+                              logger=Logger()) -> Tuple[Dict[str, ALL_DEV_TYPES], bool]:
         """
         Get a dictionary of all elements
+        :param use_secondary_key: if true the code i˘s used as key
+        :param use_rdfid: if true the rdfid is used as key
         :param: logger: Logger
         :return: Dict[idtag] -> object, ok
         """
         data = dict()
         ok = True
         for key, tpe in self.device_type_name_dict.items():
+
             elements = self.get_elements_by_type(device_type=tpe)
 
             for elm in elements:
 
                 e = data.get(elm.idtag, None)
+
                 if e is None:
-                    data[elm.idtag] = elm
+
+                    if use_secondary_key:
+                        data[elm.code] = elm
+                    elif use_rdfid:
+                        data[elm.rdfid] = elm
+                    else:
+                        data[elm.idtag] = elm
+
                 else:
                     logger.add_error(
                         msg="Duplicated idtag!",
@@ -6088,17 +6010,22 @@ class Assets:
 
         return data
 
-    def get_elements_dict_by_type(self, element_type: DeviceType,
-                                  use_secondary_key=False) -> Dict[str, ALL_DEV_TYPES]:
+    def get_elements_dict_by_type(self,
+                                  element_type: DeviceType,
+                                  use_secondary_key: bool = False,
+                                  use_rdfid: bool = False) -> Dict[str, ALL_DEV_TYPES]:
         """
         Get dictionary of elements
         :param element_type: element type (Bus, Line, etc...)
         :param use_secondary_key: use the code as dictionary key? otherwise the idtag is used
+        :param use_rdfid: if true the rdfid is used as key
         :return: Dict[str, dev.EditableDevice]
         """
 
         if use_secondary_key:
             return {elm.code: elm for elm in self.get_elements_by_type(element_type)}
+        elif use_rdfid:
+            return {elm.rdfid: elm for elm in self.get_elements_by_type(element_type)}
         else:
             return {elm.idtag: elm for elm in self.get_elements_by_type(element_type)}
 

@@ -5,6 +5,7 @@
 
 import numpy as np
 import numba as nb
+import warnings
 import scipy.sparse as sp
 from typing import Union, List, Dict
 
@@ -176,11 +177,12 @@ def make_ptdf(Bpqpv: sp.csc_matrix,
     return H
 
 
-def make_acdc_ptdf(nc: NumericalCircuit,
-                   distribute_slack: bool = True) -> Mat:
+def make_acdc_ptdf(nc: NumericalCircuit, logger: Logger,
+                   distribute_slack: bool = False) -> Mat:
     """
     Build the ACDC PTDF matrix
     :param nc: NumericalCircuit
+    :param logger: Logger
     :param distribute_slack: distribute the slack?
     :return: PTDF matrix. It is a full matrix of dimensions Branches x buses
     """
@@ -214,6 +216,26 @@ def make_acdc_ptdf(nc: NumericalCircuit,
         A[t, f] -= ys
         A[t, t] += ys
 
+    # fake impedances for converters
+    for k in range(nc.nvsc):
+        f = nc.vsc_data.F[k]
+        t = nc.vsc_data.T[k]
+        ys = 1e15
+        A[f, f] += ys
+        A[f, t] -= ys
+        A[t, f] -= ys
+        A[t, t] += ys
+
+    # fake impedances for hvdc
+    for k in range(nc.nhvdc):
+        f = nc.hvdc_data.F[k]
+        t = nc.hvdc_data.T[k]
+        ys = 1e15
+        A[f, f] += ys
+        A[f, t] -= ys
+        A[t, f] -= ys
+        A[t, t] += ys
+
     # detect how to slice
     no_slack = list()
     dc_sl = list()
@@ -239,10 +261,16 @@ def make_acdc_ptdf(nc: NumericalCircuit,
 
     Ared = A[no_slack, :][:, no_slack]
     Pred = dP[no_slack, :]
-    dtheta_ref = sp.linalg.spsolve(Ared.tocsc(), Pred)
 
     dTheta = np.zeros((n, n))
-    dTheta[no_slack, :] = dtheta_ref
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            dtheta_ref = sp.linalg.spsolve(Ared.tocsc(), Pred)
+            dTheta[no_slack, :] = dtheta_ref
+        except sp.linalg.MatrixRankWarning as e:
+            logger.add_error("ACDC PTDF singular matrix. Does each subgrid have a slack?")
 
     H = Af @ dTheta
 
@@ -346,7 +374,8 @@ class LinearAnalysis:
     def __init__(self,
                  nc: NumericalCircuit,
                  distributed_slack: bool = True,
-                 correct_values: bool = False):
+                 correct_values: bool = False,
+                 logger: Logger = Logger()):
         """
         Linear Analysis constructor
         :param nc: numerical circuit instance
@@ -354,7 +383,7 @@ class LinearAnalysis:
         :param correct_values: boolean to fix out layer values
         """
 
-        self.logger: Logger = Logger()
+        self.logger: Logger = logger
 
         islands: List[NumericalCircuit] = nc.split_into_islands()
         n_br = nc.nbr
@@ -382,7 +411,9 @@ class LinearAnalysis:
                     if len(indices.no_slack) > 0:
 
                         if island.bus_data.is_dc.any():
-                            ptdf_island = make_acdc_ptdf(nc=island, distribute_slack=distributed_slack)
+                            ptdf_island = make_acdc_ptdf(nc=island,
+                                                         logger=self.logger,
+                                                         distribute_slack=distributed_slack)
 
                         else:
                             adml = island.get_linear_admittance_matrices(indices=indices)
