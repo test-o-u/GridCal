@@ -13,6 +13,7 @@ from GridCalEngine.enumerations import BuildStatus, DeviceType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Parents.injection_parent import InjectionParent
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class LoadParent(InjectionParent):
@@ -35,7 +36,9 @@ class LoadParent(InjectionParent):
                  capex: float,
                  opex: float,
                  build_status: BuildStatus,
-                 device_type: DeviceType):
+                 device_type: DeviceType,
+                 _dynamic_model: DynamicModel = None):
+
         """
         LoadLikeTemplate
         :param name: Name of the device
@@ -68,7 +71,8 @@ class LoadParent(InjectionParent):
                                  capex=capex,
                                  opex=opex,
                                  build_status=build_status,
-                                 device_type=device_type)
+                                 device_type=device_type,
+                                 _dynamic_model=_dynamic_model)
 
         self.P = float(P)
         self._P_prof = Profile(default_value=self.P, data_type=float)

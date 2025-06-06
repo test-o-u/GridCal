@@ -6,13 +6,13 @@
 
 from GridCalEngine.enumerations import BuildStatus, DeviceType
 from GridCalEngine.Devices.Parents.load_parent import LoadParent
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class StaticGenerator(LoadParent):
 
     def __init__(self, name='StaticGen', idtag=None, code='',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
+                 _dynamic_model: DynamicModel = None,
                  P=0.0, Q=0.0, active=True,
                  mttf=0.0, mttr=0.0, Cost=1200.0,
                  capex=0, opex=0, build_status: BuildStatus = BuildStatus.Commissioned):
@@ -47,4 +47,5 @@ class StaticGenerator(LoadParent):
                             capex=capex,
                             opex=opex,
                             build_status=build_status,
-                            device_type=DeviceType.StaticGeneratorDevice)
+                            device_type=DeviceType.StaticGeneratorDevice,
+                            _dynamic_model=_dynamic_model)

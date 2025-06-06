@@ -6,6 +6,7 @@
 import numpy as np
 from typing import Union, List
 
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode
@@ -42,8 +43,6 @@ def accept_line_connection(V1: float, V2: float, branch_connection_voltage_toler
 class Line(BranchParent):
 
     def __init__(self,
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  bus_from: Bus = None,
                  bus_to: Bus = None,
                  cn_from: ConnectivityNode = None,
@@ -75,7 +74,8 @@ class Line(BranchParent):
                  capex=0,
                  opex=0,
                  circuit_idx: int = 0,
-                 build_status: BuildStatus = BuildStatus.Commissioned):
+                 build_status: BuildStatus = BuildStatus.Commissioned,
+                 _dynamic_model: DynamicModel = None):
         """
         AC current Line
         :param bus_from: "From" :ref:`bus<Bus>` object
@@ -136,13 +136,8 @@ class Line(BranchParent):
                               capex=capex,
                               opex=opex,
                               cost=cost,
-                              device_type=DeviceType.LineDevice)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
+                              device_type=DeviceType.LineDevice,
+                              _dynamic_model=_dynamic_model)
 
         # line length in km
         self._length = float(length)

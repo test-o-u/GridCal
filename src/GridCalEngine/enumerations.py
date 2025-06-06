@@ -879,6 +879,8 @@ class DeviceType(Enum):
 
     DynSlackModel = "DynSynchronousModel"
 
+    DynModel = "DynModel"
+
     def __str__(self) -> str:
         return str(self.value)
 
@@ -1629,6 +1631,7 @@ class SimulationTypes(Enum):
     TopologyProcessor_run = 'Topology Processor'
     NodalCapacityTimeSeries_run = 'Nodal capacity time series'
     Reliability_run = "Reliability"
+    Dynamic_run = "Dynamic"
 
     NoSim = "No simulation"
 

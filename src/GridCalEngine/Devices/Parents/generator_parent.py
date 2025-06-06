@@ -7,10 +7,11 @@ from typing import Union
 import numpy as np
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode
-from GridCalEngine.enumerations import BuildStatus, DeviceType
+from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Parents.injection_parent import InjectionParent
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class GeneratorParent(InjectionParent):
@@ -37,7 +38,8 @@ class GeneratorParent(InjectionParent):
                  opex: float,
                  srap_enabled: bool,
                  build_status: BuildStatus,
-                 device_type: DeviceType):
+                 device_type: DeviceType,
+                 _dynamic_model: DynamicModel = None):
         """
 
         :param name: Name of the device
@@ -72,7 +74,9 @@ class GeneratorParent(InjectionParent):
                                  capex=capex,
                                  opex=opex,
                                  build_status=build_status,
-                                 device_type=device_type)
+                                 device_type=device_type,
+                                 _dynamic_model=_dynamic_model)
+
 
         self.control_bus = control_bus
         self._control_bus_prof = Profile(default_value=control_bus, data_type=DeviceType.BusDevice)
@@ -92,8 +96,6 @@ class GeneratorParent(InjectionParent):
 
         self.srap_enabled = bool(srap_enabled)
         self._srap_enabled_prof = Profile(default_value=self.srap_enabled, data_type=bool)
-
-
 
         self.register(key='control_bus', units='', tpe=DeviceType.BusDevice, definition='Control bus',
                       editable=True, profile_name="control_bus_prof")

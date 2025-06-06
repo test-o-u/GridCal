@@ -17,6 +17,7 @@ from GridCalEngine.Devices.Parents.physical_device import PhysicalDevice
 from GridCalEngine.Devices.Aggregation.branch_group import BranchGroup
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.admittance_matrix import AdmittanceMatrix
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 if TYPE_CHECKING:
     from GridCalEngine.Devices.types import CONNECTION_TYPE
@@ -66,7 +67,8 @@ class BranchParent(PhysicalDevice):
                  opex: float,
                  cost: float,
                  device_type: DeviceType,
-                 color: str | None = None):
+                 color: str | None = None,
+                 _dynamic_model: DynamicModel = None):
         """
 
         :param name: name of the branch
@@ -150,6 +152,8 @@ class BranchParent(PhysicalDevice):
         # group of this branch
         self.group: Union[BranchGroup, None] = None
 
+        self._dynamic_model: DynamicModel = _dynamic_model
+
         self.register('bus_from', units="", tpe=DeviceType.BusDevice,
                       definition='Name of the bus at the "from" side', editable=False)
 
@@ -196,6 +200,13 @@ class BranchParent(PhysicalDevice):
                       definition='Shunt admittance matrix of the branch', editable=False, display=False)
         self.register(key='color', units='', tpe=str, definition='Color to paint the element in the map diagram',
                       is_color=True)
+        self.register(key='dynamic_model', units='', tpe=SubObjectType.DynamicModelType,
+                      definition='Dynamic model', display=False)
+
+    @property
+    def dynamic_model(self) -> DynamicModel:
+        return self._dynamic_model
+
 
     @property
     def bus_from(self) -> Bus:

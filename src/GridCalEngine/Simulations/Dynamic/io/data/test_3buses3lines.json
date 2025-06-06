@@ -1,0 +1,45 @@
+{
+  "ACLine": [
+    {
+      "code": 0,
+      "name": "ACLine 1",
+      "g": 0.3,
+      "b": 0.4,
+      "bsh": 0.0,
+      "bus1": 0,
+      "bus2" : 1
+    },
+    {
+      "code": 1,
+      "name": "ACLine 2",
+      "g": 0.3,
+      "b": 0.4,
+      "bsh": 0.0,
+      "bus1": 1,
+      "bus2" : 2
+    },
+    {
+      "code": 2,
+      "name": "ACLine 3",
+      "g": 0.3,
+      "b": 0.4,
+      "bsh": 0.0,
+      "bus1": 0,
+      "bus2" : 2
+    }
+  ],
+  "Bus": [
+    {
+      "code": 0,
+      "name": "Bus 1"
+    },
+    {
+      "code": 1,
+      "name": "Bus 2"
+    },
+    {
+      "code": 2,
+      "name": "Bus 3"
+    }
+  ]
+}

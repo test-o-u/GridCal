@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from typing import Union
 from matplotlib import pyplot as plt
+
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.basic_structures import Logger
 from GridCalEngine.enumerations import DeviceType, BuildStatus, SubObjectType
 from GridCalEngine.Devices.Associations.association import Associations
@@ -19,15 +21,14 @@ from GridCalEngine.Devices.profile import Profile
 class Generator(GeneratorParent):
 
     def __init__(self,
-                 name='gen',
+                 name: object = 'gen',
                  idtag: Union[str, None] = None,
                  code: str = '',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
+                 _dynamic_model: DynamicModel = None,
                  P: float = 0.0,
                  power_factor: float = 0.8,
                  vset: float = 1.0,
-                 is_controlled=True,
+                 is_controlled: object = True,
                  Qmin: float = -9999,
                  Qmax: float = 9999,
                  Snom: float = 9999,
@@ -38,11 +39,11 @@ class Generator(GeneratorParent):
                  Cost2: float = 0.0,
                  Cost0: float = 0.0,
                  Sbase: float = 100,
-                 enabled_dispatch=True,
+                 enabled_dispatch: object = True,
                  mttf: float = 0.0,
                  mttr: float = 0.0,
-                 q_points=None,
-                 use_reactive_power_curve=False,
+                 q_points: object = None,
+                 use_reactive_power_curve: object = False,
                  r1: float = 1e-20,
                  x1: float = 1e-20,
                  r0: float = 1e-20,
@@ -52,7 +53,7 @@ class Generator(GeneratorParent):
                  capex: float = 0,
                  opex: float = 0,
                  srap_enabled: bool = True,
-                 build_status: BuildStatus = BuildStatus.Commissioned):
+                 build_status: BuildStatus = BuildStatus.Commissioned) -> None:
         """
         Generator.
         :type dynamic_params: list()
@@ -106,8 +107,8 @@ class Generator(GeneratorParent):
                                  opex=opex,
                                  srap_enabled=srap_enabled,
                                  build_status=build_status,
-                                 device_type=DeviceType.GeneratorDevice)
-
+                                 device_type=DeviceType.GeneratorDevice,
+                                 _dynamic_model= _dynamic_model)
         
         # is the device active for active power dispatch?
         self.enabled_dispatch = bool(enabled_dispatch)
@@ -184,23 +185,6 @@ class Generator(GeneratorParent):
 
         self.emissions: Associations = Associations(device_type=DeviceType.EmissionGasDevice)
         self.fuels: Associations = Associations(device_type=DeviceType.FuelDevice)
-
-        # Dynamic vars
-        #self.Ra = Ra
-        # self.Xa = Xa
-        # self.Xd = Xd
-        # self.Xq = Xq
-        # self.Xdp = Xdp
-        # self.Xqp = Xqp
-        # self.Xdpp = Xdpp
-        # self.Xqpp = Xqpp
-        # self.Td0p = Td0p
-        # self.Tq0p = Tq0p
-        # self.Td0pp = Td0pp
-        # self.Tq0pp = Tq0pp
-        # self.H = H
-        # self.speed_volt = speed_volt
-        # self.base_mva = base_mva  # machine base MVA
 
         # system base power MVA
         self.Sbase = float(Sbase)

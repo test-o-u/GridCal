@@ -28,7 +28,138 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Worked on the contingencies with hvdc and vsc ptdf values" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Worked on the contingencies with hvdc and vsc ptdf values">
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/scripting.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/IEEE 14 bus.raw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/IEEE 14.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/dae.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/dinamic_driver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/ACLine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/Bus.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/ExpLoad.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/GENCLS.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/Slack.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/generated_module/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/initialization.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/input_try_out.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/integration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/Gen_Load_out.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/IEEE 14 bus.raw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/model_data/bus_gridcal_int.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/model_data/gen_gridcal_int.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/model_data/line_gridcal_int.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/model_data/load_gridcal_int.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/model_data/stat_gen_gridcal_int.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/test.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/test_2buses1line.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/data/test_3buses3lines.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/io/event/events.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/bus/Bus.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/bus/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/dynamic_model_template.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/dynmodel.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/line/ACLine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/line/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/load/ExpLoad.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/load/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/staticgen/Slack.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/staticgen/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/syngen/GENCLS.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/syngen/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/models/unlock.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/powerflow.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/scripting.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/set.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/symprocess.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/system.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/tds.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/utils/data_processing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/utils/json.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/utils/logging_config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/utils/paths.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/branch.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/branch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/dc_line.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/dc_line.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/line.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/line.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer3w.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer3w.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynmodel.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/models/dynmodel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/battery.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/battery.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/controllable_shunt.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/controllable_shunt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/current_injection.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/current_injection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/load.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/load.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/shunt.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/shunt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/static_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Injections/static_generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/branch_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/branch_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/generator_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/generator_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/injection_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/injection_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/load_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/load_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Substation/bus.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Substation/bus.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/Dynamic_solver.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic/utils/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/dynamic_modules.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/asym_1cage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/asym_2cage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/controller.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/events.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/01_Open_Loop_AVR_Step/smib.dyn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/01_Open_Loop_AVR_Step/smib_round.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/01_Open_Loop_AVR_Step/smib_salient.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/01_Open_Loop_AVR_Step/test_open_loop.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib.dyn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib_case.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib_events.evnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib_recorder.rcd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib_round.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/smib_salient.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/02_SMIB_AVR_Step/test_SMIB.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib.dyn" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib_case.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib_events.evnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib_recorder.rcd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib_round.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/smib_salient.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/03_SMIB_Fault/test_SMIB.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/04_Classical_Nine_Bus/case9.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/04_Classical_Nine_Bus/events.evnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/04_Classical_Nine_Bus/recorder.rcd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/04_Classical_Nine_Bus/test_nine_bus.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/G1.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/G2.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/G3.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/case9.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/events.evnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/recorder.rcd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/05_Nine_Bus_Fault/test_nine_bus.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/06_Motor_Startup/motor.mach" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/06_Motor_Startup/motor_startup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/06_Motor_Startup/recorder.rcd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/06_Motor_Startup/test_case.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/examples/06_Motor_Startup/test_events.evnt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/explicit_blocks.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/ext_grid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/interface.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/mod_Ybus.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/recorder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/run_sim.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/sym_order4.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/sym_order6a.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/sym_order6b.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/version.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/pydyn/vsc_average.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/symprocessor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamics/transient_stability_driver.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/dyn_var.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/dyn_var.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/enumerations.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/enumerations.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -74,6 +205,12 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;mrosesgh&quot;
+  }
+}</component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
       <filtered-out-file-type name="LOCAL_BRANCH" />
@@ -89,6 +226,12 @@
       </list>
     </option>
   </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SanPen/GridCal.git&quot;,
+    &quot;accountId&quot;: &quot;3b6d5ff4-45d3-4f35-aebb-c26a8c4be222&quot;
+  }
+}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/requirements.txt" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/GridCal/Gui/ConsoleWidget.py" root0="FORCE_HIGHLIGHTING" />
@@ -125,155 +268,156 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Git.Branch.Popup.ShowAllRemotes": "true",
-    "MATLAB_INTERPRETER": "/usr/local/MATLAB/R2018a/bin/matlab",
-    "Python tests.Nosetests for test_power_flow.test_zip.executor": "Debug",
-    "Python tests.Nosetests for test_topology_processor.test_topology_rts.executor": "Debug",
-    "Python tests.Nosetests for tests.test_ac_opf.executor": "Run",
-    "Python tests.Nosetests for tests.test_ac_opf.test_pegase89.executor": "Debug",
-    "Python tests.Nosetests for tests.test_hydro.executor": "Run",
-    "Python tests.Nosetests for tests.test_latin_hypercube.test_lhs.executor": "Run",
-    "Python tests.Nosetests for tests.test_opf_time_series.test_opf_ts.executor": "Run",
-    "Python tests.Nosetests for tests.test_topology_processor.executor": "Run",
-    "Python tests.Nosetests for tests.test_topology_processor.test_topology_rts.executor": "Run",
-    "Python tests.Nosetests in admittance_matrix_test.py.executor": "Run",
-    "Python tests.Nosetests in deep_copy_test.py.executor": "Run",
-    "Python tests.Nosetests in test_topology_processor.py.executor": "Run",
-    "Python tests.Nosetests in tests.executor": "Run",
-    "Python tests.Python tests in tests.executor": "Run",
-    "Python tests.pytest for src.tests.test_ac_opf.test_superconductors_handling.executor": "Debug",
-    "Python tests.pytest for src.tests.test_basic.test_gridcal_basic_pi.executor": "Debug",
-    "Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true.executor": "Run",
-    "Python tests.pytest for src.tests.test_line_circuit_idx_setter.test_valid_circuit_idx.executor": "Run",
-    "Python tests.pytest for src.tests.test_load_save_load.test_load_save_load_xlsx.executor": "Debug",
-    "Python tests.pytest for src.tests.test_nodal_capacity.test_linear_vs_nonlinear_ncap.executor": "Debug",
-    "Python tests.pytest for src.tests.test_ntc.executor": "Run",
-    "Python tests.pytest for src.tests.test_profiles.executor": "Run",
-    "Python tests.pytest for src.tests.test_tower_composition.test_acha.executor": "Run",
-    "Python tests.pytest for src.tests.test_transformer_type.executor": "Run",
-    "Python tests.pytest for src.tests.test_transformer_type.test_transformer_type.executor": "Debug",
-    "Python tests.pytest for test_ac_opf.test_superconductors_handling.executor": "Run",
-    "Python tests.pytest for test_basic.test_gridcal_basic_pi.executor": "Debug",
-    "Python tests.pytest for test_grid_diff.test_add_stuff_roundtrip.executor": "Run",
-    "Python tests.pytest for test_gslv_conversion.test_gslv_compatibility.executor": "Debug",
-    "Python tests.pytest for test_line_circuit_idx_setter.test_valid_circuit_idx.executor": "Run",
-    "Python tests.pytest for test_load_save_load.test_load_save_load2.executor": "Run",
-    "Python tests.pytest for test_ntc.test_issue_372_1.executor": "Debug",
-    "Python tests.pytest for test_ntc.test_issue_372_2.executor": "Debug",
-    "Python tests.pytest for test_opf.test_opf_battery_shedding_copper_plate.executor": "Run",
-    "Python tests.pytest for test_opf.test_opf_hvdc_controls.executor": "Run",
-    "Python tests.pytest for test_opf.test_opf_load_not_shedding_because_of_line.executor": "Debug",
-    "Python tests.pytest for test_opf.test_opf_load_shedding.executor": "Debug",
-    "Python tests.pytest for test_opf.test_opf_load_shedding_because_of_line.executor": "Run",
-    "Python tests.pytest for test_opf.test_opf_load_shedding_copper_plate.executor": "Debug",
-    "Python tests.pytest for test_opf.test_opf_ts.executor": "Debug",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_fubm_new.executor": "Debug",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_hvdc_new.executor": "Run",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_ieee_grids.executor": "Debug",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_voltage_control_with_ltc.executor": "Debug",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_voltage_remote_control_with_generation.executor": "Debug",
-    "Python tests.pytest for test_power_flow_acdc_generalized.test_zip.executor": "Debug",
-    "Python tests.pytest for test_ptdf.test_mlodf.executor": "Run",
-    "Python tests.pytest for test_ptdf.test_ptdf_generation_contingencies.executor": "Debug",
-    "Python tests.pytest for test_tower_composition.test_acha.executor": "Run",
-    "Python tests.pytest for test_tower_composition.test_rating.executor": "Debug",
-    "Python tests.pytest for test_tower_composition.test_ratings_with_neutral.executor": "Debug",
-    "Python tests.pytest for test_tower_composition.test_tower_composition.executor": "Run",
-    "Python tests.pytest for test_transformer_type.test_psse_conversion3.executor": "Debug",
-    "Python tests.pytest for test_transformer_type.test_transformer_type.executor": "Run",
-    "Python tests.pytest in test_ac_opf.py.executor": "Run",
-    "Python tests.pytest in test_basic.py.executor": "Run",
-    "Python tests.pytest in test_contingency.py.executor": "Debug",
-    "Python tests.pytest in test_contongencies_filters.py.executor": "Debug",
-    "Python tests.pytest in test_grid_diff.py.executor": "Run",
-    "Python tests.pytest in test_gslv_conversion.py.executor": "Debug",
-    "Python tests.pytest in test_nodal_capacity.py.executor": "Run",
-    "Python tests.pytest in test_nonlinear_contingency.py.executor": "Run",
-    "Python tests.pytest in test_opf.py.executor": "Run",
-    "Python tests.pytest in test_power_flow_acdc_generalized.py.executor": "Run",
-    "Python tests.pytest in test_ptdf.py.executor": "Run",
-    "Python tests.pytest in test_topology_processor.py.executor": "Run",
-    "Python tests.pytest in test_tower_composition.py.executor": "Run",
-    "Python tests.pytest in test_transformer_type.py.executor": "Run",
-    "Python tests.pytest in tests.executor": "Run",
-    "Python tests.test_ntc.py.executor": "Run",
-    "Python.AnalysisDialogue.executor": "Run",
-    "Python.ExecuteGridCal.executor": "Debug",
-    "Python.GridCalMain.executor": "Run",
-    "Python.LineBuilderDialogue.executor": "Run",
-    "Python.adequacy_driver.executor": "Run",
-    "Python.auto_document_models.executor": "Run",
-    "Python.cgmes_rdfs_graph.executor": "Run",
-    "Python.circuit_to_optimods.executor": "Run",
-    "Python.demo_code.executor": "Run",
-    "Python.demo_code2.executor": "Debug",
-    "Python.demo_code3.executor": "Run",
-    "Python.example_new_england.executor": "Run",
-    "Python.grid_merge.executor": "Run",
-    "Python.ieee9.executor": "Run",
-    "Python.iidm_parser.executor": "Debug",
-    "Python.linear_acdc_pf_example.executor": "Run",
-    "Python.load_designer.executor": "Run",
-    "Python.make.executor": "Run",
-    "Python.make_wheels.executor": "Run",
-    "Python.new_circuit_objects.executor": "Run",
-    "Python.overhead_line_calcs.executor": "Run",
-    "Python.pmode3_eqs.executor": "Debug",
-    "Python.pmode3_test.executor": "Run",
-    "Python.post_example.executor": "Run",
-    "Python.ptdf_hvdc_vsc.executor": "Run",
-    "Python.pymoo_example.executor": "Debug",
-    "Python.python_console.executor": "Run",
-    "Python.raw_imp_exp_test.executor": "Run",
-    "Python.readme_checks.executor": "Run",
-    "Python.readme_example.executor": "Run",
-    "Python.reliability.executor": "Run",
-    "Python.reliability_driver.executor": "Run",
-    "Python.reliability_study_run.executor": "Run",
-    "Python.round_trip.executor": "Run",
-    "Python.run.executor": "Debug",
-    "Python.run_child_1.executor": "Run",
-    "Python.run_contingencies_ts.executor": "Run",
-    "Python.run_master.executor": "Run",
-    "Python.run_server_farm.executor": "Debug",
-    "Python.server_example.executor": "Run",
-    "Python.short_circuit_driver.executor": "Run",
-    "Python.simple_dispatch_demo.executor": "Debug",
-    "Python.simple_dispatch_demo2.executor": "Run",
-    "Python.simple_dispatch_ts.executor": "Debug",
-    "Python.stack_plot_pos_neg.executor": "Run",
-    "Python.test_gslv_conversion.executor": "Run",
-    "Python.test_ntc.executor": "Debug",
-    "Python.test_opf.executor": "Debug",
-    "Python.test_power_flow.executor": "Run",
-    "Python.test_raw_cgmes_cross_roundtrip.executor": "Run",
-    "Python.toast_widget.executor": "Run",
-    "Python.update_gui_file (1).executor": "Run",
-    "Python.update_gui_file (2).executor": "Run",
-    "Python.update_gui_file.executor": "Run",
-    "Python.upload_to_pypi.executor": "Run",
-    "Python.y_bus_composition.executor": "Debug",
-    "Python.y_bus_composition_2.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Shell Script.make.sh.executor": "Run",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "devel",
-    "last_opened_file_path": "/home/santi/Documentos/Git/eRoots/OffshoreExpansionPlugin",
-    "node.js.detected.package.eslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "run.code.analysis.last.selected.profile": "aDefault",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "two.files.diff.last.used.file": "C:/WorkProjects/PycharmProjects/GridCal/src/trunk/cgmes_py_generator/cgmes_v2_4_15/cgmes_enums.py",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Git.Branch.Popup.ShowAllRemotes&quot;: &quot;true&quot;,
+    &quot;MATLAB_INTERPRETER&quot;: &quot;/usr/local/MATLAB/R2018a/bin/matlab&quot;,
+    &quot;Python tests.Nosetests for test_power_flow.test_zip.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Nosetests for test_topology_processor.test_topology_rts.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Nosetests for tests.test_ac_opf.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests for tests.test_ac_opf.test_pegase89.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Nosetests for tests.test_hydro.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests for tests.test_latin_hypercube.test_lhs.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests for tests.test_opf_time_series.test_opf_ts.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests for tests.test_topology_processor.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests for tests.test_topology_processor.test_topology_rts.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests in admittance_matrix_test.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests in deep_copy_test.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests in test_topology_processor.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Nosetests in tests.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests in tests.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_ac_opf.test_superconductors_handling.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for src.tests.test_basic.test_gridcal_basic_pi.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for src.tests.test_generator_q_control.test_q_control_true.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_line_circuit_idx_setter.test_valid_circuit_idx.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_load_save_load.test_load_save_load_xlsx.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for src.tests.test_nodal_capacity.test_linear_vs_nonlinear_ncap.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for src.tests.test_ntc.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_profiles.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_tower_composition.test_acha.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_transformer_type.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for src.tests.test_transformer_type.test_transformer_type.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_ac_opf.test_superconductors_handling.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_basic.test_gridcal_basic_pi.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_grid_diff.test_add_stuff_roundtrip.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_gslv_conversion.test_gslv_compatibility.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_line_circuit_idx_setter.test_valid_circuit_idx.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_load_save_load.test_load_save_load2.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_ntc.test_issue_372_1.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_ntc.test_issue_372_2.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_battery_shedding_copper_plate.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_hvdc_controls.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_load_not_shedding_because_of_line.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_load_shedding.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_load_shedding_because_of_line.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_load_shedding_copper_plate.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_opf.test_opf_ts.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_fubm_new.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_hvdc_new.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_ieee_grids.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_voltage_control_with_ltc.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_voltage_remote_control_with_generation.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_power_flow_acdc_generalized.test_zip.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_ptdf.test_mlodf.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_ptdf.test_ptdf_generation_contingencies.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_tower_composition.test_acha.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_tower_composition.test_rating.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_tower_composition.test_ratings_with_neutral.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_tower_composition.test_tower_composition.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest for test_transformer_type.test_psse_conversion3.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest for test_transformer_type.test_transformer_type.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_ac_opf.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_basic.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_contingency.py.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest in test_contongencies_filters.py.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest in test_grid_diff.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_gslv_conversion.py.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.pytest in test_nodal_capacity.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_nonlinear_contingency.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_opf.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_power_flow_acdc_generalized.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_ptdf.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_topology_processor.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_tower_composition.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in test_transformer_type.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.pytest in tests.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.test_ntc.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.AnalysisDialogue.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ExecuteGridCal.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.GridCalMain.executor&quot;: &quot;Run&quot;,
+    &quot;Python.LineBuilderDialogue.executor&quot;: &quot;Run&quot;,
+    &quot;Python.adequacy_driver.executor&quot;: &quot;Run&quot;,
+    &quot;Python.auto_document_models.executor&quot;: &quot;Run&quot;,
+    &quot;Python.cgmes_rdfs_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.circuit_to_optimods.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo_code.executor&quot;: &quot;Run&quot;,
+    &quot;Python.demo_code2.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.demo_code3.executor&quot;: &quot;Run&quot;,
+    &quot;Python.example_new_england.executor&quot;: &quot;Run&quot;,
+    &quot;Python.grid_merge.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ieee9.executor&quot;: &quot;Run&quot;,
+    &quot;Python.iidm_parser.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.linear_acdc_pf_example.executor&quot;: &quot;Run&quot;,
+    &quot;Python.load_designer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.make.executor&quot;: &quot;Run&quot;,
+    &quot;Python.make_wheels.executor&quot;: &quot;Run&quot;,
+    &quot;Python.new_circuit_objects.executor&quot;: &quot;Run&quot;,
+    &quot;Python.overhead_line_calcs.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pmode3_eqs.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.pmode3_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.post_example.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ptdf_hvdc_vsc.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pymoo_example.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.python_console.executor&quot;: &quot;Run&quot;,
+    &quot;Python.raw_imp_exp_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.readme_checks.executor&quot;: &quot;Run&quot;,
+    &quot;Python.readme_example.executor&quot;: &quot;Run&quot;,
+    &quot;Python.reliability.executor&quot;: &quot;Run&quot;,
+    &quot;Python.reliability_driver.executor&quot;: &quot;Run&quot;,
+    &quot;Python.reliability_study_run.executor&quot;: &quot;Run&quot;,
+    &quot;Python.round_trip.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.run_child_1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_contingencies_ts.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_master.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run_server_farm.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.scripting.executor&quot;: &quot;Run&quot;,
+    &quot;Python.server_example.executor&quot;: &quot;Run&quot;,
+    &quot;Python.short_circuit_driver.executor&quot;: &quot;Run&quot;,
+    &quot;Python.simple_dispatch_demo.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.simple_dispatch_demo2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.simple_dispatch_ts.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.stack_plot_pos_neg.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_gslv_conversion.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_ntc.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.test_opf.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.test_power_flow.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_raw_cgmes_cross_roundtrip.executor&quot;: &quot;Run&quot;,
+    &quot;Python.toast_widget.executor&quot;: &quot;Run&quot;,
+    &quot;Python.update_gui_file (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.update_gui_file (2).executor&quot;: &quot;Run&quot;,
+    &quot;Python.update_gui_file.executor&quot;: &quot;Run&quot;,
+    &quot;Python.upload_to_pypi.executor&quot;: &quot;Run&quot;,
+    &quot;Python.y_bus_composition.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.y_bus_composition_2.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Shell Script.make.sh.executor&quot;: &quot;Run&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;340__Dynamics__first__implementations__a__to__z&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/marina/PycharmProjects/GridCal/src/GridCalEngine/Simulations&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;C:/WorkProjects/PycharmProjects/GridCal/src/trunk/cgmes_py_generator/cgmes_v2_4_15/cgmes_enums.py&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="PyDebuggerOptionsProvider">
     <option name="mySaveCallSignatures" value="true" />
     <option name="mySupportGeventDebugging" value="true" />
@@ -281,11 +425,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations" />
       <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Reliability" />
       <recent name="$PROJECT_DIR$/src/trunk/simple_dispatch" />
       <recent name="$PROJECT_DIR$/src/tests/data/grids" />
       <recent name="$PROJECT_DIR$/src/GridCal/ThirdParty/darkdetect" />
-      <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Stochastic" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Adequacy" />
@@ -295,7 +439,7 @@
       <recent name="$PROJECT_DIR$/src/tests/data/grids" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ptdf_hvdc_vsc">
+  <component name="RunManager">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -357,6 +501,15 @@
       <option name="CUSTOM_SETTINGS" value="false" />
       <option name="USE_OPTIONS" value="false" />
       <option name="OPTIONS" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="MatlabApplication">
+      <option name="FILE_PATH" value="" />
+      <option name="INTERPRETER_PATH" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="PARAMETERS" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="MatlabApplication">
@@ -688,15 +841,6 @@
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="MatlabApplication">
-      <option name="FILE_PATH" value="" />
-      <option name="INTERPRETER_PATH" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="PARAMETERS" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
       <method v="2" />
     </configuration>
     <configuration name="ExecuteGridCal" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -847,7 +991,6 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="SDK_NAME" value="Python 3.11 (GridCal)" />
       <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -2448,191 +2591,191 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/power_flow/asd/josep/v3_pv.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/power_flow/asd/josep/v3_pv.py</url>
           <line>163</line>
           <option name="timeStamp" value="189" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/OPF/ac_opf_ts.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/OPF/ac_opf_ts.py</url>
           <line>403</line>
           <option name="timeStamp" value="328" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/tests/test_transformer_regulator.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/tests/test_transformer_regulator.py</url>
           <line>185</line>
           <option name="timeStamp" value="352" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="conv == DeviceType" language="Python" />
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/IO/excel_interface.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/IO/excel_interface.py</url>
           <line>276</line>
           <option name="timeStamp" value="402" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/helm_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/helm_power_flow.py</url>
           <line>185</line>
           <option name="timeStamp" value="407" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
           <line>1166</line>
           <option name="timeStamp" value="418" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
           <line>1192</line>
           <option name="timeStamp" value="419" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
           <line>1189</line>
           <option name="timeStamp" value="420" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Sparse/sparse_utils.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Sparse/sparse_utils.py</url>
           <line>453</line>
           <option name="timeStamp" value="486" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/IO/h5_interface.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/IO/h5_interface.py</url>
           <line>101</line>
           <option name="timeStamp" value="625" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Core/DataStructures/generator_data.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Core/DataStructures/generator_data.py</url>
           <line>173</line>
           <option name="timeStamp" value="740" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/IO/power_world_parser.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/IO/power_world_parser.py</url>
           <line>237</line>
           <option name="timeStamp" value="808" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/StateEstimation/state_estimation.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/StateEstimation/state_estimation.py</url>
           <line>285</line>
           <option name="timeStamp" value="851" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/ThirdParty/pulp/solver_interfaces/cplex.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/ThirdParty/pulp/solver_interfaces/cplex.py</url>
           <line>127</line>
           <option name="timeStamp" value="922" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
           <line>551</line>
           <option name="timeStamp" value="995" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/jacobian_based_power_flow.py</url>
           <line>543</line>
           <option name="timeStamp" value="996" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Core/admittance_matrices.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Core/admittance_matrices.py</url>
           <line>296</line>
           <option name="timeStamp" value="1032" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="nnz == 10" language="Python" />
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/ac_jacobian.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/ac_jacobian.py</url>
           <line>140</line>
           <option name="timeStamp" value="1045" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
           <line>165</line>
           <option name="timeStamp" value="1048" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="k == 7" language="Python" />
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
           <line>159</line>
           <option name="timeStamp" value="1050" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <condition expression="k == 7" language="Python" />
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/derivatives.py</url>
           <line>145</line>
           <option name="timeStamp" value="1051" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/newton_raphson.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/NumericalMethods/newton_raphson.py</url>
           <line>121</line>
           <option name="timeStamp" value="1056" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/power_flow_worker.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/PowerFlow/power_flow_worker.py</url>
           <line>503</line>
           <option name="timeStamp" value="1115" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/IO/cim/cim_parser.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/IO/cim/cim_parser.py</url>
           <line>848</line>
           <option name="timeStamp" value="1116" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
           <line>200</line>
           <option name="timeStamp" value="1133" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
           <line>545</line>
           <option name="timeStamp" value="1135" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
           <line>543</line>
           <option name="timeStamp" value="1136" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_2.py</url>
           <line>531</line>
           <option name="timeStamp" value="1137" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_3.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/derivatives_and_jacobian/branch_power_3.py</url>
           <line>22</line>
           <option name="timeStamp" value="1144" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/research/experimental_readers/arrillagas_book_grids_to_gridcal.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/research/experimental_readers/arrillagas_book_grids_to_gridcal.py</url>
           <line>58</line>
           <option name="timeStamp" value="1145" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_driver.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_driver.py</url>
           <line>238</line>
           <option name="timeStamp" value="1160" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_driver.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_driver.py</url>
           <line>240</line>
           <option name="timeStamp" value="1161" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit.py</url>
           <line>98</line>
           <option name="timeStamp" value="1177" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_worker.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_worker.py</url>
           <line>270</line>
           <option name="timeStamp" value="1178" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_worker.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Engine/Simulations/ShortCircuitStudies/short_circuit_worker.py</url>
           <line>108</line>
           <option name="timeStamp" value="1179" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/trunk/qt_related/se_editor.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/trunk/qt_related/se_editor.py</url>
           <line>78</line>
           <option name="timeStamp" value="1829" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../../Comparison/GridCal/src/GridCal/Gui/Main/update_gui_file.py</url>
+          <url>file://$USER_HOME$/Comparison/GridCal/src/GridCal/Gui/Main/update_gui_file.py</url>
           <line>23</line>
           <option name="timeStamp" value="2078" />
         </line-breakpoint>
@@ -2743,7 +2886,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer.py</url>
-          <line>439</line>
+          <line>431</line>
           <option name="timeStamp" value="2598" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

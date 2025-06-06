@@ -21,8 +21,6 @@ class ControllableShunt(ShuntParent):
                  name='Controllable Shunt',
                  idtag: Union[None, str] = None,
                  code: str = '',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  is_nonlinear: bool = False,
                  number_of_steps: int = 1,
                  step: int = 1,

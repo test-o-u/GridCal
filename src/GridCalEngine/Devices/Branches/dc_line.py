@@ -21,8 +21,6 @@ class DcLine(BranchParent):
                  name: str = 'Dc Line',
                  idtag: Union[str, None] = None,
                  code: str = '',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  r=1e-20,
                  rate=1.0,
                  active=True,
@@ -95,12 +93,6 @@ class DcLine(BranchParent):
                               opex=opex,
                               cost=cost,
                               device_type=DeviceType.DCLineDevice)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
 
         # List of measurements
         self.measurements = list()

@@ -15,7 +15,7 @@ from GridCalEngine.Devices.Branches.tap_changer import TapChanger
 from GridCalEngine.Devices.Branches.transformer import Transformer2W
 from GridCalEngine.Devices.Branches.line import Line
 from GridCalEngine.Devices.profile import Profile
-
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.Devices.Parents.editable_device import DeviceType
 
 # Global sqrt of 3 (bad practice?)
@@ -83,7 +83,8 @@ class Branch(BranchParent):
                  temp_oper=20,
                  alpha=0.00330,
                  bus_to_regulated=False,
-                 template=None,):
+                 template=None,
+                 _dynamic_model: DynamicModel = None):
         """
         This class exists for legacy reasons, use the Line or Transformer2w classes instead! *
         The **Branch** class represents the connections between nodes (i.e.
@@ -141,7 +142,8 @@ class Branch(BranchParent):
                               capex=0.0,
                               opex=0.0,
                               cost=cost,
-                              device_type=DeviceType.BranchDevice)
+                              device_type=DeviceType.BranchDevice,
+                              _dynamic_model=_dynamic_model)
 
         # List of measurements
         self.measurements = list()

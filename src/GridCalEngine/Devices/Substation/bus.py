@@ -8,12 +8,13 @@ from typing import Tuple, Union
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from GridCalEngine.enumerations import BusMode, DeviceType
+from GridCalEngine.enumerations import BusMode, DeviceType, SubObjectType
 from GridCalEngine.Devices.Parents.physical_device import PhysicalDevice
 from GridCalEngine.Devices.Aggregation import Area, Zone, Country
 from GridCalEngine.Devices.Substation.substation import Substation
 from GridCalEngine.Devices.Substation.voltage_level import VoltageLevel
 from GridCalEngine.Devices.profile import Profile
+from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 
 
 class Bus(PhysicalDevice):
@@ -21,8 +22,6 @@ class Bus(PhysicalDevice):
     def __init__(self, name="Bus",
                  idtag=None,
                  code='',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  Vnom=10,
                  vmin=0.9,
                  vmax=1.1,
@@ -46,7 +45,8 @@ class Bus(PhysicalDevice):
                  longitude=0.0,
                  latitude=0.0,
                  Vm0=1,
-                 Va0=0):
+                 Va0=0,
+                 _dynamic_model: DynamicModel = None):
         """
         The Bus object is the container of all the possible devices that can be attached to
         a bus bar or Substation. Such objects can be loads, voltage controlled generators,
@@ -84,12 +84,6 @@ class Bus(PhysicalDevice):
                                 idtag=idtag,
                                 code=code,
                                 device_type=DeviceType.BusDevice)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
 
         self.active = bool(active)
         self._active_prof = Profile(default_value=self.active, data_type=bool)
@@ -178,6 +172,8 @@ class Bus(PhysicalDevice):
         self.ph_n: bool = True
         self.is_grounded: bool = True
 
+        self._dynamic_model: DynamicModel = _dynamic_model
+
         self.register(key='active', units='', tpe=bool, definition='Is the bus active? used to disable the bus.',
                       profile_name='active_prof')
         self.register(key='is_slack', units='', tpe=bool, definition='Force the bus to be of slack type.',
@@ -230,6 +226,12 @@ class Bus(PhysicalDevice):
         self.register(key='ph_c', units='', tpe=bool, definition='Has phase C?')
         self.register(key='ph_n', units='', tpe=bool, definition='Has phase N?')
         self.register(key='is_grounded', units='', tpe=bool, definition='Is this bus neutral grounded?.')
+        self.register(key='dynamic_model', units='', tpe=SubObjectType.DynamicModelType,
+                      definition='Dynamic model', display=False)
+
+    @property
+    def dynamic_model(self) -> DynamicModel:
+        return self._dynamic_model
 
     @property
     def active_prof(self) -> Profile:

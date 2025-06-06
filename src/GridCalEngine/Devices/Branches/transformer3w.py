@@ -55,8 +55,6 @@ class Transformer3W(PhysicalDevice):
     def __init__(self, idtag: Union[str, None] = None,
                  code: str = '',
                  name: str = 'Branch',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  bus0: Union[None, Bus] = None,
                  bus1: Bus = None, bus2: Bus = None, bus3: Bus = None,
                  cn0: Union[None, ConnectivityNode] = None,
@@ -100,12 +98,6 @@ class Transformer3W(PhysicalDevice):
                                 idtag=idtag,
                                 code=code,
                                 device_type=DeviceType.Transformer3WDevice)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
 
         if bus0 is None:
             self.bus0 = Bus(name=name + '_bus', Vnom=1.0, xpos=x, ypos=y, is_internal=True)

@@ -73,7 +73,7 @@ class AlgebVar(DynVar):
         :return: Dict[str, Any]
         """
         d = super().to_dict()
-        d["var_type"] = self.var_type
+        #d["var_type"] = self.var_type
         return d
 
     def parse(self, data: Dict[str, Any]):
@@ -82,7 +82,7 @@ class AlgebVar(DynVar):
         :param data: Dict[str, Any]
         """
         super().parse(data=data)
-        self.var_type = data["var_type"]
+        #self.var_type = data["var_type"]
 
 
 class StatVar(DynVar):
@@ -101,8 +101,8 @@ class StatVar(DynVar):
         :return: Dict[str, Any]
         """
         d = super().to_dict()
-        d["var_type"] = self.var_type
-        d["t_const"] = self.t_const
+        #d["var_type"] = self.var_type
+        #d["t_const"] = self.t_const
         return d
 
     def parse(self, data: Dict[str, Any]):
@@ -111,8 +111,8 @@ class StatVar(DynVar):
         :param data: Dict[str, Any]
         """
         super().parse(data=data)
-        self.var_type = data["var_type"]
-        self.t_const = data["t_const"]
+        #self.var_type = data["var_type"]
+        #self.t_const = data["t_const"]
 
 
 class ExternVar(DynVar):
@@ -167,7 +167,7 @@ class ExternState(ExternVar):
         :return: Dict[str, Any]
         """
         d = super().to_dict()
-        d["var_type"] = self.var_type
+        #d["var_type"] = self.var_type
         return d
 
     def parse(self, data: Dict[str, Any]):
@@ -176,7 +176,7 @@ class ExternState(ExternVar):
         :param data: Dict[str, Any]
         """
         super().parse(data=data)
-        self.var_type = data["var_type"]
+        #self.var_type = data["var_type"]
 
 
 class ExternAlgeb(ExternVar):
@@ -206,7 +206,7 @@ class ExternAlgeb(ExternVar):
         :return: Dict[str, Any]
         """
         d = super().to_dict()
-        d["var_type"] = self.var_type
+        #d["var_type"] = self.var_type
         return d
 
     def parse(self, data: Dict[str, Any]):
@@ -215,4 +215,4 @@ class ExternAlgeb(ExternVar):
         :param data: Dict[str, Any]
         """
         super().parse(data=data)
-        self.var_type = data["var_type"]
+        #self.var_type = data["var_type"]

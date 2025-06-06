@@ -26,8 +26,6 @@ class Transformer2W(ControllableBranchParent):
                  name='Branch',
                  idtag: str | None = None,
                  code: str = '',
-                 dynamic_params: list = None,
-                 dynamic_model: str = "",
                  cn_from: ConnectivityNode | None = None,
                  cn_to: ConnectivityNode | None = None,
                  HV: float | None = None,
@@ -197,12 +195,6 @@ class Transformer2W(ControllableBranchParent):
                                           tc_dV=tc_dV,
                                           tc_asymmetry_angle=tc_asymmetry_angle,
                                           tc_type=tc_type)
-
-        # dynamic parameters
-        self.dynamic_params = dynamic_params
-
-        # dynamic model
-        self.dynamic_model = dynamic_model
 
         # set the high and low voltage values
         self.HV: None | float = None if HV is None else float(HV)
