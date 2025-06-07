@@ -406,28 +406,28 @@ grid = MultiCircuit()
 
 # Add the buses and the generators and loads attached
 bus1 = Bus('Bus 1', Vnom=20)
-bus1.dynamic_model.parse(bus1_data)
+bus1.rms_model.parse(bus1_data)
 grid.add_bus(bus1)
 
 bus2 = Bus('Bus 2', Vnom=20)
-bus2.dynamic_model.parse(bus2_data)
+bus2.rms_model.parse(bus2_data)
 grid.add_bus(bus2)
 
 #add branches (Lines in this case)
 line1 = Line(bus_from=bus1, bus_to=bus2, name='line 1-2', r=0.05, x=0.11, b=0.02)
-line1.dynamic_model.parse(branch_data)
+line1.rms_model.parse(branch_data)
 grid.add_line(line1)
 
 gen1 = StaticGenerator(name="slack_gen_1", P=4.0, Q=2)
-gen1.dynamic_model.parse(slack_gen_data)
+gen1.rms_model.parse(slack_gen_data)
 grid.add_static_generator(bus=bus1, api_obj=gen1)
 
 gen2 = Generator('Sync Generator', vset=1.0)
-gen2.dynamic_model.parse(syn_gen_data)
+gen2.rms_model.parse(syn_gen_data)
 grid.add_generator(bus1, api_obj=gen2)
 
 Load1 = Load('load_1', P=40, Q=20)
-Load1.dynamic_model.parse(load_data)
+Load1.rms_model.parse(load_data)
 grid.add_load(bus2, api_obj=Load1)
 
 # to access elements of the grid:

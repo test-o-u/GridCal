@@ -15,7 +15,7 @@ from GridCalEngine.Devices.multi_circuit import MultiCircuit
 import GridCalEngine.Devices as dev
 from GridCalEngine.Devices.Parents.editable_device import GCProp
 from GridCalEngine.Devices.profile import Profile
-from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model_host import DynamicModelHost
 from GridCalEngine.Devices.types import ALL_DEV_TYPES, GRIDCAL_FILE_TYPE
 from GridCalEngine.enumerations import (DiagramType, DeviceType, SubObjectType, TapPhaseControl, TapModuleControl,
                                         ContingencyOperationTypes)
@@ -416,7 +416,7 @@ def gridcal_object_to_json(elm: ALL_DEV_TYPES) -> Dict[str, str]:
         elif prop.tpe == SubObjectType.AdmittanceMatrix:
             data[name] = obj.to_dict()
 
-        elif prop.tpe == SubObjectType.DynamicModelType:
+        elif prop.tpe == SubObjectType.DynamicModelHostType:
             data[name] = obj.to_dict()
 
         elif prop.tpe == SubObjectType.Array:
@@ -1153,11 +1153,14 @@ def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
                                     adm_mat: SubObjectType.AdmittanceMatrix = elm.get_snapshot_value(prop=gc_prop)
                                     adm_mat.parse(property_value)
 
-                                elif gc_prop.tpe == SubObjectType.DynamicModelType:
+                                elif gc_prop.tpe == SubObjectType.DynamicModelHostType:
 
                                     # get the line locations object and fill it with the json data
-                                    dyn_module: DynamicModel = elm.get_snapshot_value(prop=gc_prop)
-                                    dyn_module.parse(property_value)
+                                    dyn_module: DynamicModelHost = elm.get_snapshot_value(prop=gc_prop)
+                                    dyn_module.parse(
+                                        data=property_value,
+                                        models_dict=elements_dict_by_type.get(DeviceType.DynModel, {})
+                                    )
 
                                 elif gc_prop.tpe == SubObjectType.Associations:
 

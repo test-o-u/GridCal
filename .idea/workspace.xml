@@ -28,12 +28,20 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Worked on the contingencies with hvdc and vsc ptdf values">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="integrated block editor into the rms editor dialogue">
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_model_host.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/block_editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/block_editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor.ui" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor_dialogue.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCal/Gui/RmsModelEditor/rms_model_editor_dialogue.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/branch.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/branch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dyn_services.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/branch_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/branch_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/injection_parent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Parents/injection_parent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Substation/bus.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Substation/bus.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/assets.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/assets.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/IO/gridcal/pack_unpack.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/IO/gridcal/pack_unpack.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic_old/dinamic_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Dynamic_old/dinamic_driver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -2394,7 +2402,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="746" />
+    <option name="localTasksCounter" value="747" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2440,7 +2448,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Improvements in the CGMES handling of garbage data" />
     <MESSAGE value="Improved handling of sparse arrays" />
     <MESSAGE value="Embedded darkdetect" />
     <MESSAGE value="5.3.42" />
@@ -2465,7 +2472,8 @@
     <MESSAGE value="Added capex to the investment group" />
     <MESSAGE value="Fixed broken test" />
     <MESSAGE value="Worked on the contingencies with hvdc and vsc ptdf values" />
-    <option name="LAST_COMMIT_MESSAGE" value="Worked on the contingencies with hvdc and vsc ptdf values" />
+    <MESSAGE value="integrated block editor into the rms editor dialogue" />
+    <option name="LAST_COMMIT_MESSAGE" value="integrated block editor into the rms editor dialogue" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

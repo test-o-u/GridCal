@@ -70,7 +70,7 @@ class DynamicDriver(DriverTemplate):
         """
         try:
             #   Extract dynamic devices from grid
-            dynamic_devices = [device._dynamic_model for device in self.grid.items()]
+            dynamic_devices = [device._rms_model for device in self.grid.items()]
             #  Instantiate the system
             System(dynamic_devices)
 

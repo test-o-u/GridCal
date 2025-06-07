@@ -6,7 +6,6 @@ from typing import List, Dict, Any
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
-from GridCalEngine.Devices.Parents.editable_device import parse_idtag
 
 
 class DynamicModel(EditableDevice):
@@ -51,6 +50,10 @@ class DynamicModel(EditableDevice):
         :return:
         """
         return len(self.stat_var) + len(self.algeb_var) + len(self.ext_state_var) + len(self.ext_algeb_var)
+
+    @property
+    def is_empty(self) -> bool:
+        return self.get_var_num() == 0
 
     def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
         """

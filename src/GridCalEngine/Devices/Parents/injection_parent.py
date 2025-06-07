@@ -14,7 +14,7 @@ from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Aggregation.facility import Facility
-from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model_host import DynamicModelHost
 
 if TYPE_CHECKING:
     from GridCalEngine.Devices import Technology
@@ -106,7 +106,7 @@ class InjectionParent(PhysicalDevice):
 
         self._use_kw: bool = False
 
-        self._dynamic_model: DynamicModel = DynamicModel()
+        self._rms_model: DynamicModelHost = DynamicModelHost()
 
         self.register(key='bus', units='', tpe=DeviceType.BusDevice, definition='Connection bus', editable=False)
 
@@ -139,8 +139,8 @@ class InjectionParent(PhysicalDevice):
 
         self.register(key='use_kw', units='', tpe=bool, definition='Consider the injections in kW and kVAr?')
 
-        self.register(key='dynamic_model', units='', tpe=SubObjectType.DynamicModelType,
-                      definition='Dynamic model', display=False)
+        self.register(key='rms_model', units='', tpe=SubObjectType.DynamicModelHostType,
+                      definition='RMS dynamic model', display=False)
 
     @property
     def bus(self) -> Bus:
@@ -245,13 +245,13 @@ class InjectionParent(PhysicalDevice):
             self._use_kw = val
 
     @property
-    def dynamic_model(self) -> DynamicModel:
-        return self._dynamic_model
+    def rms_model(self) -> DynamicModelHost:
+        return self._rms_model
 
-    @dynamic_model.setter
-    def dynamic_model(self, value: DynamicModel):
-        if isinstance(value, DynamicModel):
-            self._dynamic_model = value
+    @rms_model.setter
+    def rms_model(self, value: DynamicModelHost):
+        if isinstance(value, DynamicModelHost):
+            self._rms_model = value
 
     def get_S(self) -> complex:
         """

@@ -14,7 +14,7 @@ from GridCalEngine.Devices.Aggregation import Area, Zone, Country
 from GridCalEngine.Devices.Substation.substation import Substation
 from GridCalEngine.Devices.Substation.voltage_level import VoltageLevel
 from GridCalEngine.Devices.profile import Profile
-from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
+from GridCalEngine.Devices.Dynamic.dynamic_model_host import DynamicModelHost
 
 
 class Bus(PhysicalDevice):
@@ -171,7 +171,7 @@ class Bus(PhysicalDevice):
         self.ph_n: bool = True
         self.is_grounded: bool = True
 
-        self._dynamic_model: DynamicModel = DynamicModel()
+        self._rms_model: DynamicModelHost = DynamicModelHost()
 
         self.register(key='active', units='', tpe=bool, definition='Is the bus active? used to disable the bus.',
                       profile_name='active_prof')
@@ -225,17 +225,17 @@ class Bus(PhysicalDevice):
         self.register(key='ph_c', units='', tpe=bool, definition='Has phase C?')
         self.register(key='ph_n', units='', tpe=bool, definition='Has phase N?')
         self.register(key='is_grounded', units='', tpe=bool, definition='Is this bus neutral grounded?.')
-        self.register(key='dynamic_model', units='', tpe=SubObjectType.DynamicModelType,
-                      definition='Dynamic model', display=False)
+        self.register(key='rms_model', units='', tpe=SubObjectType.DynamicModelHostType,
+                      definition='RMS dynamic model', display=False)
 
     @property
-    def dynamic_model(self) -> DynamicModel:
-        return self._dynamic_model
+    def rms_model(self) -> DynamicModelHost:
+        return self._rms_model
 
-    @dynamic_model.setter
-    def dynamic_model(self, value: DynamicModel):
-        if isinstance(value, DynamicModel):
-            self._dynamic_model = value
+    @rms_model.setter
+    def rms_model(self, value: DynamicModelHost):
+        if isinstance(value, DynamicModelHost):
+            self._rms_model = value
 
     @property
     def active_prof(self) -> Profile:

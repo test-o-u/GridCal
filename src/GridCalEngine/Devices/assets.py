@@ -4643,16 +4643,16 @@ class Assets:
         :param obj: DynamicModel object
         """
         for elm in self.buses:
-            if elm.dynamic_model == obj:
-                elm.dynamic_model = None
+            if elm.rms_model == obj:
+                elm.rms_model = None
 
         for elm in self.get_injection_devices_iter():
-            if elm.dynamic_model == obj:
-                elm.dynamic_model = None
+            if elm.rms_model == obj:
+                elm.rms_model = None
 
         for elm in self.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True):
-            if elm.dynamic_model == obj:
-                elm.dynamic_model = None
+            if elm.rms_model == obj:
+                elm.rms_model = None
 
         try:
             self._rms_models.remove(obj)

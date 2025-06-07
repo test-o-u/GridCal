@@ -291,137 +291,137 @@ grid = MultiCircuit()
 
 # Add the buses and the generators and loads attached
 bus1 = Bus('Bus 1', Vnom=20)
-bus1.dynamic_model.parse(bus1_data)
+bus1.rms_model.parse(bus1_data)
 grid.add_bus(bus1)
 
 bus2 = Bus('Bus 2', Vnom=20)
-bus2.dynamic_model.parse(bus2_data)
+bus2.rms_model.parse(bus2_data)
 grid.add_bus(bus2)
 
 # add branches (Lines in this case)
 line1 = Line(bus_from=bus1, bus_to=bus2, name='line 1-2', r=0.05, x=0.11, b=0.02)
-line1.dynamic_model.parse(branch_data)
+line1.rms_model.parse(branch_data)
 grid.add_line(line1)
 
 gen1 = StaticGenerator(name="slack_gen_1", P=4.0, Q=2)
-gen1.dynamic_model.parse(slack_gen_data)
+gen1.rms_model.parse(slack_gen_data)
 grid.add_static_generator(bus=bus1, api_obj=gen1)
 
 gen2 = Generator('Sync Generator', vset=1.0)
-gen2.dynamic_model.name = "GENCLS"
-gen2.dynamic_model.comp_code = [0]
-gen2.dynamic_model.comp_name = ["GENCLS 1"]
-gen2.dynamic_model.u = [1]
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.name = "GENCLS"
+gen2.rms_model.comp_code = [0]
+gen2.rms_model.comp_name = ["GENCLS 1"]
+gen2.rms_model.u = [1]
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="fn",
     symbol="fn",
     info="rated frequency",
     value=3.81099313))
-gen2.dynamic_model.add_idx_dyn_param(val=IdxDynParam(
+gen2.rms_model.add_idx_dyn_param(val=IdxDynParam(
     name="bus",
     symbol="Bus", info="interface bus id",
     ident=[0],
     connection_point="GENCLS"))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="D",
     symbol="D",
     info="damping coefficient",
     value=10))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="M",
     symbol="M",
     info="machine start up time (2H)",
     value=1.0))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="ra",
     symbol="ra",
     info="armature resistance",
     value=0.003))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="xd",
     symbol="xd",
     info="d-axis transient reactance",
     value=0.003))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="tm",
     symbol="tm",
     info="uncontrolled mechanical torque",
     value=0.3))
-gen2.dynamic_model.add_num_dyn_param(val=NumDynParam(
+gen2.rms_model.add_num_dyn_param(val=NumDynParam(
     name="vf",
     symbol="vf",
     info="uncontrolled exitation voltage",
     value=0.86138701))
-gen2.dynamic_model.add_stat_var(val=StatVar(name="delta",
-                                            symbol="delta",
-                                            init_eq="delta0",
-                                            eq="(2 * pi * fn) * (omega - 1)"))
-gen2.dynamic_model.add_stat_var(val=StatVar(name="omega",
-                                            symbol="omega",
-                                            init_eq="omega0",
-                                            eq="(-tm / M + t_e / M - D / M * (omega - 1))"))
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="psid",
-                                               symbol="psid",
-                                               init_eq="psid0",
-                                               eq="(-ra * i_q + v_q) - psid"))
+gen2.rms_model.add_stat_var(val=StatVar(name="delta",
+                                        symbol="delta",
+                                        init_eq="delta0",
+                                        eq="(2 * pi * fn) * (omega - 1)"))
+gen2.rms_model.add_stat_var(val=StatVar(name="omega",
+                                        symbol="omega",
+                                        init_eq="omega0",
+                                        eq="(-tm / M + t_e / M - D / M * (omega - 1))"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="psid",
+                                          symbol="psid",
+                                          init_eq="psid0",
+                                          eq="(-ra * i_q + v_q) - psid"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="psiq",
-                                               symbol="psiq",
-                                               init_eq="psiq0",
-                                               eq="(-ra * i_d + v_d) - psiq"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="psiq",
+                                          symbol="psiq",
+                                          init_eq="psiq0",
+                                          eq="(-ra * i_d + v_d) - psiq"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="i_d",
-                                               symbol="i_d",
-                                               init_eq="i_d0",
-                                               eq="psid + xd * i_d - vf"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="i_d",
+                                          symbol="i_d",
+                                          init_eq="i_d0",
+                                          eq="psid + xd * i_d - vf"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="i_q",
-                                               symbol="i_q",
-                                               init_eq="i_q0",
-                                               eq="psiq + xd * i_q"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="i_q",
+                                          symbol="i_q",
+                                          init_eq="i_q0",
+                                          eq="psiq + xd * i_q"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="v_d",
-                                               symbol="v_d",
-                                               init_eq="v_d0",
-                                               eq="q * sin(delta - p) - v_d"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="v_d",
+                                          symbol="v_d",
+                                          init_eq="v_d0",
+                                          eq="q * sin(delta - p) - v_d"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="v_q",
-                                               symbol="v_q",
-                                               init_eq="v_q0",
-                                               eq="q * cos(delta - p) - v_q"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="v_q",
+                                          symbol="v_q",
+                                          init_eq="v_q0",
+                                          eq="q * cos(delta - p) - v_q"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="t_e",
-                                               symbol="t_e",
-                                               init_eq="t_m",
-                                               eq="(psid * i_q - psiq * i_d) - t_e"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="t_e",
+                                          symbol="t_e",
+                                          init_eq="t_m",
+                                          eq="(psid * i_q - psiq * i_d) - t_e"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="P_e",
-                                               symbol="P_e",
-                                               init_eq="(v_d0 * i_d0 + v_q0 * i_q0)",
-                                               eq="(v_d * i_d + v_q * i_q) - P_e"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="P_e",
+                                          symbol="P_e",
+                                          init_eq="(v_d0 * i_d0 + v_q0 * i_q0)",
+                                          eq="(v_d * i_d + v_q * i_q) - P_e"))
 
-gen2.dynamic_model.add_algeb_var(val=AlgebVar(name="Q_e",
-                                               symbol="Q_e",
-                                               init_eq="(v_q0 * i_d0 - v_d0 * i_q0)",
-                                               eq="(v_q * i_d - v_d * i_q) - Q_e"))
-gen2.dynamic_model.add_ext_algeb_var(val=ExternAlgeb(name="p",
-                                                     symbol="p",
-                                                     src="p",
-                                                     indexer="bus",
-                                                     init_eq="",
-                                                     eq="Pl0 * q ** coeff_alfa"))
+gen2.rms_model.add_algeb_var(val=AlgebVar(name="Q_e",
+                                          symbol="Q_e",
+                                          init_eq="(v_q0 * i_d0 - v_d0 * i_q0)",
+                                          eq="(v_q * i_d - v_d * i_q) - Q_e"))
+gen2.rms_model.add_ext_algeb_var(val=ExternAlgeb(name="p",
+                                                 symbol="p",
+                                                 src="p",
+                                                 indexer="bus",
+                                                 init_eq="",
+                                                 eq="Pl0 * q ** coeff_alfa"))
 
-gen2.dynamic_model.add_ext_algeb_var(val=ExternAlgeb(name="q",
-                                                     symbol="q",
-                                                     src="q",
-                                                     indexer="bus",
-                                                     init_eq="",
-                                                     eq="Ql0 * q ** coeff_beta"))
+gen2.rms_model.add_ext_algeb_var(val=ExternAlgeb(name="q",
+                                                 symbol="q",
+                                                 src="q",
+                                                 indexer="bus",
+                                                 init_eq="",
+                                                 eq="Ql0 * q ** coeff_beta"))
 
 grid.add_generator(bus1, api_obj=gen2)
 
 Load1 = Load('load_1', P=40, Q=20)
-Load1.dynamic_model.parse(load_data)
+Load1.rms_model.parse(load_data)
 grid.add_load(bus2, api_obj=Load1)
 
 # to access elements of the grid:
