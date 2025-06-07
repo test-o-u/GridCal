@@ -1,15 +1,27 @@
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QGraphicsScene, QGraphicsView,
-    QGraphicsItem, QGraphicsRectItem, QGraphicsEllipseItem,
-    QGraphicsTextItem, QMenu, QGraphicsPathItem
-)
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
+from PySide6.QtWidgets import (QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsItem,
+                               QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsTextItem, QMenu, QGraphicsPathItem)
 from PySide6.QtGui import QPen, QBrush, QPainterPath, QAction, QPainter
 from PySide6.QtCore import Qt, QPointF
 import sys
 
 
 class Port(QGraphicsEllipseItem):
-    def __init__(self, block, is_input, index, total, radius=6):
+    """
+    Port of a block
+    """
+    def __init__(self, block: "Block", is_input: bool, index: int, total: int, radius=6):
+        """
+
+        :param block:
+        :param is_input:
+        :param index:
+        :param total:
+        :param radius:
+        """
         super().__init__(-radius, -radius, 2 * radius, 2 * radius, block)
         self.setBrush(QBrush(Qt.GlobalColor.blue if is_input else Qt.GlobalColor.green))
         self.setPen(QPen(Qt.GlobalColor.black))
@@ -72,6 +84,7 @@ class Connection(QGraphicsPathItem):
             self.source_port.connection = None
             self.target_port.connection = None
 
+
 class ResizeHandle(QGraphicsRectItem):
     def __init__(self, block, size=10):
         super().__init__(0, 0, size, size, block)
@@ -97,6 +110,7 @@ class ResizeHandle(QGraphicsRectItem):
 
             return QPointF(new_width, new_height)
         return super().itemChange(change, value)
+
 
 class Block(QGraphicsRectItem):
     def __init__(self, name, inputs=1, outputs=1):
@@ -229,7 +243,6 @@ class GraphicsView(QGraphicsView):
             self.setCursor(Qt.CursorShape.ArrowCursor)
         else:
             super().mouseReleaseEvent(event)
-
 
 
 class DiagramScene(QGraphicsScene):
