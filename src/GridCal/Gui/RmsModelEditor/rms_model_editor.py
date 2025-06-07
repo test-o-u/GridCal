@@ -16,36 +16,42 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QHBoxLayout,
-    QHeaderView, QListView, QSizePolicy, QSplitter,
-    QTableView, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QHeaderView,
+    QListView, QMainWindow, QSizePolicy, QSplitter,
+    QTabWidget, QTableView, QToolBar, QVBoxLayout,
+    QWidget)
 from .icons_rc import *
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(841, 518)
-        icon = QIcon()
-        icon.addFile(u":/Icons/icons/dyn.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        MainWindow.setWindowIcon(icon)
-        self.actionCopy_to_clipboard = QAction(MainWindow)
-        self.actionCopy_to_clipboard.setObjectName(u"actionCopy_to_clipboard")
-        icon1 = QIcon()
-        icon1.addFile(u":/Icons/icons/copy.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.actionCopy_to_clipboard.setIcon(icon1)
-        self.actionSave = QAction(MainWindow)
-        self.actionSave.setObjectName(u"actionSave")
-        icon2 = QIcon()
-        icon2.addFile(u":/Icons/icons/import_profiles.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.actionSave.setIcon(icon2)
-        self.verticalLayout_2 = QVBoxLayout(MainWindow)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setSpacing(0)
+        MainWindow.resize(966, 538)
+        self.actionCheckModel = QAction(MainWindow)
+        self.actionCheckModel.setObjectName(u"actionCheckModel")
+        self.actionCheckModel.setMenuRole(QAction.MenuRole.NoRole)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.splitter_3 = QSplitter(MainWindow)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.tabWidget = QTabWidget(self.centralwidget)
+        self.tabWidget.setObjectName(u"tabWidget")
+        self.tab = QWidget()
+        self.tab.setObjectName(u"tab")
+        self.verticalLayout_4 = QVBoxLayout(self.tab)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.editorLayout = QVBoxLayout()
+        self.editorLayout.setObjectName(u"editorLayout")
+
+        self.verticalLayout_4.addLayout(self.editorLayout)
+
+        self.tabWidget.addTab(self.tab, "")
+        self.tab_2 = QWidget()
+        self.tab_2.setObjectName(u"tab_2")
+        self.verticalLayout_3 = QVBoxLayout(self.tab_2)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.splitter_3 = QSplitter(self.tab_2)
         self.splitter_3.setObjectName(u"splitter_3")
         self.splitter_3.setOrientation(Qt.Orientation.Horizontal)
         self.frame_8 = QFrame(self.splitter_3)
@@ -76,20 +82,33 @@ class Ui_MainWindow(object):
 
         self.splitter_3.addWidget(self.PlotFrame)
 
-        self.verticalLayout.addWidget(self.splitter_3)
+        self.verticalLayout_3.addWidget(self.splitter_3)
 
+        self.tabWidget.addTab(self.tab_2, "")
 
-        self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.verticalLayout.addWidget(self.tabWidget)
 
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.toolBar = QToolBar(MainWindow)
+        self.toolBar.setObjectName(u"toolBar")
+        self.toolBar.setMovable(False)
+        MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.toolBar)
+
+        self.toolBar.addAction(self.actionCheckModel)
 
         self.retranslateUi(MainWindow)
+
+        self.tabWidget.setCurrentIndex(0)
+
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"RMS Model editor", None))
-        self.actionCopy_to_clipboard.setText(QCoreApplication.translate("MainWindow", u"Copy to clipboard", None))
-        self.actionSave.setText(QCoreApplication.translate("MainWindow", u"Save", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.actionCheckModel.setText(QCoreApplication.translate("MainWindow", u"CheckModel", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Block editor", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Data", None))
+        self.toolBar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 

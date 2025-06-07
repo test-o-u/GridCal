@@ -8,17 +8,18 @@ from PySide6 import QtWidgets
 
 from GridCal.Gui.gui_functions import get_icon_list_model
 from GridCal.Gui.RmsModelEditor.rms_model_editor import Ui_MainWindow
+from GridCal.Gui.RmsModelEditor.block_editor import BlockEditor
 import GridCalEngine.Devices as dev
 
 
-class RmsModelEditorGUI(QtWidgets.QDialog):
+class RmsModelEditorGUI(QtWidgets.QMainWindow):
 
     def __init__(self, model: dev.DynamicModel, parent=None, ):
         """
 
         :param parent:
         """
-        QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QMainWindow.__init__(self, parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowTitle('RMS Model editor')
@@ -37,6 +38,9 @@ class RmsModelEditorGUI(QtWidgets.QDialog):
             ]
         )
         self.ui.listView.setModel(self._list_mdl)
+
+        self.editor = BlockEditor()
+        self.ui.editorLayout.addWidget(self.editor)
 
 
 if __name__ == "__main__":

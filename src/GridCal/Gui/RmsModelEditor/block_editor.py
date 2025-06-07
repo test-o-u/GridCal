@@ -306,9 +306,9 @@ class DiagramScene(QGraphicsScene):
             super().mouseReleaseEvent(event)
 
 
-class SimulinkEditor(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class BlockEditor(QMainWindow):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle("Block Editor with Ports")
 
         self.scene = DiagramScene(self)
@@ -320,6 +320,6 @@ class SimulinkEditor(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = SimulinkEditor()
+    window = BlockEditor()
     window.show()
     sys.exit(app.exec())

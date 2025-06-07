@@ -912,9 +912,8 @@ class ObjectsTableMain(DiagramsMain):
                 elif elm_type == DeviceType.DynModel.value:
 
                     self.rms_model_Editor_window = RmsModelEditorGUI(model=self.circuit.rms_models[idx],)
-                    self.rms_model_Editor_window.setModal(True)
                     self.rms_model_Editor_window.resize(int(1.81 * 700.0), 700)
-                    self.rms_model_Editor_window.exec()
+                    self.rms_model_Editor_window.show()
 
                 else:
 
