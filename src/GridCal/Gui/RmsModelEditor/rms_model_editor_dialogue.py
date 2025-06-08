@@ -42,6 +42,14 @@ class RmsModelEditorGUI(QtWidgets.QMainWindow):
         self.editor = BlockEditor()
         self.ui.editorLayout.addWidget(self.editor)
 
+        self.ui.actionCheckModel.triggered.connect(self.extract_dae)
+
+    def extract_dae(self):
+        eqs = self.editor.extract_dae()
+
+        for eq in eqs:
+            print(str(eq))
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
