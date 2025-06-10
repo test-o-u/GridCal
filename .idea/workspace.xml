@@ -28,11 +28,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Refactor in progress">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Improved file saving">
+      <change afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_compiler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -246,7 +246,7 @@
     "Python.run_contingencies_ts.executor": "Run",
     "Python.run_master.executor": "Run",
     "Python.run_server_farm.executor": "Debug",
-    "Python.scripting_por_obj.executor": "Run",
+    "Python.scripting_por_obj.executor": "Debug",
     "Python.server_example.executor": "Run",
     "Python.short_circuit_driver.executor": "Run",
     "Python.simple_dispatch_demo.executor": "Debug",
@@ -271,7 +271,7 @@
     "Shell Script.make.sh.executor": "Run",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "340__Dynamics__refactor",
-    "last_opened_file_path": "/home/santi/Documentos/Git/eRoots/OffshoreExpansionPlugin",
+    "last_opened_file_path": "/home/santi/Documentos/Git/GitHub/GridCal/src/trunk/dynamics",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
@@ -289,11 +289,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/trunk/dynamics" />
       <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Reliability" />
       <recent name="$PROJECT_DIR$/src/trunk/simple_dispatch" />
       <recent name="$PROJECT_DIR$/src/tests/data/grids" />
       <recent name="$PROJECT_DIR$/src/GridCal/ThirdParty/darkdetect" />
-      <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Stochastic" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/GridCalEngine/Simulations/Adequacy" />
@@ -2394,7 +2394,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="751" />
+    <option name="localTasksCounter" value="752" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2440,7 +2440,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Simple dispatch done" />
     <MESSAGE value="Worked on the `fast_dispatch_with_renewables` function" />
     <MESSAGE value="refactored fast_dispatch_with_renewables" />
     <MESSAGE value="more work on reliability" />
@@ -2465,7 +2464,8 @@
     <MESSAGE value="some types" />
     <MESSAGE value="Added some pictures" />
     <MESSAGE value="Refactor in progress" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactor in progress" />
+    <MESSAGE value="Improved file saving" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improved file saving" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3017,7 +3017,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py</url>
-          <line>178</line>
+          <line>223</line>
           <option name="timeStamp" value="2808" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">

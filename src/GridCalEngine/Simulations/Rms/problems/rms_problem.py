@@ -102,35 +102,78 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
     :param grid:
     :return:
     """
-    models: List[RmsModelStore] = list()
+    compiled_models: List[RmsModelStore] = list()
     n_algeb = 0
     n_stat = 0
 
     already_compiled_dict = dict()
 
-    for lst in [grid.buses,
-                grid.get_injection_devices_iter(),
-                grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)]:
+    bus_dict = dict()
+    for i, elm in enumerate(grid.buses):
+        bus_dict[elm]= i
 
-        for elm in lst:
+        # obtain the used model from the device of the DB
+        model = elm.rms_model.model
 
-            # obtain the used model from the device of the DB
-            model = elm.rms_model.model
+        # See if the dynamic model was already compiled
+        c_model = already_compiled_dict.get(model.idtag, None)
 
-            # See if the dynamic model was already compiled
-            c_model = already_compiled_dict.get(model.idtag, None)
+        if c_model is None:
+            # if it wasn't compiled, compile it!
+            n_algeb += len(model.algeb_var)
+            n_stat += len(model.stat_var)
+            c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
 
-            if c_model is None:
-                # if it wasn't compiled, compile it!
-                n_algeb += len(model.algeb_var)
-                n_stat += len(model.stat_var)
-                c_model = RmsModelStore(dynamic_model=elm.rms_model.model, grid_id=grid.idtag)
+            # store reference for later
+            already_compiled_dict[model.idtag] = c_model
 
-                # store reference for later
-                already_compiled_dict[model.idtag] = c_model
+        # add the compiled model used to the list
+        compiled_models.append(c_model)
 
-            # add the compiled model used to the list
-            models.append(c_model)
+
+    for e, elm in enumerate(grid.get_injection_devices_iter()):
+        bus_idx = bus_dict[elm.bus]
+
+        # obtain the used model from the device of the DB
+        model = elm.rms_model.model
+
+        # See if the dynamic model was already compiled
+        c_model = already_compiled_dict.get(model.idtag, None)
+
+        if c_model is None:
+            # if it wasn't compiled, compile it!
+            n_algeb += len(model.algeb_var)
+            n_stat += len(model.stat_var)
+            c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
+
+            # store reference for later
+            already_compiled_dict[model.idtag] = c_model
+
+        # add the compiled model used to the list
+        compiled_models.append(c_model)
+
+
+    for k, elm in enumerate(grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)):
+        bus_f = bus_dict[elm.bus_from]
+        bus_t = bus_dict[elm.bus_to]
+
+        # obtain the used model from the device of the DB
+        model = elm.rms_model.model
+
+        # See if the dynamic model was already compiled
+        c_model = already_compiled_dict.get(model.idtag, None)
+
+        if c_model is None:
+            # if it wasn't compiled, compile it!
+            n_algeb += len(model.algeb_var)
+            n_stat += len(model.stat_var)
+            c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
+
+            # store reference for later
+            already_compiled_dict[model.idtag] = c_model
+
+        # add the compiled model used to the list
+        compiled_models.append(c_model)
 
     # Compile initial values
     x0 = np.empty(n_stat)
@@ -141,7 +184,7 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
     b_stat = 0
     a_algeb = 0
     b_algeb = 0
-    for c_model in models:
+    for c_model in compiled_models:
         b_stat += len(c_model.x0)
         x0[a_stat:b_stat] = c_model.x0
         Tf[a_stat:b_stat] = c_model.t_const0
@@ -151,7 +194,7 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         y0[a_algeb:b_algeb] = c_model.y0
         a_algeb = b_algeb
 
-    return models, x0, y0, Tf, n_stat, n_algeb
+    return compiled_models, x0, y0, Tf, n_stat, n_algeb
 
 
 class RmsProblem:

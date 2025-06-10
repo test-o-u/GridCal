@@ -36,88 +36,6 @@ class RmsModelsCompiler:
         self.grid = grid
         self.models_list: List[RmsModelStore] = list()
 
-    def import_models_gridcal(self):
-        """
-        Imports dynamic models and initializes their symbolic-numeric representations.
-        his method:
-        - Dynamically imports model classes from GridCalEngine
-        - Creates empty instances of each model and stores them in `self.models`
-        :return:
-        """
-        # iterate through parsed models input
-        for family in self.gridcal_data:
-            for model_dict in family:
-                model_instance = DynamicModel(name=model_dict["name"], code='', idtag='')
-                # model_instance.idx_dyn_param = model_dict['idx_dyn_param']
-                # model_instance.num_dyn_param = model_dict['num_dyn_param']
-                # model_instance.ext_dyn_param = model_dict['ext_dyn_param']
-                # model_instance.stat_var = model_dict['stat_var']
-                # model_instance.algeb_var = model_dict['algeb_var']
-                # model_instance.ext_state_var = model_dict['ext_state_var']
-                # model_instance.ext_algeb_var = model_dict['ext_algeb_var']
-
-                for idx_dyn_param_dict in model_dict['idx_dyn_param']:
-                    idx_dyn_param = IdxDynParam(idx_dyn_param_dict['info'], idx_dyn_param_dict['name'],
-                                                idx_dyn_param_dict['symbol'], [0], "")
-                    setattr(model_instance, idx_dyn_param_dict['name'], idx_dyn_param)
-                for num_dyn_param_dict in model_dict['num_dyn_param']:
-                    num_dyn_param = NumDynParam(num_dyn_param_dict['info'], num_dyn_param_dict['name'],
-                                                num_dyn_param_dict['symbol'], 0)
-                    setattr(model_instance, num_dyn_param_dict['symbol'], num_dyn_param)
-                for ext_dyn_param_dict in model_dict['ext_dyn_param']:
-                    ext_dyn_param = ExtDynParam(ext_dyn_param_dict['info'], ext_dyn_param_dict['name'],
-                                                ext_dyn_param_dict['symbol'], 0)
-                    setattr(model_instance, ext_dyn_param_dict['symbol'], ext_dyn_param)
-                for stat_var_dict in model_dict['stat_var']:
-                    stat_var = StatVar(stat_var_dict['name'], stat_var_dict['symbol'], stat_var_dict['init_eq'],
-                                       stat_var_dict['eq'])
-                    setattr(model_instance, stat_var_dict['symbol'], stat_var)
-                for algeb_var_dict in model_dict['algeb_var']:
-                    algeb_var = AlgebVar(algeb_var_dict['name'], algeb_var_dict['symbol'], algeb_var_dict['init_eq'],
-                                         algeb_var_dict['eq'])
-                    setattr(model_instance, algeb_var_dict['symbol'], algeb_var)
-                for ext_state_var_dict in model_dict['ext_state_var']:
-                    indexer = getattr(model_instance, ext_state_var_dict['indexer'])
-                    ext_state_var = ExternState(ext_state_var_dict['name'], ext_state_var_dict['symbol'],
-                                                ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'],
-                                                ext_state_var_dict['eq'])
-                    setattr(model_instance, ext_state_var_dict['symbol'], ext_state_var)
-                for ext_algeb_var_dict in model_dict['ext_algeb_var']:
-                    indexer = getattr(model_instance, ext_algeb_var_dict['indexer'])
-                    ext_algeb_var = ExternAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'],
-                                                ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'],
-                                                ext_algeb_var_dict['eq'])
-                    setattr(model_instance, ext_algeb_var_dict['symbol'], ext_algeb_var)
-
-                self.models[model_instance.name] = model_instance
-
-    def import_models_from_devices_list(self):
-        for device in self.devices_list:
-            self.models[device.comp_name[0]] = device
-
-    def import_models(self):
-        """
-        Imports dynamic models and initializes their symbolic-numeric representations.
-        This method:
-        - Dynamically imports model classes from GridCalEngine
-        - Creates empty instances of each model and stores them in `self.models`
-        :return:
-        """
-
-        for category, model_names in self.models_list:
-            # Import the module containing the models for this category (__init__.py)
-            category_module = importlib.import_module(f'GridCalEngine.Devices.Dynamic.models.{category}')
-
-            for model_name in model_names:
-                # Retrieve the model class from the module
-                ModelClass = getattr(category_module, model_name)
-
-                # Instantiate the model with default attributes
-                model = ModelClass(name=model_name, code='', idtag='')
-
-                # Store the model instance in the dictionary
-                self.models[model_name] = model
-
     def system_prepare(self):
 
         """
@@ -133,22 +51,22 @@ class RmsModelsCompiler:
         start_time = time.perf_counter()
 
         # Step 1: Process models symbolically and generate numerical functions
-        symb_st = time.perf_counter()
-        for model in self.models.values():
-            model.store_data()
-            model.process_symbolic()
-        self.finalize_generated_code()  # Finalize generated code
-        logging.info(f"Generated code module created")
-        symb_end = time.perf_counter()
-        symb_time = symb_end - symb_st  # Store symbolic processing time
+        # symb_st = time.perf_counter()
+        # for model in self.models.values():
+        #     model.store_data()
+        #     model.process_symbolic()
+        # self.finalize_generated_code()  # Finalize generated code
+        # logging.info(f"Generated code module created")
+        # symb_end = time.perf_counter()
+        # symb_time = symb_end - symb_st  # Store symbolic processing time
 
         # Step 2: Create vectorized model instances for device storage
-        dev_st = time.perf_counter()
-        # self.create_devices(self.data)
-        self.create_devices()
-        self.devices.move_to_end('Bus', last=False)
-        dev_end = time.perf_counter()
-        dev_time = dev_end - dev_st  # Store device creation time
+        # dev_st = time.perf_counter()
+        # # self.create_devices(self.data)
+        # self.create_devices()
+        # self.devices.move_to_end('Bus', last=False)
+        # dev_end = time.perf_counter()
+        # dev_time = dev_end - dev_st  # Store device creation time
 
         # Step 3: Store parameters and assign global indices to variables and external references
         add_st = time.perf_counter()
