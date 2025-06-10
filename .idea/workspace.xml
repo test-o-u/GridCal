@@ -28,11 +28,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Added some pictures">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Refactor in progress">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -247,7 +246,7 @@
     "Python.run_contingencies_ts.executor": "Run",
     "Python.run_master.executor": "Run",
     "Python.run_server_farm.executor": "Debug",
-    "Python.scripting_por_obj.executor": "Debug",
+    "Python.scripting_por_obj.executor": "Run",
     "Python.server_example.executor": "Run",
     "Python.short_circuit_driver.executor": "Run",
     "Python.simple_dispatch_demo.executor": "Debug",
@@ -2395,7 +2394,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="750" />
+    <option name="localTasksCounter" value="751" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2441,7 +2440,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="More pmode3..." />
     <MESSAGE value="Simple dispatch done" />
     <MESSAGE value="Worked on the `fast_dispatch_with_renewables` function" />
     <MESSAGE value="refactored fast_dispatch_with_renewables" />
@@ -2466,7 +2464,8 @@
     <MESSAGE value="now DynamicModelHost is used instead of DynamicModel" />
     <MESSAGE value="some types" />
     <MESSAGE value="Added some pictures" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added some pictures" />
+    <MESSAGE value="Refactor in progress" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor in progress" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3018,18 +3017,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py</url>
-          <line>163</line>
+          <line>178</line>
           <option name="timeStamp" value="2808" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py</url>
-          <line>453</line>
-          <option name="timeStamp" value="2809" />
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py</url>
+          <line>55</line>
+          <option name="timeStamp" value="2811" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj.py</url>
-          <line>136</line>
-          <option name="timeStamp" value="2810" />
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py</url>
+          <line>57</line>
+          <option name="timeStamp" value="2812" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

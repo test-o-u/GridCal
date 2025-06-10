@@ -106,18 +106,33 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
     n_algeb = 0
     n_stat = 0
 
+    already_compiled_dict = dict()
+
     for lst in [grid.buses,
                 grid.get_injection_devices_iter(),
                 grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)]:
 
         for elm in lst:
 
+            # obtain the used model from the device of the DB
             model = elm.rms_model.model
-            n_algeb += len(model.algeb_var)
-            n_stat += len(model.stat_var)
-            c_model = RmsModelStore(dynamic_model=elm.rms_model.model, grid_id=grid.idtag)
+
+            # See if the dynamic model was already compiled
+            c_model = already_compiled_dict.get(model.idtag, None)
+
+            if c_model is None:
+                # if it wasn't compiled, compile it!
+                n_algeb += len(model.algeb_var)
+                n_stat += len(model.stat_var)
+                c_model = RmsModelStore(dynamic_model=elm.rms_model.model, grid_id=grid.idtag)
+
+                # store reference for later
+                already_compiled_dict[model.idtag] = c_model
+
+            # add the compiled model used to the list
             models.append(c_model)
 
+    # Compile initial values
     x0 = np.empty(n_stat)
     y0 = np.empty(n_algeb)
     Tf = np.ones(n_stat)
@@ -221,7 +236,6 @@ class RmsProblem:
         self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
         self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
         self.sparsity_gy = np.zeros(55, dtype=object)
-
 
     def initilize_fg(self):
         """

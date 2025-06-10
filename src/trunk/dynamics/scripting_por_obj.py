@@ -285,7 +285,7 @@ load_model.parse(load_data)
 # build the grid create models and add devices to the grid
 
 np.set_printoptions(precision=4)
-grid = gce.MultiCircuit()
+grid = gce.MultiCircuit(idtag="d3bacc4e2684432991bb3533eff0c453")
 
 grid.add_rms_model(bus1_model)
 grid.add_rms_model(bus2_model)
