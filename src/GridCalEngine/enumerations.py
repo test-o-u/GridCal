@@ -1888,7 +1888,7 @@ class CascadeType(Enum):
 
 
 class DynamicVarType(Enum):
-    x = "x",
+    x = "x"
     y = "y"
 
     def __str__(self) -> str:

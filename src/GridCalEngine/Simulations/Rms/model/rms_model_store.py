@@ -113,15 +113,23 @@ class RmsModelStore:
         """
         Fill in the structures
         """
+        self.x0 = np.zeros(len(dynamic_model.stat_var))
+        self.t_const0 = np.zeros(len(dynamic_model.stat_var))
+        self.y0 = np.zeros(len(dynamic_model.algeb_var))
 
         index = 0
 
-        for key, elem in dynamic_model.stat_var.items():
+        for i, (key, elem) in enumerate(dynamic_model.stat_var.items()):
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
-            index += 1
 
+            self.x0[i] = elem.init_val
+            self.t_const0[i] = elem.t_const
+
+            index += 1
             self.nx += 1
+
+
             if elem.eq is not None:
                 self.state_eqs.append(elem)
                 self.eqs_list.append(elem.symbol)
@@ -129,12 +137,15 @@ class RmsModelStore:
             self.vars_list.append(elem.symbol)
             self.internal_vars.append(elem.symbol)
 
-        for key, elem in dynamic_model.algeb_var.items():
+        for i, (key, elem) in enumerate(dynamic_model.algeb_var.items()):
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
-            index += 1
 
+            self.y0[i] = elem.init_val
+
+            index += 1
             self.ny += 1
+
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
                 self.eqs_list.append(elem.symbol)
@@ -281,7 +292,7 @@ class RmsModelStore:
         for idx, eq_sparse in enumerate([f_jacob_symbolic_spa, g_jacob_symbolic_spa]):
             for e_idx, v_idx, e_symbolic in eq_sparse.row_list():
                 var_type = all_variables[v_idx].var_type
-                eq_var_code = f"d{['f', 'g'][idx]}{var_type}"
+                eq_var_code = f"d{['f', 'g'][idx]}{var_type.value}"
                 if idx == 0:
                     self.jacobian_store_info[eq_var_code].append((e_idx, v_idx))
                     self.jacobian_store_equations[eq_var_code].append(str(e_symbolic))

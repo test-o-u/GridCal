@@ -3,11 +3,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List
+from typing import List, Tuple
 import numpy as np
 import sympy as sym
 import scipy.sparse as sp
+
+from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
+from GridCalEngine.basic_structures import Vec
 
 
 def build_dfx(jac_values, sparsity_set, n_rows: int, n_cols: int):
@@ -93,6 +96,49 @@ def build_dgy(jac_values, sparsity_set, n_rows: int, n_cols: int, offset_rows, o
     return sp.coo_matrix((jac_values, (rows, cols)), shape=(n_rows, n_cols))
 
 
+def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Vec, Vec, int, int]:
+    """
+
+    :param grid:
+    :return:
+    """
+    models: List[RmsModelStore] = list()
+    n_algeb = 0
+    n_stat = 0
+
+    for lst in [grid.buses,
+                grid.get_injection_devices_iter(),
+                grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)]:
+
+        for elm in lst:
+
+            model = elm.rms_model.model
+            n_algeb += len(model.algeb_var)
+            n_stat += len(model.stat_var)
+            c_model = RmsModelStore(dynamic_model=elm.rms_model.model, grid_id=grid.idtag)
+            models.append(c_model)
+
+    x0 = np.empty(n_stat)
+    y0 = np.empty(n_algeb)
+    Tf = np.ones(n_stat)
+
+    a_stat = 0
+    b_stat = 0
+    a_algeb = 0
+    b_algeb = 0
+    for c_model in models:
+        b_stat += len(c_model.x0)
+        x0[a_stat:b_stat] = c_model.x0
+        Tf[a_stat:b_stat] = c_model.t_const0
+        a_stat = b_stat
+
+        b_algeb += len(c_model.y0)
+        y0[a_algeb:b_algeb] = c_model.y0
+        a_algeb = b_algeb
+
+    return models, x0, y0, Tf, n_stat, n_algeb
+
+
 class RmsProblem:
     """
     DAE (Differential-Algebraic Equation) class to store and manage.
@@ -104,7 +150,7 @@ class RmsProblem:
         - Store sparsity patterns
     """
 
-    def __init__(self, models_list: List[RmsModelStore]):
+    def __init__(self, grid: MultiCircuit):
         """
         DAE class constructor
         Initialize DAE object with required containers and defaults.
@@ -112,7 +158,10 @@ class RmsProblem:
         """
 
         # self.system: DynamicSystemStore = system
-        self.models_list: List[RmsModelStore] = models_list
+        self.models_list, self.x, self.y, self.Tf, self.nx, self.ny = compile_rms_models(grid=grid)
+
+        # lists to store initial values and results of every step of the simulation
+        self.xy = None
 
         # List to store variables internal variables of the system (used to analyze simulation data)
         self.internal_variables_list = list()
@@ -124,9 +173,9 @@ class RmsProblem:
         self.addresses_list = list()
 
         # number of state variables (internals)
-        self.nx = 0
+        # self.nx = 0
         # number of algebraic variables (internals)
-        self.ny = 0
+        # self.ny = 0
 
         # number of non zero entries in jacobian
         self.ndfx = 0
@@ -137,11 +186,6 @@ class RmsProblem:
         # lists to store f ang g functions values (residuals)
         self.f = np.zeros(self.nx)
         self.g = np.zeros(self.ny)
-
-        # lists to store initial values and results of every step of the simulation
-        self.x = config.DAE_X0
-        self.y = config.DAE_Y0
-        self.xy = None
 
         # Lists to accumulate Jacobian positions, values and equations
 
@@ -178,8 +222,6 @@ class RmsProblem:
         self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
         self.sparsity_gy = np.zeros(55, dtype=object)
 
-        # TODO: To change!
-        self.Tf = list()
 
     def initilize_fg(self):
         """
@@ -753,8 +795,8 @@ class RmsProblem:
         """
 
         self.dfx = build_dfx(self._dfx_jac_values, self.sparsity_fx, self.nx, self.nx)
-        self.dfy = build_dfy( self._dfy_jac_values, self.sparsity_fy, self.nx, self.ny)
-        self.dgx = build_dgx( self._dgx_jac_values, self.sparsity_gx, self.ny, self.nx)
+        self.dfy = build_dfy(self._dfy_jac_values, self.sparsity_fy, self.nx, self.ny)
+        self.dgx = build_dgx(self._dgx_jac_values, self.sparsity_gx, self.ny, self.nx)
         self.dgy = build_dgy(self._dgy_jac_values, self.sparsity_gy, self.ny, self.ny, self.nx, self.nx)
 
     def get_tconst_matrix(self):

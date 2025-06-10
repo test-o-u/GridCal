@@ -53,7 +53,7 @@ class RmsSimulationDriver(DriverTemplate):
         :return:
         """
         # Time domain simulation
-        dae = RmsProblem(models_list=self)  # DAE system manager for equations.
+        dae = RmsProblem(grid=self.grid)  # DAE system manager for equations.
 
         dae.initilize_fg()
 
