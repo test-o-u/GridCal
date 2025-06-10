@@ -9,8 +9,8 @@ import pdb
 import numpy as np
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from typing import Union
-from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
-from GridCalEngine.Devices.Dynamic.symprocess import SymProcess
+from GridCalEngine.Simulations.Dynamic.utils.paths import get_generated_module_path
+from GridCalEngine.Simulations.Dynamic.symprocess import SymProcess
 from GridCalEngine.Utils.dyn_var import *
 
 

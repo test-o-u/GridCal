@@ -19,7 +19,7 @@ from GridCalEngine.Simulations.Dynamic.dinamic_driver import DynamicDriver
 bus1_data = {
       "name": "Bus",
       "comp_code": [0],
-      "comp_name": ["Bus 1"],
+      "comp_name": ["Bus1"],
       "u": [1],
       "idx_dyn_param": [],
       "num_dyn_param": [{"name":"p0",
@@ -46,7 +46,7 @@ bus1_data = {
 bus2_data = {
       "name": "Bus",
       "comp_code": [1],
-      "comp_name": ["Bus 2"],
+      "comp_name": ["Bus2"],
       "u": [1],
       "idx_dyn_param": [],
       "num_dyn_param": [{"name":"p0",
@@ -74,7 +74,7 @@ bus2_data = {
 branch_data = {
       "name": "ACLine",
       "comp_code": [0],
-      "comp_name": ["Line 1"],
+      "comp_name": ["Line1"],
       "u": [1],
       "idx_dyn_param": [{"name": "bus1",
                          "symbol":"Bus",
@@ -130,7 +130,7 @@ branch_data = {
 slack_gen_data = {
       "name": "Slack",
       "comp_code": [0],
-      "comp_name": ["Slack 1"],
+      "comp_name": ["Slack1"],
       "u": [1],
       "idx_dyn_param": [{"name": "bus",
                                "symbol":"Bus",
@@ -228,7 +228,7 @@ slack_gen_data = {
 
 
 syn_gen_data = {
-      "name": "GENCLS",
+      "name": "GENCLS1",
       "comp_code": [0],
       "comp_name": ["GENCLS 1"],
       "u": [1],
@@ -336,7 +336,7 @@ syn_gen_data = {
                              "eq":"(v_q * i_d - v_d * i_q)"}]}
 
 load_data = {
-      "name": "ExpLoad",
+      "name": "ExpLoad1",
       "comp_code": [0],
       "comp_name": ["ExpLoad 1"],
       "u": [1],

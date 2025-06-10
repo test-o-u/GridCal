@@ -10,11 +10,11 @@ import time
 import logging
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Utils.MIP.SimpleMip import set_var_bounds
-from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
+from GridCalEngine.Simulations.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.Utils.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 from GridCalEngine.Utils.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
-from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
-import GridCalEngine.Devices.Dynamic.io.data
+from GridCalEngine.Simulations.Dynamic.utils.paths import get_generated_module_path
+
 
 
 
@@ -266,7 +266,7 @@ class SET:
             if model.name in sim_dev:
 
                 # Save system devices
-                self.devices[model.name] = model
+                self.devices[model.comp_code[0]] = model
                 # set device index
                 model.index = device_index
                 device_index += 1
