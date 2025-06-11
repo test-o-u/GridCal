@@ -11,7 +11,7 @@ import logging
 import GridCalEngine.Devices.Dynamic.io.config as config
 from GridCalEngine.Devices.Dynamic.models.dynmodel import DynamicModel
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.Dynamic.utils.paths import get_generated_module_path
 
 
@@ -84,11 +84,11 @@ class SET:
                     setattr(model_instance, algeb_var_dict['symbol'],  algeb_var)
                 for ext_state_var_dict in model_dict['ext_state_var']:
                     indexer = getattr(model_instance, ext_state_var_dict['indexer'])
-                    ext_state_var = ExternState(ext_state_var_dict['name'], ext_state_var_dict['symbol'], ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'], ext_state_var_dict['eq'])
+                    ext_state_var = InputState(ext_state_var_dict['name'], ext_state_var_dict['symbol'], ext_state_var_dict['src'], indexer, ext_state_var_dict['init_eq'], ext_state_var_dict['eq'])
                     setattr(model_instance, ext_state_var_dict['symbol'],  ext_state_var)
                 for ext_algeb_var_dict in model_dict['ext_algeb_var']:
                     indexer = getattr(model_instance, ext_algeb_var_dict['indexer'])
-                    ext_algeb_var = ExternAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'], ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'], ext_algeb_var_dict['eq'])
+                    ext_algeb_var = InputAlgeb(ext_algeb_var_dict['name'], ext_algeb_var_dict['symbol'], ext_algeb_var_dict['src'], indexer, ext_algeb_var_dict['init_eq'], ext_algeb_var_dict['eq'])
                     setattr(model_instance, ext_algeb_var_dict['symbol'],  ext_algeb_var)
 
                 self.models[model_instance.name] = model_instance
@@ -353,7 +353,7 @@ class SET:
                         self.dae.Tf += [1.0] * model_instance.n
 
                 # external state variables
-                if isinstance(var_list, ExternState):
+                if isinstance(var_list, InputState):
                     key = (var_list.indexer.symbol, var_list.src)
 
                     if key not in states_ref_map:
@@ -384,7 +384,7 @@ class SET:
                     algeb_ref_map[(model_instance.name, var_list.name)] = indices
 
                 # external algebraic variables
-                if isinstance(var_list, ExternAlgeb):
+                if isinstance(var_list, InputAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
 
                     if key not in algeb_ref_map:

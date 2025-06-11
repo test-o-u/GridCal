@@ -6,11 +6,14 @@
 'Class to store variables'
 
 from typing import Dict, Any
+
+from GridCalEngine.Devices.Dynamic.address import Address
 from GridCalEngine.enumerations import DynamicVarType
 
 
+
 class DynVar:
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, init_val: float = 0.0):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, address: Address = Address(), init_val: float = 0.0):
         """
 
         :param name:
@@ -22,8 +25,10 @@ class DynVar:
         self.name = name
         self.symbol = symbol
         self.init_eq = init_eq
-        self.init_val = init_val
         self.eq = eq
+        self.address = address
+        self.init_val = init_val
+
 
     def __str__(self):
         return self.name
@@ -55,7 +60,7 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, name: str = "", symbol: str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
+    def __init__(self, name: str = "", symbol: str = "", init_eq: str = "", eq: str = "", address: Address = Address(), init_val: float = 0.0):
         """
 
         :param name:
@@ -69,6 +74,7 @@ class AlgebVar(DynVar):
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq,
+                        address=address,
                         init_val=init_val)
 
         self.var_type: DynamicVarType = DynamicVarType.y
@@ -93,7 +99,7 @@ class AlgebVar(DynVar):
 
 class StatVar(DynVar):
     def __init__(self, name: str = "", symbol: str = "", init_eq: str = "", eq: str = "",
-                 t_const: float = 1.0, init_val: float = 0.0):
+                 t_const: float = 1.0, address: Address = Address(), init_val: float = 0.0):
         """
 
         :param name:
@@ -108,6 +114,7 @@ class StatVar(DynVar):
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq,
+                        address=address,
                         init_val=init_val)
 
         self.var_type: DynamicVarType = DynamicVarType.x
@@ -133,9 +140,9 @@ class StatVar(DynVar):
         # self.t_const = data["t_const"]
 
 
-class ExternVar(DynVar):
+class InputVar(DynVar):
     def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "",
-                 init_eq: str = "", eq: str = "", init_val: float = 0.0):
+                 init_eq: str = "", eq: str = "", address: Address = Address(), init_val: float = 0.0):
         """
 
         :param name:
@@ -150,6 +157,7 @@ class ExternVar(DynVar):
                         symbol=symbol,
                         init_eq=init_eq,
                         eq=eq,
+                        address=address,
                         init_val=init_val)
         self.src = src
         self.indexer = indexer
@@ -174,7 +182,7 @@ class ExternVar(DynVar):
         self.indexer = data["indexer"]
 
 
-class ExternState(ExternVar):
+class InputState(InputVar):
     def __init__(self,
                  name: str = "",
                  symbol: str = "",
@@ -182,6 +190,7 @@ class ExternState(ExternVar):
                  indexer: str = "",
                  init_eq: str = "",
                  eq: str = "",
+                 address: Address = Address(),
                  init_val: float = 0.0):
         """
 
@@ -193,13 +202,14 @@ class ExternState(ExternVar):
         :param eq:
         :param init_val:
         """
-        ExternVar.__init__(self, name=name,
-                           symbol=symbol,
-                           src=src,
-                           indexer=indexer,
-                           init_eq=init_eq,
-                           eq=eq,
-                           init_val=init_val)
+        InputVar.__init__(self, name=name,
+                          symbol=symbol,
+                          src=src,
+                          indexer=indexer,
+                          init_eq=init_eq,
+                          eq=eq,
+                          address=address,
+                          init_val=init_val)
         self.var_type: DynamicVarType = DynamicVarType.x
 
     def to_dict(self) -> Dict[str, Any]:
@@ -220,9 +230,9 @@ class ExternState(ExternVar):
         # self.var_type = data["var_type"]
 
 
-class ExternAlgeb(ExternVar):
+class InputAlgeb(InputVar):
     def __init__(self, name: str = "", symbol: str = "", src: str = "",
-                 indexer: str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
+                 indexer: str = "", init_eq: str = "", eq: str = "", address: Address = Address(), init_val: float = 0.0):
         """
 
         :param name:
@@ -234,13 +244,14 @@ class ExternAlgeb(ExternVar):
         :param init_val:
         """
 
-        ExternVar.__init__(self, name=name,
-                           symbol=symbol,
-                           src=src,
-                           indexer=indexer,
-                           init_eq=init_eq,
-                           eq=eq,
-                           init_val=init_val)
+        InputVar.__init__(self, name=name,
+                          symbol=symbol,
+                          src=src,
+                          indexer=indexer,
+                          init_eq=init_eq,
+                          eq=eq,
+                          address=address,
+                          init_val=init_val)
         self.var_type: DynamicVarType = DynamicVarType.y
 
     def to_dict(self) -> Dict[str, Any]:

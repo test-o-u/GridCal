@@ -5,7 +5,7 @@
 from typing import Union, List
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam
 
 class Bus(DynamicModelTemplate):
@@ -30,8 +30,8 @@ class Bus(DynamicModelTemplate):
         self.num_dyn_param: List[NumDynParam] = list()
         self.stat_var: List[StatVar] = list()
         self.algeb_var: List[AlgebVar] = list()
-        self.ext_state_var: List[ExternState] = list()
-        self.ext_algeb_var: List[ExternAlgeb] = list()
+        self.ext_state_var: List[InputState] = list()
+        self.ext_algeb_var: List[InputAlgeb] = list()
 
         self.comp_name = list()
         self.comp_code = list()

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import GridCalEngine as gce
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam
 
 from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver
@@ -392,19 +392,19 @@ gen2_rms_model.add_algeb_var(val=AlgebVar(name="Q_e",
                                           symbol="Q_e",
                                           init_eq="(v_q0 * i_d0 - v_d0 * i_q0)",
                                           eq="(v_q * i_d - v_d * i_q) - Q_e"))
-gen2_rms_model.add_ext_algeb_var(val=ExternAlgeb(name="p",
-                                                 symbol="p",
-                                                 src="p",
-                                                 indexer="bus",
-                                                 init_eq="",
-                                                 eq="Pl0 * q ** coeff_alfa"))
+gen2_rms_model.add_input_algeb_var(val=InputAlgeb(name="p",
+                                                  symbol="p",
+                                                  src="p",
+                                                  indexer="bus",
+                                                  init_eq="",
+                                                  eq="Pl0 * q ** coeff_alfa"))
 
-gen2_rms_model.add_ext_algeb_var(val=ExternAlgeb(name="q",
-                                                 symbol="q",
-                                                 src="q",
-                                                 indexer="bus",
-                                                 init_eq="",
-                                                 eq="Ql0 * q ** coeff_beta"))
+gen2_rms_model.add_input_algeb_var(val=InputAlgeb(name="q",
+                                                  symbol="q",
+                                                  src="q",
+                                                  indexer="bus",
+                                                  init_eq="",
+                                                  eq="Ql0 * q ** coeff_beta"))
 
 grid.add_rms_model(gen2_rms_model)
 # ----------------------------------------------------------------------------------------------------------------------

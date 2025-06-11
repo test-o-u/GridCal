@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+import pdb
 from typing import List, Dict, Any
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 
 
@@ -33,8 +34,8 @@ class DynamicModel(EditableDevice):
 
         self.stat_var: Dict[str, StatVar] = dict()
         self.algeb_var: Dict[str, AlgebVar] = dict()
-        self.ext_state_var: Dict[str, ExternState] = dict()
-        self.ext_algeb_var: Dict[str, ExternAlgeb] = dict()
+        self.input_state_var: Dict[str, InputState] = dict()
+        self.input_algeb_var: Dict[str, InputAlgeb] = dict()
 
     @property
     def idtag(self):
@@ -49,7 +50,7 @@ class DynamicModel(EditableDevice):
         Get the number of variables
         :return:
         """
-        return len(self.stat_var) + len(self.algeb_var) + len(self.ext_state_var) + len(self.ext_algeb_var)
+        return len(self.stat_var) + len(self.algeb_var) + len(self.input_state_var) + len(self.input_algeb_var)
 
     @property
     def is_empty(self) -> bool:
@@ -67,8 +68,8 @@ class DynamicModel(EditableDevice):
             "ext_dyn_param": [e.to_dict() for _, e in self.ext_dyn_param.items()],
             "stat_var": [e.to_dict() for _, e in self.stat_var.items()],
             "algeb_var": [e.to_dict() for _, e in self.algeb_var.items()],
-            "ext_state_var": [e.to_dict() for _, e in self.ext_state_var.items()],
-            "ext_algeb_var": [e.to_dict() for _, e in self.ext_algeb_var.items()],
+            "input_state_var": [e.to_dict() for _, e in self.input_state_var.items()],
+            "input_algeb_var": [e.to_dict() for _, e in self.input_algeb_var.items()],
 
             "u": self.u,
 
@@ -120,17 +121,17 @@ class DynamicModel(EditableDevice):
             obj.parse(data=elm)
             self.add_algeb_var(obj)
 
-        self.ext_state_var.clear()
-        for elm in data["ext_state_var"]:
-            obj = ExternState()
+        self.input_state_var.clear()
+        for elm in data["input_state_var"]:
+            obj = InputState()
             obj.parse(data=elm)
-            self.add_ext_state_var(obj)
+            self.add_input_state_var(obj)
 
-        self.ext_algeb_var.clear()
-        for elm in data["ext_algeb_var"]:
-            obj = ExternAlgeb()
+        self.input_algeb_var.clear()
+        for elm in data["input_algeb_var"]:
+            obj = InputAlgeb()
             obj.parse(data=elm)
-            self.add_ext_algeb_var(obj)
+            self.add_input_algeb_var(obj)
 
     def add_idx_dyn_param(self, val: IdxDynParam):
         self.idx_dyn_param[val.name] = val
@@ -147,11 +148,11 @@ class DynamicModel(EditableDevice):
     def add_algeb_var(self, val: AlgebVar):
         self.algeb_var[val.name] = val
 
-    def add_ext_state_var(self, val: ExternState):
-        self.ext_state_var[val.name] = val
+    def add_input_state_var(self, val: InputState):
+        self.input_state_var[val.name] = val
 
-    def add_ext_algeb_var(self, val: ExternAlgeb):
-        self.ext_algeb_var[val.name] = val
+    def add_input_algeb_var(self, val: InputAlgeb):
+        self.input_algeb_var[val.name] = val
 
     def get_idx_dyn_param(self, val: str):
         return self.idx_dyn_param[val]
@@ -168,8 +169,8 @@ class DynamicModel(EditableDevice):
     def get_algeb_var(self, val: str):
         return self.algeb_var[val]
 
-    def get_ext_state_var(self, val: str):
-        return self.ext_state_var[val]
+    def get_input_state_var(self, val: str):
+        return self.input_state_var[val]
 
-    def get_ext_algeb_var(self, val: str):
-        return self.ext_algeb_var[val]
+    def get_input_algeb_var(self, val: str):
+        return self.input_algeb_var[val]

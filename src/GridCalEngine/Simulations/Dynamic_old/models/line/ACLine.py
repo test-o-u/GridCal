@@ -6,7 +6,7 @@
 from typing import Union, List
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam
 
 class ACLine(DynamicModelTemplate):
@@ -30,8 +30,8 @@ class ACLine(DynamicModelTemplate):
         self.num_dyn_param: List[NumDynParam] = list()
         self.stat_var: List[StatVar] = list()
         self.algeb_var: List[AlgebVar] = list()
-        self.ext_state_var: List[ExternState] = list()
-        self.ext_algeb_var: List[ExternAlgeb] = list()
+        self.ext_state_var: List[InputState] = list()
+        self.ext_algeb_var: List[InputAlgeb] = list()
 
         self.comp_name = list()
         self.comp_code = list()
@@ -70,38 +70,38 @@ class ACLine(DynamicModelTemplate):
         # TODO: 
         # - discuss modeling. Here a pi-model is considered and the power flow equations are derived according to it, while in ANDES they apply some transformations first.
         # - check if naming makes sense.
-        self.P_origin = ExternAlgeb(name='P_origin',
-                              symbol = 'P_origin',
-                              src='p',
-                              indexer=self.bus1, 
-                              init_eq='', 
-                              eq='(Q_origin ** 2 * g  - \
+        self.P_origin = InputAlgeb(name='P_origin',
+                                   symbol = 'P_origin',
+                                   src='p',
+                                   indexer=self.bus1,
+                                   init_eq='',
+                                   eq='(Q_origin ** 2 * g  - \
                                     Q_origin * Q_end * (g * cos(P_origin - P_end) + \
                                         b * sin(P_origin - P_end)))')
 
-        self.Q_origin = ExternAlgeb(name='Q_origin',
-                              symbol='Q_origin',
-                              src='q',
-                              indexer=self.bus1,
-                              init_eq='',
-                              eq='(- Q_origin ** 2 * (b + bsh / 2) - \
+        self.Q_origin = InputAlgeb(name='Q_origin',
+                                   symbol='Q_origin',
+                                   src='q',
+                                   indexer=self.bus1,
+                                   init_eq='',
+                                   eq='(- Q_origin ** 2 * (b + bsh / 2) - \
                                             Q_origin * Q_end * (g * sin(P_origin - P_end) - \
                                                 b * cos(P_origin - P_end)))')
         
-        self.P_end = ExternAlgeb(name='P_end',
-                              symbol = 'P_end',
-                              src='p',
-                              indexer=self.bus2, 
-                              init_eq='', 
-                              eq='(Q_end ** 2 * g  - \
+        self.P_end = InputAlgeb(name='P_end',
+                                symbol = 'P_end',
+                                src='p',
+                                indexer=self.bus2,
+                                init_eq='',
+                                eq='(Q_end ** 2 * g  - \
                                     Q_end * Q_origin * (g * cos(P_end - P_origin) + \
                                         b * sin(P_end - P_origin)))')
         
-        self.Q_end = ExternAlgeb(name='Q_end',
-                              symbol = 'Q_end',
-                              src='q',
-                              indexer=self.bus2, 
-                              init_eq='', 
-                              eq='(- Q_end ** 2 * (b + bsh / 2) - \
+        self.Q_end = InputAlgeb(name='Q_end',
+                                symbol = 'Q_end',
+                                src='q',
+                                indexer=self.bus2,
+                                init_eq='',
+                                eq='(- Q_end ** 2 * (b + bsh / 2) - \
                                     Q_end * Q_origin * (g * sin(P_end - P_origin) - \
                                         b * cos(P_end - P_origin)))')

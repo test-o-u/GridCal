@@ -37,6 +37,9 @@ class RmsModelStore:
         self.stats = list()
         self.algebs = list()
 
+        # to build adressing system
+        self.variables = list()
+
         # dictionary containing index of the variable as key and symbol of the variable as value
         self.vars_index = np.empty(dynamic_model.get_var_num(), dtype=object)
 
@@ -122,6 +125,7 @@ class RmsModelStore:
         index = 0
 
         for i, (key, elem) in enumerate(dynamic_model.stat_var.items()):
+            self.variables.append(elem)
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
 
@@ -140,6 +144,7 @@ class RmsModelStore:
             self.internal_vars.append(elem.symbol)
 
         for i, (key, elem) in enumerate(dynamic_model.algeb_var.items()):
+            self.variables.append(elem)
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
 
@@ -155,7 +160,8 @@ class RmsModelStore:
             self.vars_list.append(elem.symbol)
             self.internal_vars.append(elem.symbol)
 
-        for key, elem in dynamic_model.ext_state_var.items():
+        for key, elem in dynamic_model.input_state_var.items():
+            self.variables.append(elem)
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
             index += 1
@@ -167,7 +173,8 @@ class RmsModelStore:
             self.vars_list.append(elem.symbol)
             self.external_vars.append(elem)
 
-        for key, elem in dynamic_model.ext_algeb_var.items():
+        for key, elem in dynamic_model.input_algeb_var.items():
+            self.variables.append(elem)
             self.variables_list.append(elem.symbol)
             self.vars_index[index] = elem.symbol
             index += 1

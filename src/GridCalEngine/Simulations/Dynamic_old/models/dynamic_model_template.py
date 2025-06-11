@@ -140,7 +140,7 @@ class DynamicModelTemplate(EditableDevice):
                 self.vars_list.append(elem.symbol)
                 self.internal_vars.append(elem.symbol)
 
-            if isinstance(elem, ExternState):
+            if isinstance(elem, InputState):
                 if elem.eq != None:
                     self.state_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)
@@ -148,7 +148,7 @@ class DynamicModelTemplate(EditableDevice):
                 self.vars_list.append(elem.symbol)
                 self.external_vars.append(elem)
 
-            if isinstance(elem, ExternAlgeb):
+            if isinstance(elem, InputAlgeb):
                 if elem.eq != None:
                     self.algeb_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)

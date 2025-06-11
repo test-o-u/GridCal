@@ -5,7 +5,7 @@
 from typing import Union, List, Dict, Any
 from GridCalEngine.Devices.Dynamic.models.dynamic_model_template import DynamicModelTemplate
 from GridCalEngine.enumerations import DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 
 
@@ -102,14 +102,14 @@ class DynamicModel(DynamicModelTemplate):
 
         #self.ext_state_var: List[ExternState] = list()
         for elm in data["ext_state_var"]:
-            obj = ExternState()
+            obj = InputState()
             obj.parse(data=elm)
             setattr(self, obj.symbol, obj)
             #self.ext_state_var.append(obj)
 
         #self.ext_algeb_var: List[ExternAlgeb] = list()
         for elm in data["ext_algeb_var"]:
-            obj = ExternAlgeb()
+            obj = InputAlgeb()
             obj.parse(data=elm)
             setattr(self, obj.symbol, obj)
             #self.ext_algeb_var.append(obj)

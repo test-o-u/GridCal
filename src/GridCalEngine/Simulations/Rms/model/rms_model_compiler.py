@@ -11,7 +11,7 @@ import logging
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternState, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 
 
 class RmsModelsCompiler:
@@ -202,6 +202,72 @@ class RmsModelsCompiler:
                 self.dae.nx += model.n * model.nx
                 self.dae.ny += model.n * model.ny
 
+    def set_addresses(self, models_list):
+        """
+        Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
+        This method:
+            - Assigning local and global indices to state and algebraic variables
+            - Mapping external variable references
+            - Populating the `dae.addresses_dict` and `dae.params_dict`
+            - Storing a reference list to analyse results
+        :return:
+        """
+
+        self.global_states_id = 0
+        self.global_algebs_id = self.dae.nx
+        algeb_ref_map = {}  # Cache: store algeb_idx references for quick lookup
+        states_ref_map = {}  # Cache: store states_idx references for quick lookup
+
+        # Loop through devices
+        for model_store in models_list:
+            # initialize variables list and addresses list for this device
+            device_variables_list = list()
+            device_addresses_list = list()
+
+            # Assign addresses
+            for var_list in model_store.variables:
+
+                # state varibles first
+                if isinstance(var_list, StatVar):
+                    address = self.global_states_id
+                    var_list.address = address
+
+                    # store variables names and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(address)
+
+
+                    self.global_states_id += 1  # Move global index forward
+
+                if isinstance(var_list, InputState):
+
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(var_list.address)
+
+                # algebraic variables second
+                if isinstance(var_list, AlgebVar):
+                    address = self.global_algebs_id
+                    var_list.address = address
+
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(address)
+
+                    self.global_algebs_id += 1  # Move global index forward
+
+
+                # external algebraic variables
+                if isinstance(var_list, InputAlgeb):
+
+                    # store variable name and addresses locally
+                    device_variables_list.append(var_list.symbol)
+                    device_addresses_list.append(var_list.address)
+
+            # add variables names local list and addresses local list to dae general lists
+            self.dae.variables_list.append(device_variables_list)
+            self.dae.addresses_list.append(device_addresses_list)
+
     def set_addresses(self):
         """
         Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
@@ -267,7 +333,7 @@ class RmsModelsCompiler:
                         self.dae.Tf += [1.0] * model_instance.n
 
                 # external state variables
-                if isinstance(var_list, ExternState):
+                if isinstance(var_list, InputState):
                     key = (var_list.indexer.symbol, var_list.src)
 
                     if key not in states_ref_map:
@@ -298,7 +364,7 @@ class RmsModelsCompiler:
                     algeb_ref_map[(model_instance.name, var_list.name)] = indices
 
                 # external algebraic variables
-                if isinstance(var_list, ExternAlgeb):
+                if isinstance(var_list, InputAlgeb):
                     key = (var_list.indexer.symbol, var_list.src)
 
                     if key not in algeb_ref_map:

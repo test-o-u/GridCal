@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import GridCalEngine as gce
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, ExternAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam
 
 from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver
@@ -61,8 +61,8 @@ bus1_data = {
                    "symbol": "q",
                    "init_eq": "",
                    "eq": ""}],
-    "ext_state_var": [],
-    "ext_algeb_var": []}
+    "input_state_var": [],
+    "input_algeb_var": []}
 
 bus1_model = gce.DynamicModel()
 bus1_model.parse(bus1_data)
@@ -92,8 +92,8 @@ bus2_data = {
                    "symbol": "q",
                    "init_eq": "",
                    "eq": ""}],
-    "ext_state_var": [],
-    "ext_algeb_var": []}
+    "input_state_var": [],
+    "input_algeb_var": []}
 
 bus2_model = gce.DynamicModel()
 bus2_model.parse(bus2_data)
@@ -104,17 +104,7 @@ branch_data = {
     "comp_code": [0],
     "comp_name": ["Line 1"],
     "u": [1],
-    "idx_dyn_param": [{"name": "bus1",
-                       "symbol": "Bus",
-                       "info": "idx of from bus",
-                       "ident": [0],
-                       "connection_point": "ACLine_origin"},
-                      {"name": "bus2",
-                       "symbol": "Bus",
-                       "info": "idx of to bus",
-                       "ident": [1],
-                       "connection_point": "ACLine_end"}],
-
+    "idx_dyn_param": [],
     "num_dyn_param": [{"name": "g",
                        "symbol": "g",
                        "info": "shared shunt conductance",
@@ -130,29 +120,29 @@ branch_data = {
     "ext_dyn_param": [],
     "stat_var": [],
     "algeb_var": [],
-    "ext_state_var": [],
-    "ext_algeb_var": [{"name": "P_origin",
+    "input_state_var": [],
+    "input_algeb_var": [{"name": "P_origin",
                        "symbol": "P_origin",
                        "src": "p",
-                       "indexer": "bus1",
+                       "indexer": "bus_from",
                        "init_eq": "",
                        "eq": "(Q_origin ** 2 * g  - Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))"},
                       {"name": "Q_origin",
                        "symbol": "Q_origin",
                        "src": "q",
-                       "indexer": "bus1",
+                       "indexer": "bus_from",
                        "init_eq": "",
                        "eq": "(- Q_origin ** 2 * (b + bsh / 2) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end)))"},
                       {"name": "P_end",
                        "symbol": "P_end",
                        "src": "p",
-                       "indexer": "bus2",
+                       "indexer": "bus_to",
                        "init_eq": "",
                        "eq": "(Q_end ** 2 * g  - Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))"},
                       {"name": "Q_end",
                        "symbol": "Q_end",
                        "src": "q",
-                       "indexer": "bus2",
+                       "indexer": "bus_to",
                        "init_eq": "",
                        "eq": "(- Q_end ** 2 * (b + bsh / 2) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin)))"}]}
 branch_model = gce.DynamicModel()
@@ -164,11 +154,7 @@ slack_gen_data = {
     "comp_code": [0],
     "comp_name": ["Slack 1"],
     "u": [1],
-    "idx_dyn_param": [{"name": "bus",
-                       "symbol": "Bus",
-                       "info": "interface bus id",
-                       "ident": [0],
-                       "connection_point": "Slack"}],
+    "idx_dyn_param": [],
     "num_dyn_param": [{"name": "Sn",
                        "symbol": "Sn",
                        "info": "",
@@ -244,8 +230,8 @@ slack_gen_data = {
                    "symbol": "Q_e_slack",
                    "init_eq": "q0",
                    "eq": "q0-q + qmin-Q_e_slack + qmax-Q_e_slack"}],
-    "ext_state_var": [],
-    "ext_algeb_var": [{"name": "p",
+    "input_state_var": [],
+    "input_algeb_var": [{"name": "p",
                        "symbol": "p",
                        "src": "p",
                        "indexer": "bus",
@@ -266,11 +252,7 @@ load_data = {
     "comp_code": [0],
     "comp_name": ["ExpLoad 1"],
     "u": [1],
-    "idx_dyn_param": [{"name": "bus",
-                       "symbol": "Bus",
-                       "info": "interface bus id",
-                       "ident": [1],
-                       "connection_point": "ExpLoad"}],
+    "idx_dyn_param": [],
     "num_dyn_param": [{"name": "coeff_alfa",
                        "symbol": "coeff_alfa",
                        "info": "Active power load exponential coefficient",
@@ -290,8 +272,8 @@ load_data = {
     "ext_dyn_param": [],
     "stat_var": [],
     "algeb_var": [],
-    "ext_state_var": [],
-    "ext_algeb_var": [{"name": "p",
+    "input_state_var": [],
+    "input_algeb_var": [{"name": "p",
                        "symbol": "p",
                        "src": "p",
                        "indexer": "bus",
@@ -416,19 +398,19 @@ gen2_rms_model.add_algeb_var(val=AlgebVar(name="Q_e",
                                           symbol="Q_e",
                                           init_eq="(v_q0 * i_d0 - v_d0 * i_q0)",
                                           eq="(v_q * i_d - v_d * i_q) - Q_e"))
-gen2_rms_model.add_ext_algeb_var(val=ExternAlgeb(name="p",
-                                                 symbol="p",
-                                                 src="p",
-                                                 indexer="bus",
-                                                 init_eq="",
-                                                 eq="Pl0 * q ** coeff_alfa"))
+gen2_rms_model.add_input_algeb_var(val=InputAlgeb(name="p",
+                                                  symbol="p",
+                                                  src="p",
+                                                  indexer="bus",
+                                                  init_eq="",
+                                                  eq="Pl0 * q ** coeff_alfa"))
 
-gen2_rms_model.add_ext_algeb_var(val=ExternAlgeb(name="q",
-                                                 symbol="q",
-                                                 src="q",
-                                                 indexer="bus",
-                                                 init_eq="",
-                                                 eq="Ql0 * q ** coeff_beta"))
+gen2_rms_model.add_input_algeb_var(val=InputAlgeb(name="q",
+                                                  symbol="q",
+                                                  src="q",
+                                                  indexer="bus",
+                                                  init_eq="",
+                                                  eq="Ql0 * q ** coeff_beta"))
 
 grid.add_rms_model(gen2_rms_model)
 

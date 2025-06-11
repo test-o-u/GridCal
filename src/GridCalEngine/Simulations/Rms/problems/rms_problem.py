@@ -2,14 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-
+import pdb
+import copy
 from typing import List, Tuple
 import numpy as np
 import sympy as sym
 import scipy.sparse as sp
 
+from GridCalEngine.Devices.Dynamic.dyn_param import IdxDynParam
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
+from GridCalEngine.Simulations.Rms.model.rms_model_compiler import RmsModelsCompiler
 from GridCalEngine.basic_structures import Vec
 
 
@@ -120,6 +124,11 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
 
         if c_model is None:
             # if it wasn't compiled, compile it!
+            # save number of state and algebraic variables
+            # build RmsModelStore object
+            # add to already_compiled_dict
+            # add to compiled_models list
+
             n_algeb += len(model.algeb_var)
             n_stat += len(model.stat_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
@@ -132,16 +141,38 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
 
 
     for e, elm in enumerate(grid.get_injection_devices_iter()):
+
+        # get connection bus
         bus_idx = bus_dict[elm.bus]
 
         # obtain the used model from the device of the DB
         model = elm.rms_model.model
+
+        # relate input variables to bus variables
+        connection_bus_rms_model = elm.bus.rms_model.model
+        for variable in model.input_state_var.values():
+            variable.address = copy.deepcopy(connection_bus_rms_model.stat_var[variable.src].address)
+
+
+
+
+        for variable in model.input_algeb_var.values():
+            variable.address = copy.deepcopy(connection_bus_rms_model.algeb_var[variable.src].address)
+
+
+
+
 
         # See if the dynamic model was already compiled
         c_model = already_compiled_dict.get(model.idtag, None)
 
         if c_model is None:
             # if it wasn't compiled, compile it!
+            # save number of state and algebraic variables
+            # build RmsModelStore object
+            # add to already_compiled_dict
+            # add to compiled_models list
+
             n_algeb += len(model.algeb_var)
             n_stat += len(model.stat_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
@@ -160,11 +191,34 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         # obtain the used model from the device of the DB
         model = elm.rms_model.model
 
+        # relate input variables to bus variables
+
+        for variable in model.input_state_var.values():
+            if variable.indexer == "bus_from":
+                connection_bus_rms_model = elm.bus_from.rms_model.model
+            else:
+                connection_bus_rms_model = elm.bus_to.rms_model.model
+            variable.address = connection_bus_rms_model.stat_var[variable.src].address
+
+
+        for variable in model.input_algeb_var.values():
+            if variable.indexer == "bus_from":
+                connection_bus_rms_model = elm.bus_from.rms_model.model
+            else:
+                connection_bus_rms_model = elm.bus_to.rms_model.model
+            variable.address = connection_bus_rms_model.algeb_var[variable.src].address
+
+
         # See if the dynamic model was already compiled
         c_model = already_compiled_dict.get(model.idtag, None)
 
         if c_model is None:
             # if it wasn't compiled, compile it!
+            # save number of state and algebraic variables
+            # build RmsModelStore object
+            # add to already_compiled_dict
+            # add to compiled_models list
+
             n_algeb += len(model.algeb_var)
             n_stat += len(model.stat_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
@@ -196,6 +250,72 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
 
     return compiled_models, x0, y0, Tf, n_stat, n_algeb
 
+def set_addresses(models_list, nx):
+    """
+    Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
+    This method:
+        - Assigning local and global indices to state and algebraic variables
+        - Mapping external variable references
+        - Populating the `dae.addresses_dict` and `dae.params_dict`
+        - Storing a reference list to analyse results
+    :return:
+    """
+
+    global_states_id = 0
+    global_algebs_id = nx
+
+    variables_list = list()
+    addresses_list = list()
+
+    # Loop through devices
+    for model_store in models_list:
+        # initialize variables list and addresses list for this device
+        device_variables_list = list()
+        device_addresses_list = list()
+
+        # Assign addresses
+        for var_list in model_store.variables:
+
+            # state varibles first
+            if isinstance(var_list, StatVar):
+                address = global_states_id
+
+
+                # store variables names and addresses locally
+                device_variables_list.append(var_list.symbol)
+                device_addresses_list.append(address)
+
+                var_list.address.value.append(address)
+
+                global_states_id += 1  # Move global index forward
+
+
+            if isinstance(var_list, InputState):
+                # store variable name and addresses locally
+                device_variables_list.append(var_list.symbol)
+                device_addresses_list.append(var_list.address.value[0])
+
+            # algebraic variables second
+            if isinstance(var_list, AlgebVar):
+                # store variable name and addresses locally
+                address = global_algebs_id
+                # store variable name and addresses locally
+                device_variables_list.append(var_list.symbol)
+                device_addresses_list.append(address)
+
+                var_list.address.value.append(address)
+
+                global_algebs_id += 1  # Move global index forward
+
+            # external algebraic variables
+            if isinstance(var_list, InputAlgeb):
+                # store variable name and addresses locally
+                device_variables_list.append(var_list.symbol)
+                device_addresses_list.append(var_list.address.value[0])
+        # add variables names local list and addresses local list to dae general lists
+        variables_list.append(device_variables_list)
+        addresses_list.append(device_addresses_list)
+    return addresses_list, variables_list
 
 class RmsProblem:
     """
@@ -217,7 +337,8 @@ class RmsProblem:
 
         # self.system: DynamicSystemStore = system
         self.models_list, self.x, self.y, self.Tf, self.nx, self.ny = compile_rms_models(grid=grid)
-
+        self.addresses_list, self.variables_list = set_addresses(self.models_list, self.nx)
+        pdb.set_trace()
         # lists to store initial values and results of every step of the simulation
         self.xy = None
 
