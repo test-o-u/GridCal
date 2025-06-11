@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 class Address:
-    def __init__(self, value: list = []):
-        """
-        :param value:
-        """
-        self.value = value
+    def __init__(self):
+
+        self.value = []

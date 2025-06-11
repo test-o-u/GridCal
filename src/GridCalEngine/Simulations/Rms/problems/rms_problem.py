@@ -151,13 +151,13 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         # relate input variables to bus variables
         connection_bus_rms_model = elm.bus.rms_model.model
         for variable in model.input_state_var.values():
-            variable.address = copy.deepcopy(connection_bus_rms_model.stat_var[variable.src].address)
+            variable.address = connection_bus_rms_model.stat_var[variable.src].address
 
 
 
 
         for variable in model.input_algeb_var.values():
-            variable.address = copy.deepcopy(connection_bus_rms_model.algeb_var[variable.src].address)
+            variable.address = connection_bus_rms_model.algeb_var[variable.src].address
 
 
 
