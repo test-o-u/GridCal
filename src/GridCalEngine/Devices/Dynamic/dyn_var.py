@@ -13,17 +13,19 @@ from GridCalEngine.enumerations import DynamicVarType
 
 
 class DynVar:
-    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, init_val: float = 0.0):
+    def __init__(self, name: str, symbol: str, init_eq: str, eq: str, init_val: float = 0.0, src: str = "", indexer: str = ""):
         """
 
         :param name:
         :param symbol:
-        :param init_eq:
+        :param init_eq
         :param eq:
         :param init_val:
         """
         self.name = name
         self.symbol = symbol
+        self.src = src
+        self.indexer = indexer
         self.init_eq = init_eq
         self.eq = eq
         self.init_val = init_val
@@ -60,7 +62,7 @@ class DynVar:
 
 
 class AlgebVar(DynVar):
-    def __init__(self, name: str = "", symbol: str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
+    def __init__(self, name: str = "", symbol: str = "", src:str = "", indexer:str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
         """
 
         :param name:
@@ -72,6 +74,8 @@ class AlgebVar(DynVar):
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
+                        src=src,
+                        indexer=indexer,
                         init_eq=init_eq,
                         eq=eq,
                         init_val=init_val)
@@ -97,7 +101,7 @@ class AlgebVar(DynVar):
 
 
 class StatVar(DynVar):
-    def __init__(self, name: str = "", symbol: str = "", init_eq: str = "", eq: str = "",
+    def __init__(self, name: str = "", symbol: str = "", src:str = "", indexer:str ="", init_eq: str = "", eq: str = "",
                  t_const: float = 1.0, init_val: float = 0.0):
         """
 
@@ -111,6 +115,8 @@ class StatVar(DynVar):
         DynVar.__init__(self,
                         name=name,
                         symbol=symbol,
+                        src=src,
+                        indexer=indexer,
                         init_eq=init_eq,
                         eq=eq,
                         init_val=init_val)
@@ -138,48 +144,48 @@ class StatVar(DynVar):
         # self.t_const = data["t_const"]
 
 
-class InputVar(DynVar):
-    def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "",
-                 init_eq: str = "", eq: str = "", init_val: float = 0.0):
-        """
+# class InputVar(DynVar):
+#     def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "",
+#                  init_eq: str = "", eq: str = "", init_val: float = 0.0):
+#         """
+#
+#         :param name:
+#         :param symbol:
+#         :param src:
+#         :param indexer:
+#         :param init_eq:
+#         :param eq:
+#         :param init_val:
+#         """
+#         DynVar.__init__(self, name=name,
+#                         symbol=symbol,
+#                         init_eq=init_eq,
+#                         eq=eq,
+#                         init_val=init_val)
+#         self.src = src
+#         self.indexer = indexer
+#
+#     def to_dict(self) -> Dict[str, Any]:
+#         """
+#         Generates a json representation of this objects
+#         :return: Dict[str, Any]
+#         """
+#         d = super().to_dict()
+#         d["src"] = self.src
+#         d["indexer"] = self.indexer
+#         return d
+#
+#     def parse(self, data: Dict[str, Any]):
+#         """
+#         Parse jsn data generated with to_json
+#         :param data: Dict[str, Any]
+#         """
+#         super().parse(data=data)
+#         self.src = data["src"]
+#         self.indexer = data["indexer"]
+#
 
-        :param name:
-        :param symbol:
-        :param src:
-        :param indexer:
-        :param init_eq:
-        :param eq:
-        :param init_val:
-        """
-        DynVar.__init__(self, name=name,
-                        symbol=symbol,
-                        init_eq=init_eq,
-                        eq=eq,
-                        init_val=init_val)
-        self.src = src
-        self.indexer = indexer
-
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Generates a json representation of this objects
-        :return: Dict[str, Any]
-        """
-        d = super().to_dict()
-        d["src"] = self.src
-        d["indexer"] = self.indexer
-        return d
-
-    def parse(self, data: Dict[str, Any]):
-        """
-        Parse jsn data generated with to_json
-        :param data: Dict[str, Any]
-        """
-        super().parse(data=data)
-        self.src = data["src"]
-        self.indexer = data["indexer"]
-
-
-class InputState(InputVar):
+class InputState(StatVar):
     def __init__(self,
                  name: str = "",
                  symbol: str = "",
@@ -198,10 +204,10 @@ class InputState(InputVar):
         :param eq:
         :param init_val:
         """
-        InputVar.__init__(self, name=name,
+        StatVar.__init__(self, name=name,
                           symbol=symbol,
                           src=src,
-                          indexer=indexer,
+                         indexer=indexer,
                           init_eq=init_eq,
                           eq=eq,
                           init_val=init_val)
@@ -225,7 +231,7 @@ class InputState(InputVar):
         # self.var_type = data["var_type"]
 
 
-class InputAlgeb(InputVar):
+class InputAlgeb(AlgebVar):
     def __init__(self, name: str = "", symbol: str = "", src: str = "",
                  indexer: str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
         """
@@ -239,7 +245,131 @@ class InputAlgeb(InputVar):
         :param init_val:
         """
 
-        InputVar.__init__(self, name=name,
+        AlgebVar.__init__(self, name=name,
+                          symbol=symbol,
+                          src=src,
+                          indexer=indexer,
+                          init_eq=init_eq,
+                          eq=eq,
+                          init_val=init_val)
+        self.var_type: DynamicVarType = DynamicVarType.y
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Generates a json representation of this objects
+        :return: Dict[str, Any]
+        """
+        d = super().to_dict()
+        # d["var_type"] = self.var_type
+        return d
+
+    def parse(self, data: Dict[str, Any]):
+        """
+        Parse jsn data generated with to_json
+        :param data: Dict[str, Any]
+        """
+        super().parse(data=data)
+        # self.var_type = data["var_type"]
+
+
+
+
+# class OutputVar(DynVar):
+#     def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "",
+#                  init_eq: str = "", eq: str = "", init_val: float = 0.0):
+#         """
+#
+#         :param name:
+#         :param symbol:
+#         :param src:
+#         :param indexer:
+#         :param init_eq:
+#         :param eq:
+#         :param init_val:
+#         """
+#         DynVar.__init__(self, name=name,
+#                         symbol=symbol,
+#                         init_eq=init_eq,
+#                         eq=eq,
+#                         init_val=init_val)
+#         self.src = src
+#         self.indexer = indexer
+#
+#     def to_dict(self) -> Dict[str, Any]:
+#         """
+#         Generates a json representation of this objects
+#         :return: Dict[str, Any]
+#         """
+#         d = super().to_dict()
+#         d["src"] = self.src
+#         d["indexer"] = self.indexer
+#         return d
+#
+#     def parse(self, data: Dict[str, Any]):
+#         """
+#         Parse jsn data generated with to_json
+#         :param data: Dict[str, Any]
+#         """
+#         super().parse(data=data)
+#         self.src = data["src"]
+#         self.indexer = data["indexer"]
+
+
+class OutputState(StatVar):
+    def __init__(self, name: str = "", symbol: str = "", src: str = "", indexer: str = "", init_eq: str = "",
+                 eq: str = "", init_val: float = 0.0):
+        """
+
+        :param name:
+        :param symbol:
+        :param src:
+        :param indexer:
+        :param init_eq:
+        :param eq:
+        :param init_val:
+        """
+        StatVar.__init__(self, name=name,
+                          symbol=symbol,
+                         src=src,
+                         indexer=indexer,
+                          init_eq=init_eq,
+                          eq=eq,
+                          init_val=init_val)
+        self.var_type: DynamicVarType = DynamicVarType.x
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Generates a json representation of this objects
+        :return: Dict[str, Any]
+        """
+        d = super().to_dict()
+        # d["var_type"] = self.var_type
+        return d
+
+    def parse(self, data: Dict[str, Any]):
+        """
+        Parse jsn data generated with to_json
+        :param data: Dict[str, Any]
+        """
+        super().parse(data=data)
+        # self.var_type = data["var_type"]
+
+
+class OutputAlgeb(AlgebVar):
+    def __init__(self, name: str = "", symbol: str = "", src: str = "",
+                 indexer: str = "", init_eq: str = "", eq: str = "", init_val: float = 0.0):
+        """
+
+        :param name:
+        :param symbol:
+        :param src:
+        :param indexer:
+        :param init_eq:
+        :param eq:
+        :param init_val:
+        """
+
+        AlgebVar.__init__(self, name=name,
                           symbol=symbol,
                           src=src,
                           indexer=indexer,

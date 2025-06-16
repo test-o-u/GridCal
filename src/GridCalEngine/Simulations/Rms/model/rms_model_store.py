@@ -27,11 +27,11 @@ class RmsModelStore:
 
         self.idtag = dynamic_model.idtag
 
-        # Device index for ordering devices in the system (used to relate variables with their addresses)
-        self.index = int
+        # # Device index for ordering devices in the system (used to relate variables with their addresses)
+        # self.index = device_index
 
         # Set address function
-        self.n = 0  # index for the number of components corresponding to this model
+        self.n = 1  # index for the number of components corresponding to this model
 
         # Symbolic processing engine utils
         self.stats = list()
@@ -45,7 +45,8 @@ class RmsModelStore:
 
         # Lists of internal and external variables
         self.internal_vars = list()
-        self.external_vars = list()
+        self.output_vars = list()
+        self.input_vars = list()
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
         self.variables_list = list()  # list of all the variables (including external)
@@ -55,6 +56,9 @@ class RmsModelStore:
         self.algeb_vars = list()
         self.eqs_list = list()  # list of all the variables with an equation
         self.vars_list = list()  # list of all the variables
+
+        # Dictionary with parameters
+        self.num_params_dict = dynamic_model.num_dyn_param
 
         # Lists to store function arguments
         self.f_args = list()
@@ -171,7 +175,7 @@ class RmsModelStore:
                 self.eqs_list.append(elem.symbol)
             self.state_vars.append(elem)
             self.vars_list.append(elem.symbol)
-            self.external_vars.append(elem)
+            self.input_vars.append(elem)
 
         for key, elem in dynamic_model.input_algeb_var.items():
             self.variables.append(elem)
@@ -184,7 +188,33 @@ class RmsModelStore:
                 self.eqs_list.append(elem.symbol)
             self.algeb_vars.append(elem)
             self.vars_list.append(elem.symbol)
-            self.external_vars.append(elem)
+            self.input_vars.append(elem)
+
+        for key, elem in dynamic_model.output_state_var.items():
+            self.variables.append(elem)
+            self.variables_list.append(elem.symbol)
+            self.vars_index[index] = elem.symbol
+            index += 1
+
+            if elem.eq is not None:
+                self.state_eqs.append(elem)
+                self.eqs_list.append(elem.symbol)
+            self.state_vars.append(elem)
+            self.vars_list.append(elem.symbol)
+            self.output_vars.append(elem)
+
+        for key, elem in dynamic_model.output_algeb_var.items():
+            self.variables.append(elem)
+            self.variables_list.append(elem.symbol)
+            self.vars_index[index] = elem.symbol
+            index += 1
+
+            if elem.eq is not None:
+                self.algeb_eqs.append(elem)
+                self.eqs_list.append(elem.symbol)
+            self.algeb_vars.append(elem)
+            self.vars_list.append(elem.symbol)
+            self.output_vars.append(elem)
 
         folder_to_save = get_create_dynamics_model_folder(grid_id=grid_id)
         file_path = self.generate(folder_to_save=folder_to_save)  # does all the symbolic operations needed
@@ -312,12 +342,12 @@ class RmsModelStore:
         # store arguments for f_jacobian
         f_jac_args = sorted(f_jac_symbols, key=lambda s: s.name)
         for arg in f_jac_args:
-            self.f_jacobian_args.append(str(arg))
+            self.f_jac_arguments.append(str(arg))
 
         # store arguments for g_jacobian
         g_jac_args = sorted(g_jac_symbols, key=lambda s: s.name)
         for arg in g_jac_args:
-            self.g_jacobian_args.append(str(arg))
+            self.g_jac_arguments.append(str(arg))
 
         # Lambdify Jacobian functions
         self.jacob_states = lambdify(f_jac_args, tuple(f_jacobian_symbolic), modules='numpy')
@@ -382,8 +412,8 @@ class RmsModelStore:
                 f.write(f"@njit(cache=True)\n")
                 f.write(f"{py_expr}")
 
-            f.write(f"f_jac_args =" + pprint.pformat(self.f_jacobian_args, width=1000) + '\n')
-            f.write(f"g_jac_args =" + pprint.pformat(self.g_jacobian_args, width=1000) + '\n\n')
+            f.write(f"f_jac_args =" + pprint.pformat(self.f_jac_arguments, width=1000) + '\n')
+            f.write(f"g_jac_args =" + pprint.pformat(self.g_jac_arguments, width=1000) + '\n\n')
 
             f.write(f"jacobian_info = {self.jacobian_store_info}" + '\n')
             f.write(f"jacobian_equations =" + pprint.pformat(self.jacobian_store_equations, width=1000))

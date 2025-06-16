@@ -99,6 +99,76 @@ def build_dgy(jac_values, sparsity_set, n_rows: int, n_cols: int, offset_rows, o
 
     return sp.coo_matrix((jac_values, (rows, cols)), shape=(n_rows, n_cols))
 
+def build_connections_and_conservation_eqs(grid: MultiCircuit):
+    # iterate through devices and connect them with corresponding buses
+    for e, elm in enumerate(grid.get_injection_devices_iter()):
+
+
+        # find connection bus
+        bus = elm.bus
+        # find device rms model
+        model = elm.rms_model.model
+
+
+        # find connection bus rms model
+        connection_bus_rms_model = bus.rms_model.model
+        # add variables to bus variables
+        for state_var in model.output_state_var.values():
+            connection_bus_rms_model.stat_var[state_var.name] = state_var
+        for algeb_var in model.output_algeb_var.values():
+            connection_bus_rms_model.algeb_var[algeb_var.name] = algeb_var
+
+        # Build conservation equations
+        for input_var in connection_bus_rms_model.input_state_var.values():
+            for output_var in model.output_state_var.values():
+                if output_var.symbol == input_var.symbol:
+                    input_var.eq = input_var.eq + output_var.eq
+        for input_var in connection_bus_rms_model.input_algeb_var.values():
+            for output_var in model.output_algeb_var.values():
+                if output_var.symbol == input_var.symbol:
+                    input_var.eq = input_var.eq + output_var.eq
+
+
+    for k, elm in enumerate(grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)):
+
+        # obtain the used model from the device of the DB
+        model = elm.rms_model.model
+
+        # add variables to bus variables
+        for state_var in model.output_state_var.values():
+            if state_var.indexer == "bus_from":
+                connection_bus_rms_model = elm.bus_from.rms_model.model
+                connection_bus_rms_model.stat_var[state_var.name] = state_var
+
+            else:
+                connection_bus_rms_model = elm.bus_to.rms_model.model
+                connection_bus_rms_model.stat_var[state_var.name] = state_var
+
+        for algeb_var in model.output_algeb_var.values():
+            if algeb_var.indexer == "bus_from":
+
+                connection_bus_rms_model = elm.bus_from.rms_model.model
+                connection_bus_rms_model.algeb_var[algeb_var.name] = algeb_var
+
+            else:
+                connection_bus_rms_model = elm.bus_to.rms_model.model
+                connection_bus_rms_model.algeb_var[algeb_var.name] = algeb_var
+
+        # Build conservation equations
+        # Bus from
+        bus_from = elm.bus_from.rms_model.model
+        for input_var in bus_from.input_state_var.values():
+            for output_var in model.output_state_var.values():
+                if output_var.indexer == "bus_from" and output_var.symbol == input_var.symbol:
+                    input_var.eq = input_var.eq + output_var.eq
+        # Bus to
+        bus_to = elm.bus_to.rms_model.model
+        for input_var in bus_to.input_algeb_var.values():
+            for output_var in model.output_algeb_var.values():
+                if output_var.indexer == "bus_to" and output_var.symbol == input_var.symbol:
+                    input_var.eq = input_var.eq + output_var.eq
+
+
 
 def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Vec, Vec, int, int]:
     """
@@ -111,7 +181,7 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
     n_stat = 0
 
     already_compiled_dict = dict()
-
+    device_index = 0
     bus_dict = dict()
     for i, elm in enumerate(grid.buses):
         bus_dict[elm]= i
@@ -136,6 +206,8 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
             # store reference for later
             already_compiled_dict[model.idtag] = c_model
 
+        # move devices index forward
+        device_index+=1
         # add the compiled model used to the list
         compiled_models.append(c_model)
 
@@ -148,20 +220,13 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         # obtain the used model from the device of the DB
         model = elm.rms_model.model
 
-        # relate input variables to bus variables
-        connection_bus_rms_model = elm.bus.rms_model.model
-        for variable in model.input_state_var.values():
-            variable.address = connection_bus_rms_model.stat_var[variable.src].address
-
-
-
-
-        for variable in model.input_algeb_var.values():
-            variable.address = connection_bus_rms_model.algeb_var[variable.src].address
-
-
-
-
+        # # relate input variables to bus variables
+        # connection_bus_rms_model = elm.bus.rms_model.model
+        # for variable in model.input_state_var.values():
+        #     variable.address = connection_bus_rms_model.stat_var[variable.src].address
+        #
+        # for variable in model.input_algeb_var.values():
+        #     variable.address = connection_bus_rms_model.algeb_var[variable.src].address
 
         # See if the dynamic model was already compiled
         c_model = already_compiled_dict.get(model.idtag, None)
@@ -191,22 +256,22 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         # obtain the used model from the device of the DB
         model = elm.rms_model.model
 
-        # relate input variables to bus variables
-
-        for variable in model.input_state_var.values():
-            if variable.indexer == "bus_from":
-                connection_bus_rms_model = elm.bus_from.rms_model.model
-            else:
-                connection_bus_rms_model = elm.bus_to.rms_model.model
-            variable.address = connection_bus_rms_model.stat_var[variable.src].address
-
-
-        for variable in model.input_algeb_var.values():
-            if variable.indexer == "bus_from":
-                connection_bus_rms_model = elm.bus_from.rms_model.model
-            else:
-                connection_bus_rms_model = elm.bus_to.rms_model.model
-            variable.address = connection_bus_rms_model.algeb_var[variable.src].address
+        # # relate input variables to bus variables
+        #
+        # for variable in model.input_state_var.values():
+        #     if variable.indexer == "bus_from":
+        #         connection_bus_rms_model = elm.bus_from.rms_model.model
+        #     else:
+        #         connection_bus_rms_model = elm.bus_to.rms_model.model
+        #     variable.address = connection_bus_rms_model.stat_var[variable.src].                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          dress
+        #
+        #
+        # for variable in model.input_algeb_var.values():
+        #     if variable.indexer == "bus_from":
+        #         connection_bus_rms_model = elm.bus_from.rms_model.model
+        #     else:
+        #         connection_bus_rms_model = elm.bus_to.rms_model.model
+        #     variable.address = connection_bus_rms_model.algeb_var[variable.src].address
 
 
         # See if the dynamic model was already compiled
@@ -254,9 +319,8 @@ def set_addresses(models_list, nx):
     """
     Assign global DAE indices to variables, store parameter values and store a reference for results analysis.
     This method:
-        - Assigning local and global indices to state and algebraic variables
-        - Mapping external variable references
-        - Populating the `dae.addresses_dict` and `dae.params_dict`
+        - Assigning global indices to state and algebraic variables
+        - Populating the rms_problem.addresses_list  and `rms_problem.variables_list`
         - Storing a reference list to analyse results
     :return:
     """
@@ -285,7 +349,7 @@ def set_addresses(models_list, nx):
                 device_variables_list.append(var_list.symbol)
                 device_addresses_list.append(address)
 
-                var_list.address.value.append(address)
+                var_list.address.value = address
 
                 global_states_id += 1  # Move global index forward
 
@@ -293,7 +357,7 @@ def set_addresses(models_list, nx):
             if isinstance(var_list, InputState):
                 # store variable name and addresses locally
                 device_variables_list.append(var_list.symbol)
-                device_addresses_list.append(var_list.address.value[0])
+                device_addresses_list.append(var_list.address.value)
 
             # algebraic variables second
             if isinstance(var_list, AlgebVar):
@@ -303,7 +367,7 @@ def set_addresses(models_list, nx):
                 device_variables_list.append(var_list.symbol)
                 device_addresses_list.append(address)
 
-                var_list.address.value.append(address)
+                var_list.address.value = address
 
                 global_algebs_id += 1  # Move global index forward
 
@@ -311,7 +375,7 @@ def set_addresses(models_list, nx):
             if isinstance(var_list, InputAlgeb):
                 # store variable name and addresses locally
                 device_variables_list.append(var_list.symbol)
-                device_addresses_list.append(var_list.address.value[0])
+                device_addresses_list.append(var_list.address.value)
         # add variables names local list and addresses local list to dae general lists
         variables_list.append(device_variables_list)
         addresses_list.append(device_addresses_list)
@@ -335,26 +399,24 @@ class RmsProblem:
         :param system: The simulation system object to which this DAE is tied
         """
 
-        # self.system: DynamicSystemStore = system
+        # Build connections and conservation equations in buses
+        build_connections_and_conservation_eqs(grid=grid)
+
+        # Create:
+        # Models_list (list of RmsModelStore for every model)
+        # self.x (list of state variables), self.y (list of algeb variables), self.Tf, self.nx (num of state variables), self.ny (num of algeb variables)
         self.models_list, self.x, self.y, self.Tf, self.nx, self.ny = compile_rms_models(grid=grid)
+
+        # Create variables_list (list to store all variables) and addresses_list (List to store all addresses),
+        # these lists are used when updating f, g, and jacobian values.
+
         self.addresses_list, self.variables_list = set_addresses(self.models_list, self.nx)
-        pdb.set_trace()
+
         # lists to store initial values and results of every step of the simulation
         self.xy = None
 
         # List to store variables internal variables of the system (used to analyze simulation data)
         self.internal_variables_list = list()
-
-        # List to store all variables (used when updating f, g, and jacobian values)
-        self.variables_list = list()
-
-        # List to store all addresses (used when updating f, g, and jacobian values)
-        self.addresses_list = list()
-
-        # number of state variables (internals)
-        # self.nx = 0
-        # number of algebraic variables (internals)
-        # self.ny = 0
 
         # number of non zero entries in jacobian
         self.ndfx = 0
@@ -410,20 +472,6 @@ class RmsProblem:
         self.concatenate()
         self.initialize_jacobian()
         self.finalize_jacobians_init()
-        # demo
-        # logging.info(f"Jacobian computed, printing numeric and symbolic Jacobians" + '\n\n')
-        # logging.info(f"numeric dfx:" + '\n' + f"{self.dfx.toarray()}")
-        # logging.info(f"numeric dfy:" + '\n' + f"{self.dfy.toarray()}")
-        # logging.info(f"numeric dgx:" + '\n' + f"{self.dgx.toarray()}")
-        # logging.info(f"numeric dgy:" + '\n' + f"{self.dgy.toarray()}")
-        # with open('jacobian_dfx.png', 'wb') as f:
-        #     preview(self.dfx_equ, viewer='BytesIO', outputbuffer=f)
-        # with open('jacobian_dfy.png', 'wb') as f:
-        #     preview(self.dfy_equ, viewer='BytesIO', outputbuffer=f)
-        # with open('jacobian_dgx.png', 'wb') as f:
-        #     preview(self.dgx_equ, viewer='BytesIO', outputbuffer=f)
-        # with open('jacobian_dgy.png', 'wb') as f:
-        #     preview(self.dgy_equ, viewer='BytesIO', outputbuffer=f)
 
     def concatenate(self):
         """
@@ -481,6 +529,7 @@ class RmsProblem:
                 device.g_jac_input_values = np.zeros((device.n, len(device.g_jac_arguments)), dtype=object)
 
                 self.get_input_values(device)
+                pdb.set_trace()
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
             if device.name != 'Bus':
@@ -590,8 +639,8 @@ class RmsProblem:
 
                 else:
                     inputs_order_list[i][j] = 'param'
-                    param = getattr(device, arg)
-                    input_values_list[i][j] = param.value[i]
+                    param = device.num_params_dict[arg]
+                    input_values_list[i][j] = param.value
 
     def assign_global_f_g_positions(self, device, local_values, variables_names_for_ordering, outputs_order_list):
         """

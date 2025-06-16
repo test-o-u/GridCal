@@ -5,7 +5,7 @@
 import pdb
 from typing import List, Dict, Any
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
+from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb, OutputState, OutputAlgeb
 from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
 
 
@@ -36,6 +36,8 @@ class DynamicModel(EditableDevice):
         self.algeb_var: Dict[str, AlgebVar] = dict()
         self.input_state_var: Dict[str, InputState] = dict()
         self.input_algeb_var: Dict[str, InputAlgeb] = dict()
+        self.output_state_var: Dict[str, OutputState] = dict()
+        self.output_algeb_var: Dict[str, OutputAlgeb] = dict()
 
     @property
     def idtag(self):
@@ -50,7 +52,7 @@ class DynamicModel(EditableDevice):
         Get the number of variables
         :return:
         """
-        return len(self.stat_var) + len(self.algeb_var) + len(self.input_state_var) + len(self.input_algeb_var)
+        return len(self.stat_var) + len(self.algeb_var) + len(self.input_state_var) + len(self.input_algeb_var) + len(self.output_state_var) + len(self.output_algeb_var)
 
     @property
     def is_empty(self) -> bool:
@@ -70,6 +72,8 @@ class DynamicModel(EditableDevice):
             "algeb_var": [e.to_dict() for _, e in self.algeb_var.items()],
             "input_state_var": [e.to_dict() for _, e in self.input_state_var.items()],
             "input_algeb_var": [e.to_dict() for _, e in self.input_algeb_var.items()],
+            "output_state_var": [e.to_dict() for _, e in self.output_state_var.items()],
+            "output_algeb_var": [e.to_dict() for _, e in self.output_algeb_var.items()],
 
             "u": self.u,
 
@@ -133,6 +137,18 @@ class DynamicModel(EditableDevice):
             obj.parse(data=elm)
             self.add_input_algeb_var(obj)
 
+        self.output_state_var.clear()
+        for elm in data["output_state_var"]:
+            obj = OutputState()
+            obj.parse(data=elm)
+            self.add_output_state_var(obj)
+
+        self.output_algeb_var.clear()
+        for elm in data["output_algeb_var"]:
+            obj = OutputAlgeb()
+            obj.parse(data=elm)
+            self.add_output_algeb_var(obj)
+
     def add_idx_dyn_param(self, val: IdxDynParam):
         self.idx_dyn_param[val.name] = val
 
@@ -154,6 +170,12 @@ class DynamicModel(EditableDevice):
     def add_input_algeb_var(self, val: InputAlgeb):
         self.input_algeb_var[val.name] = val
 
+    def add_output_state_var(self, val: OutputState):
+        self.output_state_var[val.name] = val
+
+    def add_output_algeb_var(self, val: OutputAlgeb):
+        self.output_algeb_var[val.name] = val
+
     def get_idx_dyn_param(self, val: str):
         return self.idx_dyn_param[val]
 
@@ -174,3 +196,10 @@ class DynamicModel(EditableDevice):
 
     def get_input_algeb_var(self, val: str):
         return self.input_algeb_var[val]
+
+    def get_output_state_var(self, val: str):
+        return self.output_state_var[val]
+
+    def get_output_algeb_var(self, val: str):
+        return self.output_algeb_var[val]
+
