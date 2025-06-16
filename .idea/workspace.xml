@@ -28,13 +28,9 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="addresses with pointers">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="build conservation equations in buses">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/address.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/address.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dyn_var.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dyn_var.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dynamic_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_compiler.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_compiler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" afterDir="false" />
     </list>
@@ -249,7 +245,7 @@
     "Python.reliability_driver.executor": "Run",
     "Python.reliability_study_run.executor": "Run",
     "Python.rms_model_editor_dialogue.executor": "Run",
-    "Python.rms_problem.executor": "Run",
+    "Python.rms_problem.executor": "Debug",
     "Python.round_trip.executor": "Run",
     "Python.run.executor": "Debug",
     "Python.run_child_1.executor": "Run",
@@ -2405,7 +2401,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="754" />
+    <option name="localTasksCounter" value="755" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2451,7 +2447,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="refactored fast_dispatch_with_renewables" />
     <MESSAGE value="more work on reliability" />
     <MESSAGE value="Integrated reliability study" />
     <MESSAGE value="Migrated Investment to inherit from PointerDevice" />
@@ -2476,7 +2471,8 @@
     <MESSAGE value="Improved file saving" />
     <MESSAGE value="some types" />
     <MESSAGE value="addresses with pointers" />
-    <option name="LAST_COMMIT_MESSAGE" value="addresses with pointers" />
+    <MESSAGE value="build conservation equations in buses" />
+    <option name="LAST_COMMIT_MESSAGE" value="build conservation equations in buses" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3028,8 +3024,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py</url>
-          <line>361</line>
-          <option name="timeStamp" value="2794" />
+          <line>425</line>
+          <option name="timeStamp" value="2799" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -3041,6 +3037,7 @@
         <watch expression="t" />
         <watch expression="lole" />
         <watch expression="np.sum(load_not_supplied)" />
+        <watch expression="grid.loads[0].rms_model.model.comp_name" />
       </configuration>
     </watches-manager>
   </component>

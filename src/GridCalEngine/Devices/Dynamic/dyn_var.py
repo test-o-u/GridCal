@@ -46,6 +46,8 @@ class DynVar:
         return {
             "name": self.name,
             "symbol": self.symbol,
+            "src": self.src,
+            "indexer": self.indexer,
             "init_eq": self.init_eq,
             "eq": self.eq
         }
@@ -57,6 +59,8 @@ class DynVar:
         """
         self.name = data["name"]
         self.symbol = data["symbol"]
+        self.src = data["src"]
+        self.indexer = data["indexer"]
         self.init_eq = data["init_eq"]
         self.eq = data["eq"]
 
