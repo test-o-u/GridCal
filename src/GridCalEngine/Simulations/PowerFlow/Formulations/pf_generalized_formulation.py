@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
+import time
 from typing import Tuple, List, Callable
 import numpy as np
 from numba import njit
@@ -1227,7 +1228,9 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         :param x: Solution vector
         :return: Residual vector
         """
+        tm = [None] * 9
 
+        tm[0] = time.time()
         a = len(self.i_u_va)
         b = a + len(self.i_u_vm)
         c = b + len(self.u_vsc_pf)
@@ -1268,6 +1271,8 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         Scalc_passive = compute_power(self.Ybus, V)
 
         # Controllable branches ----------------------------------------------------------------------------------------
+        tm[1] = time.time()
+
         # Power at the controlled branches
         m2 = self.nc.active_branch_data.tap_module.copy()
         tau2 = self.nc.active_branch_data.tap_angle.copy()
@@ -1297,6 +1302,8 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         AScalc_cbr = np.zeros(self.nc.bus_data.nbus, dtype=complex)
         AScalc_cbr[self.F_cbr[self.cbr]] += Sf_cbr
         AScalc_cbr[self.T_cbr[self.cbr]] += St_cbr
+
+        tm[2] = time.time()
 
         Pf_cbr = calcSf(k=self.k_cbr_pf,
                         V=V,
@@ -1351,6 +1358,8 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
                         vtap_t=self.nc.passive_branch_data.virtual_tap_t).imag
 
         # VSC ----------------------------------------------------------------------------------------------------------
+        tm[3] = time.time()
+
         T_vsc = self.nc.vsc_data.T
         It = np.sqrt(Pt_vsc * Pt_vsc + Qt_vsc * Qt_vsc) / Vm[T_vsc]
         It2 = It * It
@@ -1364,6 +1373,8 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         Scalc_vsc = Pf_vsc @ self.nc.vsc_data.Cf + St_vsc @ self.nc.vsc_data.Ct
 
         # HVDC ---------------------------------------------------------------------------------------------------------
+        tm[4] = time.time()
+
         Vmf_hvdc = Vm[self.nc.hvdc_data.F]
         zbase = self.nc.hvdc_data.Vnf * self.nc.hvdc_data.Vnf / self.nc.Sbase
         Ploss_hvdc = self.nc.hvdc_data.r / zbase * np.power(Pf_hvdc / Vmf_hvdc, 2.0)
@@ -1380,25 +1391,17 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
         St_hvdc = make_complex(Pt_hvdc, Qt_hvdc)
         Scalc_hvdc = Sf_hvdc @ self.nc.hvdc_data.Cf + St_hvdc @ self.nc.hvdc_data.Ct
 
-        if 1401 in self.i_k_p:
-            print("1401 in i_k_p")
-        if 1403 in self.i_k_p:
-            print("1403 in i_k_p")
-        if 1401 in self.i_k_q:
-            print("1401 in i_k_q")
-        if 1403 in self.i_k_q:
-            print("1403 in i_k_q")
-        if 1401 in self.i_u_vm:
-            print("1401 in i_u_vm")
-        if 1403 in self.i_u_vm:
-            print("1403 in i_u_vm")
-
         # total nodal power --------------------------------------------------------------------------------------------
+        tm[5] = time.time()
+
         Scalc = Scalc_passive + AScalc_cbr + Scalc_vsc + Scalc_hvdc
         self.Scalc = Scalc  # needed for the Q control check to use
         dS = Scalc - Sbus
 
         # compose the residuals vector ---------------------------------------------------------------------------------
+        tm[6] = time.time()
+        tm[7] = time.time()
+
         _f = np.r_[
             dS[self.i_k_p].real,
             dS[self.i_k_q].imag,
@@ -1410,6 +1413,16 @@ class PfGeneralizedFormulation(PfFormulationTemplate):
             Qf_cbr - self.cbr_qf_set,
             Qt_cbr - self.cbr_qt_set
         ]
+
+        tm[8] = time.time()
+
+        # print("\tInit", tm[1] - tm[0])
+        # print("\tControllable branches", tm[2] - tm[1])
+        # print("\tPassive branches", tm[3] - tm[2])
+        # print("\tVSC", tm[4] - tm[3])
+        # print("\tHVDC", tm[5] - tm[4])
+        # print("\ttotal nodal power", tm[6] - tm[5])
+        # print("\tcompose the residuals vector", tm[8] - tm[7])
 
         return _f
 
