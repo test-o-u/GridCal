@@ -5,6 +5,7 @@
 import datetime
 import os
 import inspect
+import pdb
 import pprint
 import numpy as np
 import sympy as sym
@@ -54,6 +55,8 @@ class RmsModelStore:
         self.state_vars = list()
         self.algeb_eqs = list()
         self.algeb_vars = list()
+        self.input_state_eqs = list()
+        self.input_algeb_eqs = list()
         self.eqs_list = list()  # list of all the variables with an equation
         self.vars_list = list()  # list of all the variables
 
@@ -172,6 +175,7 @@ class RmsModelStore:
 
             if elem.eq is not None:
                 self.state_eqs.append(elem)
+                self.input_state_eqs.append(elem)
                 self.eqs_list.append(elem.symbol)
             self.state_vars.append(elem)
             self.vars_list.append(elem.symbol)
@@ -185,6 +189,7 @@ class RmsModelStore:
 
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
+                self.input_algeb_eqs.append(elem)
                 self.eqs_list.append(elem.symbol)
             self.algeb_vars.append(elem)
             self.vars_list.append(elem.symbol)
@@ -253,8 +258,8 @@ class RmsModelStore:
         :return:
         """
         # Define symbolic variables
-        self.sym_state_vars = [sym.Symbol(v.symbol) for v in self.state_vars]
-        self.sym_algeb_vars = [sym.Symbol(v.symbol) for v in self.algeb_vars]
+        self.sym_state_vars = [sym.Symbol(v.name) for v in self.state_vars]
+        self.sym_algeb_vars = [sym.Symbol(v.name) for v in self.algeb_vars]
 
     def generate_equations(self):
         """
@@ -268,8 +273,12 @@ class RmsModelStore:
         :return:
         """
         variables_f_g = [self.state_eqs, self.algeb_eqs]
+        input_variables_f_g = [self.input_state_eqs, self.input_algeb_eqs]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
+
+        if self.name == "Bus":
+            variables_f_g = input_variables_f_g
 
         for variables, equations, eq_type in zip(variables_f_g, equations_f_g, equation_type):
             # list with the information of the order of the equations in the output of f_update and g_update

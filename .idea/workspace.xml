@@ -28,11 +28,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="build conservation equations in buses">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="build conservation equations in buses 2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dyn_var.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Devices/Dynamic/dyn_var.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -253,7 +252,7 @@
     "Python.run_master.executor": "Run",
     "Python.run_server_farm.executor": "Debug",
     "Python.scripting_por_obj.executor": "Debug",
-    "Python.scripting_por_obj2.executor": "Debug",
+    "Python.scripting_por_obj2.executor": "Run",
     "Python.server_example.executor": "Run",
     "Python.short_circuit_driver.executor": "Run",
     "Python.simple_dispatch_demo.executor": "Debug",
@@ -2401,7 +2400,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="755" />
+    <option name="localTasksCounter" value="756" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2447,7 +2446,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="more work on reliability" />
     <MESSAGE value="Integrated reliability study" />
     <MESSAGE value="Migrated Investment to inherit from PointerDevice" />
     <MESSAGE value="Migrated Contingency and RemedialAction to inherit from PointerDevice" />
@@ -2472,7 +2470,8 @@
     <MESSAGE value="some types" />
     <MESSAGE value="addresses with pointers" />
     <MESSAGE value="build conservation equations in buses" />
-    <option name="LAST_COMMIT_MESSAGE" value="build conservation equations in buses" />
+    <MESSAGE value="build conservation equations in buses 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="build conservation equations in buses 2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3022,11 +3021,6 @@
           <line>833</line>
           <option name="timeStamp" value="2789" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py</url>
-          <line>425</line>
-          <option name="timeStamp" value="2799" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
@@ -3038,6 +3032,7 @@
         <watch expression="lole" />
         <watch expression="np.sum(load_not_supplied)" />
         <watch expression="grid.loads[0].rms_model.model.comp_name" />
+        <watch expression="grid" />
       </configuration>
     </watches-manager>
   </component>
