@@ -198,8 +198,8 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
             # add to already_compiled_dict
             # add to compiled_models list
 
-            n_algeb += len(model.algeb_var)
-            n_stat += len(model.stat_var)
+            n_algeb += len(model.input_algeb_var)
+            n_stat += len(model.input_state_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
 
             # store reference for later
@@ -229,8 +229,8 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
             # add to already_compiled_dict
             # add to compiled_models list
 
-            n_algeb += len(model.algeb_var)
-            n_stat += len(model.stat_var)
+            n_algeb += len(model.algeb_var) + len(model.output_algeb_var)
+            n_stat += len(model.stat_var) + len(model.output_state_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
 
             # store reference for later
@@ -257,8 +257,8 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
             # add to already_compiled_dict
             # add to compiled_models list
 
-            n_algeb += len(model.algeb_var)
-            n_stat += len(model.stat_var)
+            n_algeb += len(model.algeb_var) + len(model.output_algeb_var)
+            n_stat += len(model.stat_var) + len(model.output_state_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
 
             # store reference for later
@@ -298,55 +298,75 @@ def set_addresses(models_list, nx):
     :return:
     """
 
+
     global_states_id = 0
     global_algebs_id = nx
+    variables_ordered = list()
 
     variables_list = list()
     addresses_list = list()
 
     # Loop through devices
     for model_store in models_list:
+        local_variables_list = list()
+        local_addresses_list = list()
 
-        # Assign addresses
-        for var_list in model_store.variables:
-
-            # state varibles first
-            if isinstance(var_list, StatVar):
-                address = global_states_id
+        if model_store.name == "Bus":
+            for var_list in model_store.variables:
+                # state varibles first
                 if isinstance(var_list, InputState):
-                    if model_store.name == "BUS":
-                        address = global_states_id
-                        # store variable name and addresses
-                        variables_list.append(var_list.name)
-                        addresses_list.append(address)
-
-                        global_states_id += 1  # Move global index forward
-                else:
-                # store variables names and addresses
-                    variables_list.append(var_list.name)
-                    addresses_list.append(address)
+                    address = global_states_id
+                    local_variables_list.append(var_list.name)
+                    local_addresses_list.append(address)
 
                     global_states_id += 1  # Move global index forward
-
-            # algeb varibles second
-            if isinstance(var_list, AlgebVar):
-                address = global_algebs_id
+                # algeb varibles second
                 if isinstance(var_list, InputAlgeb):
-                    if model_store.name == "BUS":
-                        address = global_algebs_id
-                        # store variable name and addresses
-                        variables_list.append(var_list.name)
-                        addresses_list.append(address)
-
-                        global_algebs_id += 1  # Move global index forward
-                else:
-                    # store variables names and addresses
-                    variables_list.append(var_list.name)
-                    addresses_list.append(address)
+                    address = global_algebs_id
+                    local_variables_list.append(var_list.name)
+                    local_addresses_list.append(address)
 
                     global_algebs_id += 1  # Move global index forward
 
-    return addresses_list, variables_list
+                else:
+                    pass
+
+        else:
+            for var_list in model_store.variables:
+
+                # state varibles first
+                if isinstance(var_list, StatVar):
+                    address = global_states_id
+                    if isinstance(var_list, InputState):
+                        pass
+                    else:
+                        # store variables names and addresses
+                        local_variables_list.append(var_list.name)
+                        local_addresses_list.append(address)
+
+                        global_states_id += 1  # Move global index forward
+
+                # algeb varibles second
+                if isinstance(var_list, AlgebVar):
+                    address = global_algebs_id
+                    if isinstance(var_list, InputAlgeb):
+                        pass
+                    else:
+                        # store variables names and addresses
+                        local_variables_list.append(var_list.name)
+                        local_addresses_list.append(address)
+
+                        global_algebs_id += 1  # Move global index forward
+
+        addresses_list.append(local_addresses_list)
+        flat_adddresses = [address for model in addresses_list for address in model]
+        variables_list.append(local_variables_list)
+        flat_variables = [var for model in variables_list for var in model]
+
+
+    variables_ordered = [var for _, var in sorted(zip(flat_adddresses, flat_variables))]
+
+    return variables_ordered, addresses_list, variables_list
 
 class RmsProblem:
     """
@@ -377,7 +397,7 @@ class RmsProblem:
         # Create variables_list (list to store all variables) and addresses_list (List to store all addresses),
         # these lists are used when updating f, g, and jacobian values.
 
-        self.addresses_list, self.variables_list = set_addresses(self.models_list, self.nx)
+        self.variables_ordered, self.addresses_list, self.variables_list = set_addresses(self.models_list, self.nx)
 
         # lists to store initial values and results of every step of the simulation
         self.xy = None
@@ -479,95 +499,94 @@ class RmsProblem:
         self._dgy_jac_equ = np.zeros(55, dtype=object)
 
         for device in self.models_list:
-            if device.name != 'Bus':
-                # Initialize lists to store the addresses of the variables in the order of the input of the functions.
-                device.f_inputs_order = np.zeros((device.n, len(device.f_args)), dtype=object)
-                device.g_inputs_order = np.zeros((device.n, len(device.g_args)), dtype=object)
 
-                # Initialize lists to store the addresses of the variables in the order of the input of the functions.
-                device.f_jac_inputs_order = np.zeros((device.n, len(device.f_jac_arguments)), dtype=object)
-                device.g_jac_inputs_order = np.zeros((device.n, len(device.g_jac_arguments)), dtype=object)
+            # Initialize lists to store the addresses of the variables in the order of the input of the functions.
+            device.f_inputs_order = np.zeros((device.n, len(device.f_args)), dtype=object)
+            device.g_inputs_order = np.zeros((device.n, len(device.g_args)), dtype=object)
 
-                # Store input values in device
+            # Initialize lists to store the addresses of the variables in the order of the input of the functions.
+            device.f_jac_inputs_order = np.zeros((device.n, len(device.f_jac_arguments)), dtype=object)
+            device.g_jac_inputs_order = np.zeros((device.n, len(device.g_jac_arguments)), dtype=object)
 
-                device.f_input_values = np.zeros((device.n, len(device.f_args)), dtype=object)
-                device.g_input_values = np.zeros((device.n, len(device.g_args)), dtype=object)
-                device.f_jac_input_values = np.zeros((device.n, len(device.f_jac_arguments)), dtype=object)
-                device.g_jac_input_values = np.zeros((device.n, len(device.g_jac_arguments)), dtype=object)
+            # Store input values in device
 
-                self.get_input_values(device)
-                pdb.set_trace()
+            device.f_input_values = np.zeros((device.n, len(device.f_args)), dtype=object)
+            device.g_input_values = np.zeros((device.n, len(device.g_args)), dtype=object)
+            device.f_jac_input_values = np.zeros((device.n, len(device.f_jac_arguments)), dtype=object)
+            device.g_jac_input_values = np.zeros((device.n, len(device.g_jac_arguments)), dtype=object)
+
+            self.get_input_values(device)
 
             # Get the function type and var type info and the local jacobians using the calc_local_jacs function defined in dynamic_model_template
-            if device.name != 'Bus':
-                ###f and g update
-                # get local f and g info and values
-                local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions()
+            ###f and g update
+            # get local f and g info and values
+            local_f_values, local_g_values, variables_names_for_ordering_f, variables_names_for_ordering_g = device.calc_f_g_functions()
 
-                # Initialize lists to store addresses of the variables in the order og the output of the functions.
-                device.f_output_order = np.zeros_like(local_f_values, dtype=object)
-                device.g_output_order = np.zeros_like(local_g_values, dtype=object)
+            # Initialize lists to store addresses of the variables in the order of the output of the functions.
+            device.f_output_order = np.zeros_like(local_f_values, dtype=object)
+            device.g_output_order = np.zeros_like(local_g_values, dtype=object)
 
-                eq_type = 'f'
-                pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f,
+            eq_type = 'f'
+            pairs = self.assign_global_f_g_positions(device, local_f_values, variables_names_for_ordering_f,
                                                          device.f_output_order)
-                for index, val in pairs:
-                    self.add_to_f_g(self.f, index, val)
+            for index, val in pairs:
+                self.add_to_f_g(self.f, index, val)
 
-                eq_type = 'g'
-                pairs = self.assign_global_f_g_positions(device, local_g_values, variables_names_for_ordering_g,
+            eq_type = 'g'
+            pairs = self.assign_global_f_g_positions(device, local_g_values, variables_names_for_ordering_g,
                                                          device.g_output_order)
-                for index, val in pairs:
-                    self.add_to_f_g(self.g, index, val)
+            for index, val in pairs:
+                self.add_to_f_g(self.g, index, val)
+            pdb.set_trace()
 
-                ### Jacobian update
-                # get local jacobians info and values
-                jacobian, jacobian_info, jacobian_equations = device.calc_local_jacs()
+            ### Jacobian update
+            # get local jacobians info and values
+            jacobian, jacobian_info, jacobian_equations = device.calc_local_jacs()
 
-                # Initialize lists to store addresses of the variables in the order of the output of the functions.
-                device.dfx_jac_output_order = np.zeros((device.n, len(jacobian_info['dfx'])), dtype=object)
-                device.dfy_jac_output_order = np.zeros((device.n, len(jacobian_info['dfy'])), dtype=object)
-                device.dgx_jac_output_order = np.zeros((device.n, len(jacobian_info['dgx'])), dtype=object)
-                device.dgy_jac_output_order = np.zeros((device.n, len(jacobian_info['dgy'])), dtype=object)
+            # Initialize lists to store addresses of the variables in the order of the output of the functions.
+            device.dfx_jac_output_order = np.zeros((device.n, len(jacobian_info['dfx'])), dtype=object)
+            device.dfy_jac_output_order = np.zeros((device.n, len(jacobian_info['dfy'])), dtype=object)
+            device.dgx_jac_output_order = np.zeros((device.n, len(jacobian_info['dgx'])), dtype=object)
+            device.dgy_jac_output_order = np.zeros((device.n, len(jacobian_info['dgy'])), dtype=object)
 
-                # calc dfx
-                jac_type = 'dfx'
-                positions = jacobian_info[jac_type]
-                equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
+            # calc dfx
+            jac_type = 'dfx'
+            positions = jacobian_info[jac_type]
+            equations = jacobian_equations[jac_type]
+            triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dfx_jac_output_order)
-                for row, col, val, equ in triplets:
-                    self.add_to_jacobian_init(self._dfx_jac_positions, self._dfx_jac_values, self._dfx_jac_equ,
+            for row, col, val, equ in triplets:
+                self.add_to_jacobian_init(self._dfx_jac_positions, self._dfx_jac_values, self._dfx_jac_equ,
                                               self.sparsity_fx, row, col, val, equ)
 
-                # calc dfy
-                jac_type = 'dfy'
-                positions = jacobian_info[jac_type]
-                equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
+            # calc dfy
+            jac_type = 'dfy'
+            positions = jacobian_info[jac_type]
+            equations = jacobian_equations[jac_type]
+            triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dfy_jac_output_order)
-                for row, col, val, equ in triplets:
-                    self.add_to_jacobian_init(self._dfy_jac_positions, self._dfy_jac_values, self._dfy_jac_equ,
+            for row, col, val, equ in triplets:
+                self.add_to_jacobian_init(self._dfy_jac_positions, self._dfy_jac_values, self._dfy_jac_equ,
                                               self.sparsity_fy, row, col, val, equ)
 
-                # calc dgx
-                jac_type = 'dgx'
-                positions = jacobian_info[jac_type]
-                equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
+            # calc dgx
+            jac_type = 'dgx'
+            positions = jacobian_info[jac_type]
+            equations = jacobian_equations[jac_type]
+            triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dgx_jac_output_order)
-                for row, col, val, equ in triplets:
-                    self.add_to_jacobian_init(self._dgx_jac_positions, self._dgx_jac_values, self._dgx_jac_equ,
+            for row, col, val, equ in triplets:
+                self.add_to_jacobian_init(self._dgx_jac_positions, self._dgx_jac_values, self._dgx_jac_equ,
                                               self.sparsity_gx, row, col, val, equ)
 
-                # calc dgy
-                jac_type = 'dgy'
-                positions = jacobian_info[jac_type]
-                equations = jacobian_equations[jac_type]
-                triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
+            # calc dgy
+            jac_type = 'dgy'
+            positions = jacobian_info[jac_type]
+            equations = jacobian_equations[jac_type]
+            triplets = self.assign_global_jac_positions(device, jacobian, positions, equations,
                                                             device.dgy_jac_output_order)
-                for row, col, val, equ in triplets:
-                    self.add_to_jacobian_init(self._dgy_jac_positions, self._dgy_jac_values, self._dgy_jac_equ,
+            for row, col, val, equ in triplets:
+                self.add_to_jacobian_init(self._dgy_jac_positions, self._dgy_jac_values, self._dgy_jac_equ,
                                               self.sparsity_gy, row, col, val, equ)
 
     def get_input_values(self, device: RmsModelStore):
@@ -599,10 +618,8 @@ class RmsProblem:
         for j, arg in enumerate(arguments_list):
             for i in range(device.n):
                 if arg in device.variables_list:
-                    inputs_order_list[i][j] = \
-                        self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]
-                    input_values_list[i][j] = values[
-                        self.addresses_list[device.index][self.variables_list[device.index].index(arg)][i]]
+                    inputs_order_list[i][j] = self.variables_ordered.index(arg)
+                    input_values_list[i][j] = values[self.variables_ordered.index(arg)]
 
                 else:
                     inputs_order_list[i][j] = 'param'
@@ -623,7 +640,7 @@ class RmsProblem:
         pairs = []
         for i in range(device.n):
             for j, (val, var_name) in enumerate(zip(local_values[i], variables_names_for_ordering)):
-                address = self.addresses_list[device.index][self.variables_list[device.index].index(var_name)][i]
+                address = self.variables_ordered.index(var_name)
                 outputs_order_list[i][j] = address
                 pairs.append((address, val))
 
@@ -646,14 +663,8 @@ class RmsProblem:
             for j, (func_index, var_index) in enumerate(positions):
                 equation_str = sym.sympify(equations[j])
                 val = local_jacobian[i][func_index][var_index]
-                address_func = \
-                    self.addresses_list[device.index][
-                        self.variables_list[device.index].index(device.eqs_list[func_index])][
-                        i]
-                address_var = \
-                    self.addresses_list[device.index][
-                        self.variables_list[device.index].index(device.vars_list[var_index])][
-                        i]
+                address_func = self.variables_ordered.index(device.eqs_list[func_index])
+                address_var = self.variables_ordered.index(device.eqs_list[var_index])
                 outputs_order_triplets[i][j] = (address_func, address_var)
                 triplets.append((address_func, address_var, val, equation_str))
 

@@ -59,6 +59,8 @@ class RmsModelStore:
         self.input_algeb_eqs = list()
         self.eqs_list = list()  # list of all the variables with an equation
         self.vars_list = list()  # list of all the variables
+        self.real_state_vars = list()
+        self.real_algeb_vars = list()
 
         # Dictionary with parameters
         self.num_params_dict = dynamic_model.num_dyn_param
@@ -125,16 +127,17 @@ class RmsModelStore:
         """
         Fill in the structures
         """
-        self.x0 = np.zeros(len(dynamic_model.stat_var))
-        self.t_const0 = np.zeros(len(dynamic_model.stat_var))
-        self.y0 = np.zeros(len(dynamic_model.algeb_var))
+        self.x0 = np.zeros(len(dynamic_model.stat_var) + len(dynamic_model.output_state_var))
+        self.t_const0 = np.zeros(len(dynamic_model.stat_var) + len(dynamic_model.output_state_var))
+        self.y0 = np.zeros(len(dynamic_model.algeb_var)) + len(dynamic_model.output_algeb_var)
 
         index = 0
 
         for i, (key, elem) in enumerate(dynamic_model.stat_var.items()):
+            self.real_state_vars.append(elem)
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
 
             self.x0[i] = elem.init_val
             self.t_const0[i] = elem.t_const
@@ -145,15 +148,17 @@ class RmsModelStore:
 
             if elem.eq is not None:
                 self.state_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.state_vars.append(elem)
-            self.vars_list.append(elem.symbol)
-            self.internal_vars.append(elem.symbol)
+            self.vars_list.append(elem.name)
+            self.internal_vars.append(elem.name)
 
         for i, (key, elem) in enumerate(dynamic_model.algeb_var.items()):
+            self.real_algeb_vars.append(elem)
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
+
 
             self.y0[i] = elem.init_val
 
@@ -162,63 +167,63 @@ class RmsModelStore:
 
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.algeb_vars.append(elem)
-            self.vars_list.append(elem.symbol)
-            self.internal_vars.append(elem.symbol)
+            self.vars_list.append(elem.name)
+            self.internal_vars.append(elem.name)
 
         for key, elem in dynamic_model.input_state_var.items():
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
             index += 1
 
             if elem.eq is not None:
-                self.state_eqs.append(elem)
                 self.input_state_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.state_vars.append(elem)
-            self.vars_list.append(elem.symbol)
+            self.vars_list.append(elem.name)
             self.input_vars.append(elem)
 
         for key, elem in dynamic_model.input_algeb_var.items():
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
             index += 1
 
             if elem.eq is not None:
-                self.algeb_eqs.append(elem)
                 self.input_algeb_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.algeb_vars.append(elem)
-            self.vars_list.append(elem.symbol)
+            self.vars_list.append(elem.name)
             self.input_vars.append(elem)
 
         for key, elem in dynamic_model.output_state_var.items():
+            self.real_state_vars.append(elem)
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
             index += 1
 
             if elem.eq is not None:
                 self.state_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.state_vars.append(elem)
-            self.vars_list.append(elem.symbol)
+            self.vars_list.append(elem.name)
             self.output_vars.append(elem)
 
         for key, elem in dynamic_model.output_algeb_var.items():
+            self.real_algeb_vars.append(elem)
             self.variables.append(elem)
-            self.variables_list.append(elem.symbol)
-            self.vars_index[index] = elem.symbol
+            self.variables_list.append(elem.name)
+            self.vars_index[index] = elem.name
             index += 1
 
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
-                self.eqs_list.append(elem.symbol)
+                self.eqs_list.append(elem.name)
             self.algeb_vars.append(elem)
-            self.vars_list.append(elem.symbol)
+            self.vars_list.append(elem.name)
             self.output_vars.append(elem)
 
         folder_to_save = get_create_dynamics_model_folder(grid_id=grid_id)
@@ -288,6 +293,7 @@ class RmsModelStore:
             symbolic_eqs = []
             symbolic_vars = []
             for var in variables:
+
                 if var.eq:
                     variables_names_for_ordering.append(var.name)
                     symbolic_expr = sym.sympify(var.eq)
@@ -434,21 +440,27 @@ class RmsModelStore:
         calculates f and g functions and gets variables order.
         :return: f and g functions values, lists with the order of the variables for f and g
         """
+        len_state_eq = len(self.state_eqs)
+        len_algeb_eq = len(self.algeb_eqs)
+        if self.name == "Bus":
+            len_state_eq = len(self.input_state_eqs)
+            len_algeb_eq = len(self.input_algeb_eqs)
 
-        f_values_device = np.zeros((self.n, len(self.state_eqs)))
-        g_values_device = np.zeros((self.n, len(self.algeb_eqs)))
+
+        f_values_device = np.zeros((self.n, len_state_eq))
+        g_values_device = np.zeros((self.n, len_algeb_eq))
 
         for i in range(self.n):
             # get f values
             if self.f_args:
                 f_values = self._f_update_ptr(*self.f_input_values[i])
-                for j in range(len(self.state_eqs)):
+                for j in range(len_state_eq):
                     f_values_device[i][j] = f_values[j]
 
             # get g values
             if self.g_args:
                 g_values = self._g_update_ptr(*self.g_input_values[i])
-                for j in range(len(self.algeb_eqs)):
+                for j in range(len_algeb_eq):
                     g_values_device[i][j] = g_values[j]
 
         return (f_values_device, g_values_device,
@@ -461,18 +473,26 @@ class RmsModelStore:
         """
         f_jacobians = np.zeros((self.n, len(self.state_eqs), len(self.variables_list)))
         g_jacobians = np.zeros((self.n, len(self.algeb_eqs), len(self.variables_list)))
+        state_eqs = self.state_eqs
+        algeb_eqs = self.algeb_eqs
+
+        if self.name == "Bus":
+            f_jacobians = np.zeros((self.n, len(self.input_state_eqs), len(self.variables_list)))
+            g_jacobians = np.zeros((self.n, len(self.input_algeb_eqs), len(self.variables_list)))
+            state_eqs = self.input_state_eqs
+            algeb_eqs = self.input_algeb_eqs
 
         for i in range(self.n):
 
             if self.f_jac_arguments:
                 local_jac_f = self._f_ia_ptr(*self.f_jac_input_values[i])
-                for j, funct in enumerate(self.state_eqs):
+                for j, funct in enumerate(state_eqs):
                     for k, var in enumerate(self.variables_list):
                         f_jacobians[i, j, k] = local_jac_f[j * len(self.variables_list) + k]
 
             if self.g_jac_arguments:
                 local_jac_g = self._g_ia_ptr(*self.g_jac_input_values[i])
-                for j, funct in enumerate(self.algeb_eqs):
+                for j, funct in enumerate(algeb_eqs):
                     for k, var in enumerate(self.variables_list):
                         g_jacobians[i, j, k] = local_jac_g[j * len(self.variables_list) + k]
 
