@@ -127,9 +127,15 @@ class RmsModelStore:
         """
         Fill in the structures
         """
-        self.x0 = np.zeros(len(dynamic_model.stat_var) + len(dynamic_model.output_state_var))
+
+        if self.name == "Bus":
+            self.x0 = np.ones(len(dynamic_model.input_state_var))
+            self.t_const0 = np.zeros(len(dynamic_model.input_state_var))
+            self.y0 = np.ones(len(dynamic_model.input_algeb_var))
+
+        self.x0 = np.ones(len(dynamic_model.stat_var) + len(dynamic_model.output_state_var))
         self.t_const0 = np.zeros(len(dynamic_model.stat_var) + len(dynamic_model.output_state_var))
-        self.y0 = np.zeros(len(dynamic_model.algeb_var)) + len(dynamic_model.output_algeb_var)
+        self.y0 = np.ones(len(dynamic_model.algeb_var) + len(dynamic_model.output_algeb_var))
 
         index = 0
 

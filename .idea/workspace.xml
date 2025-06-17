@@ -28,11 +28,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="build variables array">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Build jacobian first part">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -2401,7 +2400,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="757" />
+    <option name="localTasksCounter" value="758" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2447,7 +2446,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Migrated Investment to inherit from PointerDevice" />
     <MESSAGE value="Migrated Contingency and RemedialAction to inherit from PointerDevice" />
     <MESSAGE value="Removed the unused topology driver logic" />
     <MESSAGE value="Fixed date editing" />
@@ -2472,7 +2470,8 @@
     <MESSAGE value="build conservation equations in buses" />
     <MESSAGE value="build conservation equations in buses 2" />
     <MESSAGE value="build variables array" />
-    <option name="LAST_COMMIT_MESSAGE" value="build variables array" />
+    <MESSAGE value="Build jacobian first part" />
+    <option name="LAST_COMMIT_MESSAGE" value="Build jacobian first part" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3024,13 +3023,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>449</line>
+          <line>455</line>
           <option name="timeStamp" value="2800" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py</url>
-          <line>665</line>
-          <option name="timeStamp" value="2801" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

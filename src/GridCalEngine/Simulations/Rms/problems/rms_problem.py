@@ -198,8 +198,8 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
             # add to already_compiled_dict
             # add to compiled_models list
 
-            n_algeb += len(model.input_algeb_var)
-            n_stat += len(model.input_state_var)
+            n_algeb += len(model.algeb_var)
+            n_stat += len(model.stat_var)
             c_model = RmsModelStore(dynamic_model=model, grid_id=grid.idtag)
 
             # store reference for later
@@ -283,6 +283,7 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         a_stat = b_stat
 
         b_algeb += len(c_model.y0)
+        pdb.set_trace()
         y0[a_algeb:b_algeb] = c_model.y0
         a_algeb = b_algeb
 
@@ -410,6 +411,13 @@ class RmsProblem:
         self.ndfy = 0
         self.ndgx = 0
         self.ndgy = 0
+        for model in self.models_list:
+            self.ndfx += len(model.jacobian_store_info["dfx"])
+            self.ndfy += len(model.jacobian_store_info["dfy"])
+            self.ndgx += len(model.jacobian_store_info["dgx"])
+            self.ndgy += len(model.jacobian_store_info["dgy"])
+
+
 
         # lists to store f ang g functions values (residuals)
         self.f = np.zeros(self.nx)
@@ -420,17 +428,17 @@ class RmsProblem:
         self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
         self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
         self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
-        self._dgy_jac_positions = np.zeros(55, dtype=object)  # TODO: investigate 2-pass sizing
+        self._dgy_jac_positions = np.zeros(self.ndgy, dtype=object)  # TODO: investigate 2-pass sizing
 
         self._dfx_jac_values = np.zeros(self.ndfx)
         self._dfy_jac_values = np.zeros(self.ndfy)
         self._dgx_jac_values = np.zeros(self.ndgx)
-        self._dgy_jac_values = np.zeros(55)  # TODO: investigate 2-pass sizing
+        self._dgy_jac_values = np.zeros(self.ndgy)  # TODO: investigate 2-pass sizing
 
         self._dfx_jac_equ = np.zeros(self.ndfx, dtype=object)
         self._dfy_jac_equ = np.zeros(self.ndfy, dtype=object)
         self._dgx_jac_equ = np.zeros(self.ndgx, dtype=object)
-        self._dgy_jac_equ = np.zeros(55, dtype=object)  # TODO: investigate 2-pass sizing
+        self._dgy_jac_equ = np.zeros(self.ndgy, dtype=object)  # TODO: investigate 2-pass sizing
 
         # Sparse Jacobian values
         self.dfx = None
@@ -481,22 +489,22 @@ class RmsProblem:
         self.sparsity_fx = np.zeros(self.ndfx, dtype=object)
         self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
         self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
-        self.sparsity_gy = np.zeros(55, dtype=object)
+        self.sparsity_gy = np.zeros(self.ndgy, dtype=object)
 
         self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
         self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
         self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
-        self._dgy_jac_positions = np.zeros(55, dtype=object)
+        self._dgy_jac_positions = np.zeros(self.ndgy, dtype=object)
 
         self._dfx_jac_values = np.zeros(self.ndfx)
         self._dfy_jac_values = np.zeros(self.ndfy)
         self._dgx_jac_values = np.zeros(self.ndgx)
-        self._dgy_jac_values = np.zeros(55)
+        self._dgy_jac_values = np.zeros(self.ndgy)
 
         self._dfx_jac_equ = np.zeros(self.ndfx, dtype=object)
         self._dfy_jac_equ = np.zeros(self.ndfy, dtype=object)
         self._dgx_jac_equ = np.zeros(self.ndgx, dtype=object)
-        self._dgy_jac_equ = np.zeros(55, dtype=object)
+        self._dgy_jac_equ = np.zeros(self.ndgy, dtype=object)
 
         for device in self.models_list:
 
@@ -820,17 +828,17 @@ class RmsProblem:
         self.sparsity_fx = np.zeros(self.ndfx, dtype=object)
         self.sparsity_fy = np.zeros(self.ndfy, dtype=object)
         self.sparsity_gx = np.zeros(self.ndgx, dtype=object)
-        self.sparsity_gy = np.zeros(55, dtype=object)
+        self.sparsity_gy = np.zeros(self.ndgy, dtype=object)
 
         self._dfx_jac_positions = np.zeros(self.ndfx, dtype=object)
         self._dfy_jac_positions = np.zeros(self.ndfy, dtype=object)
         self._dgx_jac_positions = np.zeros(self.ndgx, dtype=object)
-        self._dgy_jac_positions = np.zeros(55, dtype=object)
+        self._dgy_jac_positions = np.zeros(self.ndgy, dtype=object)
 
         self._dfx_jac_values = np.zeros(self.ndfx)
         self._dfy_jac_values = np.zeros(self.ndfy)
         self._dgx_jac_values = np.zeros(self.ndgx)
-        self._dgy_jac_values = np.zeros(55)
+        self._dgy_jac_values = np.zeros(self.ndgy)
 
         for device in self.models_list:
 
