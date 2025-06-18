@@ -17,6 +17,8 @@ class Var:
         """
         self.idtag: int = uuid4().int
 
+        self.name = name
+
         self.symbol = smb.Symbol(name)
 
         self.parent: EditableDevice | None = parent

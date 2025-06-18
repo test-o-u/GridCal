@@ -22,14 +22,12 @@ class DynamicModel(EditableDevice):
                          code="",
                          device_type=DeviceType.DynModel, )
 
-        self._algebraic_var_input: List[Var] = list()
-        self._state_var_input: List[Var] = list()
-
-        self._algebraic_var_output: List[Var] = list()
-        self._state_var_output: List[Var] = list()
-
-        self._algebraic_equations: List[Equation] = list()
-        self._state_equations: List[Equation] = list()
+        self._algebraic_var_input: Dict[str, Var] = dict()
+        self._state_var_input: Dict[str, Var] = dict()
+        self._algebraic_var_output: Dict[str, Var] = dict()
+        self._state_var_output: Dict[str, Var] = dict()
+        self._algebraic_equations: Dict[str, Equation] = dict()
+        self._state_equations: Dict[str, Equation] = dict()
 
     @property
     def n_input(self):
@@ -38,6 +36,99 @@ class DynamicModel(EditableDevice):
     @property
     def n_output(self):
         return len(self._algebraic_var_output) + len(self._state_var_output)
+
+    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get a dictionary representation of this object
+        :return: Dictionary
+        """
+        return {
+            "idtag": self.idtag,
+            "algebraic_var_input": [e.to_dict() for _, e in self._algebraic_var_input.items()],
+            "state_var_input": [e.to_dict() for _, e in self._state_var_input.items()],
+            "algebraic_var_output": [e.to_dict() for _, e in self._algebraic_var_output.items()],
+            "state_var_output": [e.to_dict() for _, e in self._state_var_output.items()],
+            "algebraic_equations": [e.to_dict() for _, e in self._algebraic_equations.items()],
+            "state_equations": [e.to_dict() for _, e in self._state_equations.items()],
+        }
+
+    def parse(self, data: Dict[str, List[Dict[str, Any]]] | List[int] | List[str]):
+        """
+        Parse the dictionary representation of this object
+        :param data:
+        :return:
+        """
+        self.name: str = data["name"]
+        self.idtag: str = data["idtag"]
+
+        self._algebraic_var_input.clear()
+        for elm in data["algebraic_var_input"]:
+            obj = Var(elm["name"])
+            self.add_algebraic_var_input(obj)
+
+        self._state_var_input.clear()
+        for elm in data["state_var_input"]:
+            obj = Var(elm["name"])
+            self.add_state_var_input(obj)
+
+        self._algebraic_var_output.clear()
+        for elm in data["algebraic_var_output"]:
+            obj = Var(elm["name"])
+            self.add_algebraic_var_output(obj)
+
+        self._state_var_output.clear()
+        for elm in data["state_var_output"]:
+            obj = Var(elm["name"])
+            self.add_state_var_output(obj)
+
+        self._algebraic_equations.clear()
+        for elm in data["algebraic_equations"]:
+            obj = Equation(elm["output"], elm["eq"])
+            self.add_algebraic_equations(obj)
+
+        self._state_equations.clear()
+        for elm in data["state_equations"]:
+            obj = Equation(elm["output"], elm["eq"])
+            self.add_state_equations(obj)
+
+
+    def add_algebraic_var_input(self, val: Var):
+        self._algebraic_var_input[val.name] = val
+
+    def add_state_var_input(self, val: Var):
+        self._state_var_input[val.name] = val
+
+    def add_algebraic_var_output(self, val: Var):
+        self._algebraic_var_output[val.name] = val
+
+    def add_state_var_output(self, val: Var):
+        self._state_var_output[val.name] = val
+
+    def add_algebraic_equations(self, val: Equation):
+        self._algebraic_equations[val.output.name] = val
+
+    def add_state_equations(self, val: Equation):
+        self._state_equations[val.output.name] = val
+
+    def get_algebraic_var_input(self, val: str):
+        return self._algebraic_var_input[val]
+
+    def get_state_var_input(self, val: str):
+        return self._state_var_input[val]
+
+    def get_algebraic_var_output(self, val: str):
+        return self._algebraic_var_output[val]
+
+    def get_state_var_output(self, val: str):
+        return self._state_var_output[val]
+
+    def get_algebraic_equations(self, val: str):
+        return self._algebraic_var_output[val]
+
+    def get_state_equations(self, val: str):
+        return self._state_var_output[val]
+
+
 
 
 class Sum(DynamicModel):
