@@ -5,8 +5,8 @@
 import pdb
 from typing import List, Dict, Any
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb, OutputState, OutputAlgeb
-from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
+from GridCalEngine.Devices.Dynamic.variable import Var
+from GridCalEngine.Devices.Dynamic.equation import Equation
 
 
 class DynamicModel(EditableDevice):
@@ -22,184 +22,50 @@ class DynamicModel(EditableDevice):
                          code="",
                          device_type=DeviceType.DynModel, )
 
-        # connexion status
-        self.u: List[int] = list()
+        self._algebraic_var_input: List[Var] = list()
+        self._state_var_input: List[Var] = list()
 
-        self.comp_name: List[str] = list()
-        self.comp_code: List[int] = list()
+        self._algebraic_var_output: List[Var] = list()
+        self._state_var_output: List[Var] = list()
 
-        self.idx_dyn_param: Dict[str, IdxDynParam] = dict()
-        self.num_dyn_param: Dict[str, NumDynParam] = dict()
-        self.ext_dyn_param: Dict[str, ExtDynParam] = dict()
-
-        self.stat_var: Dict[str, StatVar] = dict()
-        self.algeb_var: Dict[str, AlgebVar] = dict()
-        self.input_state_var: Dict[str, InputState] = dict()
-        self.input_algeb_var: Dict[str, InputAlgeb] = dict()
-        self.output_state_var: Dict[str, OutputState] = dict()
-        self.output_algeb_var: Dict[str, OutputAlgeb] = dict()
+        self._algebraic_equations: List[Equation] = list()
+        self._state_equations: List[Equation] = list()
 
     @property
-    def idtag(self):
-        return self._idtag
-
-    @idtag.setter
-    def idtag(self, val: str):
-        self._idtag = val
-
-    def get_var_num(self) -> int:
-        """
-        Get the number of variables
-        :return:
-        """
-        return len(self.stat_var) + len(self.algeb_var) + len(self.input_state_var) + len(self.input_algeb_var) + len(self.output_state_var) + len(self.output_algeb_var)
+    def n_input(self):
+        return len(self._algebraic_var_input) + len(self._state_var_input)
 
     @property
-    def is_empty(self) -> bool:
-        return self.get_var_num() == 0
+    def n_output(self):
+        return len(self._algebraic_var_output) + len(self._state_var_output)
 
-    def to_dict(self) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Get a dictionary representation of this object
-        :return: Dictionary
-        """
-        return {
-            "idtag": self.idtag,
-            "idx_dyn_param": [e.to_dict() for _, e in self.idx_dyn_param.items()],
-            "num_dyn_param": [e.to_dict() for _, e in self.num_dyn_param.items()],
-            "ext_dyn_param": [e.to_dict() for _, e in self.ext_dyn_param.items()],
-            "stat_var": [e.to_dict() for _, e in self.stat_var.items()],
-            "algeb_var": [e.to_dict() for _, e in self.algeb_var.items()],
-            "input_state_var": [e.to_dict() for _, e in self.input_state_var.items()],
-            "input_algeb_var": [e.to_dict() for _, e in self.input_algeb_var.items()],
-            "output_state_var": [e.to_dict() for _, e in self.output_state_var.items()],
-            "output_algeb_var": [e.to_dict() for _, e in self.output_algeb_var.items()],
 
-            "u": self.u,
+class Sum(DynamicModel):
 
-            "comp_name": self.comp_name,
-            "comp_code": self.comp_code
-        }
+    def __init__(self, name: str, A: Var, B: Var):
+        super().__init__(name, None)
 
-    def parse(self, data: Dict[str, List[Dict[str, Any]]] | List[int] | List[str]):
-        """
-        Parse the dictionary representation of this object
-        :param data:
-        :return:
-        """
-        self.name: str = data["name"]
-        self.idtag: str = data["idtag"]
+        self.out = Var("C_" + name)
+        eq = Equation(self.out, A.symbol + B.symbol)
 
-        # connexion status
-        self.u: List[int] = data["u"]
-        self.comp_name: List[str] = data["comp_name"]
-        self.comp_code: List[int] = data["comp_code"]
+        self._algebraic_var_input = [A, B]
+        self._algebraic_var_output = [self.out]
+        self._algebraic_equations = [eq]
 
-        self.idx_dyn_param.clear()
-        for elm in data["idx_dyn_param"]:
-            obj = IdxDynParam()
-            obj.parse(data=elm)
-            self.add_idx_dyn_param(obj)
+if __name__ == "__main__":
+    # model Suma 1
+    # suma1 = DynamicModel(name="Suma 1")
+    # A = Var("A")
+    # B = Var("B")
+    # C = Var("C")
+    # eq1 = Equation(C, A.symbol + B.symbol)
 
-        self.num_dyn_param.clear()
-        for elm in data["num_dyn_param"]:
-            obj = NumDynParam()
-            obj.parse(data=elm)
-            self.add_num_dyn_param(obj)
+    A_ = Var("A")
+    B_ = Var("B")
 
-        self.ext_dyn_param.clear()
-        for elm in data["ext_dyn_param"]:
-            obj = ExtDynParam()
-            obj.parse(data=elm)
-            self.add_ext_dyn_param(obj)
+    suma1 = Sum(name="Suma 1", A=A_, B=B_)
 
-        self.stat_var.clear()
-        for elm in data["stat_var"]:
-            obj = StatVar()
-            obj.parse(data=elm)
-            self.add_stat_var(obj)
+    suma2 = Sum(name="Suma 2", A=suma1.out, B=B_)
 
-        self.algeb_var.clear()
-        for elm in data["algeb_var"]:
-            obj = AlgebVar()
-            obj.parse(data=elm)
-            self.add_algeb_var(obj)
-
-        self.input_state_var.clear()
-        for elm in data["input_state_var"]:
-            obj = InputState()
-            obj.parse(data=elm)
-            self.add_input_state_var(obj)
-
-        self.input_algeb_var.clear()
-        for elm in data["input_algeb_var"]:
-            obj = InputAlgeb()
-            obj.parse(data=elm)
-            self.add_input_algeb_var(obj)
-
-        self.output_state_var.clear()
-        for elm in data["output_state_var"]:
-            obj = OutputState()
-            obj.parse(data=elm)
-            self.add_output_state_var(obj)
-
-        self.output_algeb_var.clear()
-        for elm in data["output_algeb_var"]:
-            obj = OutputAlgeb()
-            obj.parse(data=elm)
-            self.add_output_algeb_var(obj)
-
-    def add_idx_dyn_param(self, val: IdxDynParam):
-        self.idx_dyn_param[val.name] = val
-
-    def add_num_dyn_param(self, val: NumDynParam):
-        self.num_dyn_param[val.name] = val
-
-    def add_ext_dyn_param(self, val: ExtDynParam):
-        self.ext_dyn_param[val.name] = val
-
-    def add_stat_var(self, val: StatVar):
-        self.stat_var[val.name] = val
-
-    def add_algeb_var(self, val: AlgebVar):
-        self.algeb_var[val.name] = val
-
-    def add_input_state_var(self, val: InputState):
-        self.input_state_var[val.name] = val
-
-    def add_input_algeb_var(self, val: InputAlgeb):
-        self.input_algeb_var[val.name] = val
-
-    def add_output_state_var(self, val: OutputState):
-        self.output_state_var[val.name] = val
-
-    def add_output_algeb_var(self, val: OutputAlgeb):
-        self.output_algeb_var[val.name] = val
-
-    def get_idx_dyn_param(self, val: str):
-        return self.idx_dyn_param[val]
-
-    def get_num_dyn_param(self, val: str):
-        return self.num_dyn_param[val]
-
-    def get_ext_dyn_param(self, val: str):
-        return self.ext_dyn_param[val]
-
-    def get_stat_var(self, val: str):
-        return self.stat_var[val]
-
-    def get_algeb_var(self, val: str):
-        return self.algeb_var[val]
-
-    def get_input_state_var(self, val: str):
-        return self.input_state_var[val]
-
-    def get_input_algeb_var(self, val: str):
-        return self.input_algeb_var[val]
-
-    def get_output_state_var(self, val: str):
-        return self.output_state_var[val]
-
-    def get_output_algeb_var(self, val: str):
-        return self.output_algeb_var[val]
-
+    print(suma1._algebraic_equations[0])
+    print(suma2._algebraic_equations[0])

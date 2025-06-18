@@ -28,11 +28,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Build jacobian second part">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/problems/rms_problem.py" afterDir="false" />
-    </list>
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="some types" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -78,12 +74,6 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;mrosesgh&quot;
-  }
-}</component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
       <filtered-out-file-type name="LOCAL_BRANCH" />
@@ -92,12 +82,6 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/SanPen/GridCal.git&quot;,
-    &quot;accountId&quot;: &quot;3b6d5ff4-45d3-4f35-aebb-c26a8c4be222&quot;
-  }
-}</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/requirements.txt" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/GridCal/Gui/ConsoleWidget.py" root0="FORCE_HIGHLIGHTING" />
@@ -244,14 +228,13 @@
     &quot;Python.reliability_driver.executor&quot;: &quot;Run&quot;,
     &quot;Python.reliability_study_run.executor&quot;: &quot;Run&quot;,
     &quot;Python.rms_model_editor_dialogue.executor&quot;: &quot;Run&quot;,
-    &quot;Python.rms_problem.executor&quot;: &quot;Debug&quot;,
     &quot;Python.round_trip.executor&quot;: &quot;Run&quot;,
     &quot;Python.run.executor&quot;: &quot;Debug&quot;,
     &quot;Python.run_child_1.executor&quot;: &quot;Run&quot;,
     &quot;Python.run_contingencies_ts.executor&quot;: &quot;Run&quot;,
     &quot;Python.run_master.executor&quot;: &quot;Run&quot;,
     &quot;Python.run_server_farm.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.scripting_por_obj.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.scripting_por_obj.executor&quot;: &quot;Run&quot;,
     &quot;Python.scripting_por_obj2.executor&quot;: &quot;Run&quot;,
     &quot;Python.server_example.executor&quot;: &quot;Run&quot;,
     &quot;Python.short_circuit_driver.executor&quot;: &quot;Run&quot;,
@@ -309,7 +292,7 @@
       <recent name="$PROJECT_DIR$/src/tests/data/grids" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.test_gslv_conversion">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -371,15 +354,6 @@
       <option name="CUSTOM_SETTINGS" value="false" />
       <option name="USE_OPTIONS" value="false" />
       <option name="OPTIONS" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="MatlabApplication">
-      <option name="FILE_PATH" value="" />
-      <option name="INTERPRETER_PATH" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="PARAMETERS" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="MatlabApplication">
@@ -711,6 +685,15 @@
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="MatlabApplication">
+      <option name="FILE_PATH" value="" />
+      <option name="INTERPRETER_PATH" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="PARAMETERS" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
       <method v="2" />
     </configuration>
     <configuration name="ExecuteGridCal" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -2400,7 +2383,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="759" />
+    <option name="localTasksCounter" value="753" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2446,6 +2429,12 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <MESSAGE value="Worked on the `fast_dispatch_with_renewables` function" />
+    <MESSAGE value="refactored fast_dispatch_with_renewables" />
+    <MESSAGE value="more work on reliability" />
+    <MESSAGE value="Integrated reliability study" />
+    <MESSAGE value="Migrated Investment to inherit from PointerDevice" />
+    <MESSAGE value="Migrated Contingency and RemedialAction to inherit from PointerDevice" />
     <MESSAGE value="Removed the unused topology driver logic" />
     <MESSAGE value="Fixed date editing" />
     <MESSAGE value="Fixed issue with dates and colors" />
@@ -2465,13 +2454,7 @@
     <MESSAGE value="Refactor in progress" />
     <MESSAGE value="Improved file saving" />
     <MESSAGE value="some types" />
-    <MESSAGE value="addresses with pointers" />
-    <MESSAGE value="build conservation equations in buses" />
-    <MESSAGE value="build conservation equations in buses 2" />
-    <MESSAGE value="build variables array" />
-    <MESSAGE value="Build jacobian first part" />
-    <MESSAGE value="Build jacobian second part" />
-    <option name="LAST_COMMIT_MESSAGE" value="Build jacobian second part" />
+    <option name="LAST_COMMIT_MESSAGE" value="some types" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2771,11 +2754,6 @@
           <option name="timeStamp" value="2596" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Devices/Branches/transformer.py</url>
-          <line>439</line>
-          <option name="timeStamp" value="2598" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_generalized_formulation.py</url>
           <line>1186</line>
           <option name="timeStamp" value="2599" />
@@ -3022,109 +3000,14 @@
           <option name="timeStamp" value="2789" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>469</line>
-          <option name="timeStamp" value="2800" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>53</line>
-          <option name="timeStamp" value="2803" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>54</line>
-          <option name="timeStamp" value="2804" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>59</line>
-          <option name="timeStamp" value="2805" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>60</line>
-          <option name="timeStamp" value="2806" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>109</line>
-          <option name="timeStamp" value="2807" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>110</line>
-          <option name="timeStamp" value="2808" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>107</line>
-          <option name="timeStamp" value="2809" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>108</line>
-          <option name="timeStamp" value="2810" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>113</line>
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py</url>
+          <line>55</line>
           <option name="timeStamp" value="2811" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>114</line>
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/rms_driver.py</url>
+          <line>57</line>
           <option name="timeStamp" value="2812" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>111</line>
-          <option name="timeStamp" value="2813" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>112</line>
-          <option name="timeStamp" value="2814" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>56</line>
-          <option name="timeStamp" value="2815" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>58</line>
-          <option name="timeStamp" value="2816" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>121</line>
-          <option name="timeStamp" value="2817" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>122</line>
-          <option name="timeStamp" value="2818" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>73</line>
-          <option name="timeStamp" value="2819" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>74</line>
-          <option name="timeStamp" value="2820" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>119</line>
-          <option name="timeStamp" value="2821" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/Rms/model/rms_model_store.py</url>
-          <line>120</line>
-          <option name="timeStamp" value="2822" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -3136,8 +3019,6 @@
         <watch expression="t" />
         <watch expression="lole" />
         <watch expression="np.sum(load_not_supplied)" />
-        <watch expression="grid.loads[0].rms_model.model.comp_name" />
-        <watch expression="grid" />
       </configuration>
     </watches-manager>
   </component>
