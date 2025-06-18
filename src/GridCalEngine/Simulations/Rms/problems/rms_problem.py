@@ -283,9 +283,10 @@ def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Ve
         a_stat = b_stat
 
         b_algeb += len(c_model.y0)
-        pdb.set_trace()
         y0[a_algeb:b_algeb] = c_model.y0
         a_algeb = b_algeb
+    x0 = np.ones(2)
+    y0 = np.ones(21)
 
     return compiled_models, x0, y0, Tf, n_stat, n_algeb
 
@@ -545,7 +546,6 @@ class RmsProblem:
                                                          device.g_output_order)
             for index, val in pairs:
                 self.add_to_f_g(self.g, index, val)
-            pdb.set_trace()
 
             ### Jacobian update
             # get local jacobians info and values
@@ -671,8 +671,9 @@ class RmsProblem:
             for j, (func_index, var_index) in enumerate(positions):
                 equation_str = sym.sympify(equations[j])
                 val = local_jacobian[i][func_index][var_index]
-                address_func = self.variables_ordered.index(device.eqs_list[func_index])
-                address_var = self.variables_ordered.index(device.eqs_list[var_index])
+                pdb.set_trace()
+                address_func = self.variables_ordered.index(device.vars_index[func_index])
+                address_var = self.variables_ordered.index(device.vars_index[var_index])
                 outputs_order_triplets[i][j] = (address_func, address_var)
                 triplets.append((address_func, address_var, val, equation_str))
 
@@ -699,17 +700,17 @@ class RmsProblem:
         :param value: Value to insert or accumulate at (row, col)
         :return:
         """
-        in_positions = [row, col] in jac_positions.tolist()
-        if in_positions:
-            index = jac_positions.tolist().index([row, col])
-            jac_values[index] += value
-            jac_equations[index] = jac_equations[index] + equ
-        else:
-            index = np.where(jac_positions == 0)[0]
-            jac_positions[index[0]] = [row, col]
-            jac_values[index[0]] = value
-            jac_equations[index[0]] = equ
-            sparsity_set[index[0]] = [row, col]  # Store pattern
+        # in_positions = [row, col] in jac_positions.tolist()
+        # if in_positions:
+        #     index = jac_positions.tolist().index([row, col])
+        #     jac_values[index] += value
+        #     jac_equations[index] = jac_equations[index] + equ
+        # else:
+        index = np.where(jac_positions == 0)[0]
+        jac_positions[index[0]] = [row, col]
+        jac_values[index[0]] = value
+        jac_equations[index[0]] = equ
+        sparsity_set[index[0]] = [row, col]  # Store pattern
 
     def finalize_jacobians_init(self):
         """
@@ -789,6 +790,7 @@ class RmsProblem:
             values = jac_values.tolist()
             equations = jac_equations.tolist()
             for i in range(len(sparsity_set)):
+                pdb.set_trace()
                 sparsity_set[i][0] = sparsity_set[i][0] - self.nx
                 sparsity_set[i][1] = sparsity_set[i][1] - self.nx
             if len(sparsity_set) != 0:

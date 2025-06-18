@@ -51,12 +51,14 @@ class RmsModelStore:
 
         # list containing all the symbols of the variables in the model (used in f, g, and jacobian calculation)
         self.variables_list = list()  # list of all the variables (including external)
+        self.int_out_stat = list() #internal and output state variables
+        self.int_out_algeb = list() #internal and output algeb variables
         self.state_eqs = list()
-        self.state_vars = list()
+        self.state_vars = list() # internal, output and input state variables
         self.algeb_eqs = list()
-        self.algeb_vars = list()
-        self.input_state_eqs = list()
-        self.input_algeb_eqs = list()
+        self.algeb_vars = list() # internal, output and input algeb variables
+        self.input_state_eqs = list() # input state
+        self.input_algeb_eqs = list() # input algeb
         self.eqs_list = list()  # list of all the variables with an equation
         self.vars_list = list()  # list of all the variables
         self.real_state_vars = list()
@@ -140,71 +142,82 @@ class RmsModelStore:
         index = 0
 
         for i, (key, elem) in enumerate(dynamic_model.stat_var.items()):
+            self.int_out_stat.append(elem)
+            self.state_vars.append(elem)
             self.real_state_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
-            self.vars_index[index] = elem.name
+            if self.name != "Bus":
+                self.vars_index[index] = elem.name
+                index += 1
 
             self.x0[i] = elem.init_val
             self.t_const0[i] = elem.t_const
 
-            index += 1
+
             self.nx += 1
 
 
             if elem.eq is not None:
                 self.state_eqs.append(elem)
                 self.eqs_list.append(elem.name)
-            self.state_vars.append(elem)
             self.vars_list.append(elem.name)
             self.internal_vars.append(elem.name)
 
         for i, (key, elem) in enumerate(dynamic_model.algeb_var.items()):
+            self.int_out_algeb.append(elem)
+            self.algeb_vars.append(elem)
             self.real_algeb_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
-            self.vars_index[index] = elem.name
-
+            if self.name != "Bus":
+                self.vars_index[index] = elem.name
+                index += 1
 
             self.y0[i] = elem.init_val
 
-            index += 1
+
             self.ny += 1
 
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
                 self.eqs_list.append(elem.name)
-            self.algeb_vars.append(elem)
             self.vars_list.append(elem.name)
             self.internal_vars.append(elem.name)
 
         for key, elem in dynamic_model.input_state_var.items():
+            self.input_state_eqs.append(elem)
+            self.state_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
-            self.vars_index[index] = elem.name
-            index += 1
+            if self.name == "Bus":
+                self.vars_index[index] = elem.name
+
+                index += 1
 
             if elem.eq is not None:
-                self.input_state_eqs.append(elem)
                 self.eqs_list.append(elem.name)
-            self.state_vars.append(elem)
             self.vars_list.append(elem.name)
             self.input_vars.append(elem)
 
         for key, elem in dynamic_model.input_algeb_var.items():
+            self.input_algeb_eqs.append(elem)
+            self.algeb_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
-            self.vars_index[index] = elem.name
-            index += 1
+            if self.name == "Bus":
+                self.vars_index[index] = elem.name
+                index += 1
 
             if elem.eq is not None:
-                self.input_algeb_eqs.append(elem)
+
                 self.eqs_list.append(elem.name)
-            self.algeb_vars.append(elem)
             self.vars_list.append(elem.name)
             self.input_vars.append(elem)
 
         for key, elem in dynamic_model.output_state_var.items():
+            self.int_out_stat.append(elem)
+            self.state_vars.append(elem)
             self.real_state_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
@@ -214,11 +227,13 @@ class RmsModelStore:
             if elem.eq is not None:
                 self.state_eqs.append(elem)
                 self.eqs_list.append(elem.name)
-            self.state_vars.append(elem)
+
             self.vars_list.append(elem.name)
             self.output_vars.append(elem)
 
         for key, elem in dynamic_model.output_algeb_var.items():
+            self.int_out_algeb.append(elem)
+            self.algeb_vars.append(elem)
             self.real_algeb_vars.append(elem)
             self.variables.append(elem)
             self.variables_list.append(elem.name)
@@ -228,7 +243,7 @@ class RmsModelStore:
             if elem.eq is not None:
                 self.algeb_eqs.append(elem)
                 self.eqs_list.append(elem.name)
-            self.algeb_vars.append(elem)
+
             self.vars_list.append(elem.name)
             self.output_vars.append(elem)
 
@@ -268,7 +283,6 @@ class RmsModelStore:
         Converts model variables into symbolic expressions.
         :return:
         """
-        # Define symbolic variables
         self.sym_state_vars = [sym.Symbol(v.name) for v in self.state_vars]
         self.sym_algeb_vars = [sym.Symbol(v.name) for v in self.algeb_vars]
 
@@ -283,7 +297,7 @@ class RmsModelStore:
             - Creates lambdified numerical functions for f and g
         :return:
         """
-        variables_f_g = [self.state_eqs, self.algeb_eqs]
+        variables_f_g = [self.int_out_stat, self.int_out_algeb]
         input_variables_f_g = [self.input_state_eqs, self.input_algeb_eqs]
         equations_f_g = [self.f_list, self.g_list]
         equation_type = ['f', 'g']
