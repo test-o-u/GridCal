@@ -124,13 +124,13 @@ def build_connections_and_conservation_eqs(grid: MultiCircuit):
             connection_bus_rms_model.stat_var[state_var.name] = state_var
             for input_var in connection_bus_rms_model.input_state_var.values():
                 if state_var.symbol == input_var.symbol:
-                    input_var.eq = build_eq(input_var.eq, state_var.name)
+                    input_var.equality = build_eq(input_var.equality, state_var.name)
 
         for algeb_var in model.output_algeb_var.values():
             connection_bus_rms_model.algeb_var[algeb_var.name] = algeb_var
             for input_var in connection_bus_rms_model.input_algeb_var.values():
                 if algeb_var.symbol == input_var.symbol:
-                    input_var.eq = build_eq(input_var.eq, algeb_var.name)
+                    input_var.equality = build_eq(input_var.equality, algeb_var.name)
 
     for k, elm in enumerate(grid.get_branches_iter(add_vsc=True, add_hvdc=True, add_switch=True)):
 
@@ -144,14 +144,14 @@ def build_connections_and_conservation_eqs(grid: MultiCircuit):
                 bus_from.stat_var[state_var.name] = state_var
                 for input_var in bus_from.input_state_var.values():
                     if state_var.symbol == input_var.symbol:
-                         input_var.eq = build_eq(input_var.eq, state_var.name)
+                         input_var.equality = build_eq(input_var.equality, state_var.name)
 
             else:
                 bus_to = elm.bus_to.rms_model.model
                 bus_to.stat_var[state_var.name] = state_var
                 for input_var in bus_to.input_state_var.values():
                     if state_var.symbol == input_var.symbol:
-                            input_var.eq = build_eq(input_var.eq, state_var.name)
+                            input_var.equality = build_eq(input_var.equality, state_var.name)
 
         for algeb_var in model.output_algeb_var.values():
             if algeb_var.indexer == "bus_from":
@@ -159,14 +159,14 @@ def build_connections_and_conservation_eqs(grid: MultiCircuit):
                 bus_from.algeb_var[algeb_var.name] = algeb_var
                 for input_var in bus_from.input_algeb_var.values():
                     if algeb_var.symbol == input_var.symbol:
-                        input_var.eq = build_eq(input_var.eq, algeb_var.name)
+                        input_var.equality = build_eq(input_var.equality, algeb_var.name)
 
             else:
                 bus_to = elm.bus_to.rms_model.model
                 bus_to.algeb_var[algeb_var.name] = algeb_var
                 for input_var in bus_to.input_algeb_var.values():
                     if algeb_var.symbol == input_var.symbol:
-                        input_var.eq = build_eq(input_var.eq, algeb_var.name)
+                        input_var.equality = build_eq(input_var.equality, algeb_var.name)
 
 
 def compile_rms_models(grid: MultiCircuit) -> Tuple[List[RmsModelStore], Vec, Vec, Vec, int, int]:

@@ -158,7 +158,7 @@ class RmsModelStore:
             self.nx += 1
 
 
-            if elem.eq is not None:
+            if elem.equality is not None:
                 self.state_eqs.append(elem)
                 self.eqs_list.append(elem.name)
             self.vars_list.append(elem.name)
@@ -179,7 +179,7 @@ class RmsModelStore:
 
             self.ny += 1
 
-            if elem.eq is not None:
+            if elem.equality is not None:
                 self.algeb_eqs.append(elem)
                 self.eqs_list.append(elem.name)
             self.vars_list.append(elem.name)
@@ -195,7 +195,7 @@ class RmsModelStore:
 
                 index += 1
 
-            if elem.eq is not None:
+            if elem.equality is not None:
                 self.eqs_list.append(elem.name)
             self.vars_list.append(elem.name)
             self.input_vars.append(elem)
@@ -209,7 +209,7 @@ class RmsModelStore:
                 self.vars_index[index] = elem.name
                 index += 1
 
-            if elem.eq is not None:
+            if elem.equality is not None:
 
                 self.eqs_list.append(elem.name)
             self.vars_list.append(elem.name)
@@ -224,7 +224,7 @@ class RmsModelStore:
             self.vars_index[index] = elem.name
             index += 1
 
-            if elem.eq is not None:
+            if elem.equality is not None:
                 self.state_eqs.append(elem)
                 self.eqs_list.append(elem.name)
 
@@ -240,7 +240,7 @@ class RmsModelStore:
             self.vars_index[index] = elem.name
             index += 1
 
-            if elem.eq is not None:
+            if elem.equality is not None:
                 self.algeb_eqs.append(elem)
                 self.eqs_list.append(elem.name)
 
@@ -314,9 +314,9 @@ class RmsModelStore:
             symbolic_vars = []
             for var in variables:
 
-                if var.eq:
+                if var.equality:
                     variables_names_for_ordering.append(var.name)
-                    symbolic_expr = sym.sympify(var.eq)
+                    symbolic_expr = sym.sympify(var.equality)
                     symbols_in_eq = symbolic_expr.free_symbols
 
                     symbolic_eqs.append(symbolic_expr)

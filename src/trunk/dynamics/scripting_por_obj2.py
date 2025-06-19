@@ -16,7 +16,7 @@ from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver
 
 # grid data, this data will be automatically generated when the user builds the grid.
 
-#instantiate the grid
+# instantiate the grid
 grid = gce.MultiCircuit(idtag="d3bacc4e2684432991bb3533eff0c453")
 
 # Add the buses, the generators and loads attached and lines
@@ -80,23 +80,27 @@ branch_data = {
     'state_var_output': [],
 
     'algebraic_equations': [
-    {
-        'output': Var(name='P_origin'),
-        'eq': smb.sympify('(Q_origin ** 2 * g  - Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))')
-    },
-    {
-        'output': Var(name='Q_origin'),
-        'eq': smb.sympify('(- Q_origin ** 2 * (b + bsh / 2) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end)))')
-    },
-    {
-        'output': Var(name='P_end'),
-        'eq': smb.sympify('(Q_end ** 2 * g  - Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))')
-    },
-    {
-        'output': Var(name='Q_end'),
-        'eq': smb.sympify('(- Q_end ** 2 * (b + bsh / 2) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin)))')
-    }
-],
+        {
+            'output': Var(name='P_origin'),
+            'eq': smb.sympify(
+                '(Q_origin ** 2 * g  - Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))')
+        },
+        {
+            'output': Var(name='Q_origin'),
+            'eq': smb.sympify(
+                '(- Q_origin ** 2 * (b + bsh / 2) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end)))')
+        },
+        {
+            'output': Var(name='P_end'),
+            'eq': smb.sympify(
+                '(Q_end ** 2 * g  - Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))')
+        },
+        {
+            'output': Var(name='Q_end'),
+            'eq': smb.sympify(
+                '(- Q_end ** 2 * (b + bsh / 2) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin)))')
+        }
+    ],
     'state_equations': [],
     'state_var_output': []
 }
@@ -114,23 +118,23 @@ slack_gen_data = {
     ],
     'state_var_output': [],
     'algebraic_equations': [
-    {
-        'output': Var(name='p'),
-        'eq': smb.sympify('(-p)')
-    },
-    {
-        'output': Var(name='q'),
-        'eq': smb.sympify('(-q)')
-    },
-    {
-        'output': Var(name='P_e_slack'),
-        'eq': smb.sympify('p0-p + pmin-P_e_slack + pmax-P_e_slack')
-    },
-    {
-        'output': Var(name='Q_e_slack'),
-        'eq': smb.sympify('q0-q + qmin-Q_e_slack + qmax-Q_e_slack')
-    }
-],
+        {
+            'output': Var(name='p'),
+            'eq': smb.sympify('(-p)')
+        },
+        {
+            'output': Var(name='q'),
+            'eq': smb.sympify('(-q)')
+        },
+        {
+            'output': Var(name='P_e_slack'),
+            'eq': smb.sympify('p0-p + pmin-P_e_slack + pmax-P_e_slack')
+        },
+        {
+            'output': Var(name='Q_e_slack'),
+            'eq': smb.sympify('q0-q + qmin-Q_e_slack + qmax-Q_e_slack')
+        }
+    ],
     'state_equations': []
 }
 
@@ -145,16 +149,17 @@ load_data = {
     ],
     'state_var_output': [],
     'algebraic_equations': [
-    {
-        'output': Var(name='Pl'),
-        'eq': smb.sympify('Pl0 * Ql ** coeff_alfa')
-    },
-    {
-        'output': Var(name='Ql'),
-        'eq': smb.sympify('Ql0 * Ql ** coeff_beta')
-    }
-],
-    'state_equations': []}
+        {
+            'output': Var(name='Pl'),
+            'eq': smb.sympify('Pl0 * Ql ** coeff_alfa')
+        },
+        {
+            'output': Var(name='Ql'),
+            'eq': smb.sympify('Ql0 * Ql ** coeff_beta')
+        }
+    ],
+    'state_equations': []
+}
 
 bus1_model = gce.DynamicModel()
 bus1_model.parse(bus1_data)
@@ -162,20 +167,16 @@ bus1_model.parse(bus1_data)
 bus2_model = gce.DynamicModel()
 bus2_model.parse(bus2_data)
 
-
 branch_model = gce.DynamicModel()
 branch_model.parse(branch_data)
 
-
 slack_gen_model = gce.DynamicModel()
 slack_gen_model.parse(slack_gen_data)
-
 
 load_model = gce.DynamicModel()
 load_model.parse(load_data)
 
 np.set_printoptions(precision=4)
-
 
 grid.add_rms_model(bus1_model)
 grid.add_rms_model(bus2_model)
@@ -249,21 +250,15 @@ gen2_rms_model.add_algebraic_equations(Equation(Var("Qg"), v_q * i_d + v_d * i_q
 
 grid.add_rms_model(gen2_rms_model)
 
-
-#Assign the dynamic RMS models
+# Assign the dynamic RMS models
 bus1.rms_model.template = bus1_model
 bus2.rms_model.template = bus2_model
 line1.rms_model.template = branch_model
-#gen1.rms_model.template = slack_gen_model
+# gen1.rms_model.template = slack_gen_model
 gen2.rms_model.template = gen2_rms_model
 Load1.rms_model.template = load_model
 
 pdb.set_trace()
-
-
-
-
-
 
 rms_options = gce.RmsOptions()
 Dynamic_simulation = RmsSimulationDriver(grid=grid, options=rms_options)

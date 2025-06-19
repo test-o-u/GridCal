@@ -124,7 +124,7 @@ class DynamicModelTemplate(EditableDevice):
 
             if isinstance(elem, StatVar):
                 self.nx += 1
-                if elem.eq != None:
+                if elem.equality != None:
                     self.state_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
@@ -133,7 +133,7 @@ class DynamicModelTemplate(EditableDevice):
 
             if isinstance(elem, AlgebVar):
                 self.ny += 1
-                if elem.eq != None:
+                if elem.equality != None:
                     self.algeb_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)
@@ -141,7 +141,7 @@ class DynamicModelTemplate(EditableDevice):
                 self.internal_vars.append(elem.symbol)
 
             if isinstance(elem, InputState):
-                if elem.eq != None:
+                if elem.equality != None:
                     self.state_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)
                 self.state_vars.append(elem)
@@ -149,7 +149,7 @@ class DynamicModelTemplate(EditableDevice):
                 self.external_vars.append(elem)
 
             if isinstance(elem, InputAlgeb):
-                if elem.eq != None:
+                if elem.equality != None:
                     self.algeb_eqs.append(elem)
                     self.eqs_list.append(elem.symbol)
                 self.algeb_vars.append(elem)

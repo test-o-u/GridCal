@@ -104,9 +104,9 @@ class SymProcess:
             symbolic_eqs = []
             symbolic_vars = []
             for var in variables:
-                if var.eq:
+                if var.equality:
                     variables_names_for_ordering.append(var.name)
-                    symbolic_expr = sp.sympify(var.eq)
+                    symbolic_expr = sp.sympify(var.equality)
                     symbols_in_eq = symbolic_expr.free_symbols
 
                     symbolic_eqs.append(symbolic_expr)
