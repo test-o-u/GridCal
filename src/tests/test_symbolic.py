@@ -1,9 +1,6 @@
 from __future__ import annotations
 import json
-import math
 import pytest
-
-
 import math
 from types import MappingProxyType
 from typing import Any, Callable, Dict
@@ -224,3 +221,22 @@ def test_frozen_dataclass_immutable():
     c = sym.Const(1)
     with pytest.raises(AttributeError):
         c.value = 2  # type: ignore[attr-defined]
+
+
+# -----------------------------------------------------------------------------
+# 10. numba compilation
+# -----------------------------------------------------------------------------
+
+def test_numba_compilation_1():
+    x, y, x2 = sym.Var("x"), sym.Var("y"), sym.Var("x")
+    expr = sym.sin(x) * sym.exp(y) + x2 ** 2
+
+    f_fast = sym.compile_numba(expr, ordering=[x, y, x2])
+
+    # Argument order is in the docstring:
+    # print(f_fast.__doc__)  → "Positional order: v0 → x, v1 → y, v2 → x"
+    val= f_fast(1.0, 2.0, 3.0)  # x=1, y=2, x2=3
+
+    val_test = math.sin(1.0) * math.exp(2.0) + 3**2
+
+    assert val == val_test
