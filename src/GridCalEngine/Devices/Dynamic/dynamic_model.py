@@ -133,11 +133,11 @@ class Sum(DynamicModel):
         super().__init__(name, None)
 
         self.out = Var("C_" + name)
-        eq = Equation(self.out, A.symbol + B.symbol)
+        # eq = Equation(self.out, A.symbol + B.symbol)
 
         self._algebraic_var_input = [A, B]
         self._algebraic_var_output = [self.out]
-        self._algebraic_equations = [eq]
+        self._algebraic_equations = [f"{self.out.name}={A.name}+{B.name}"]
 
 
 if __name__ == "__main__":
