@@ -10,8 +10,8 @@ import time
 import logging
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
-from GridCalEngine.Devices.Dynamic.dyn_param import NumDynParam, IdxDynParam, ExtDynParam
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
+from GridCalEngine.Devices.Dynamic.variable import Var
+from GridCalEngine.Devices.Dynamic.equation import Equation
 
 
 class RmsModelsCompiler:

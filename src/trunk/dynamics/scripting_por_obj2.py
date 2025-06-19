@@ -2,20 +2,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+import pdb
+
 import matplotlib.pyplot as plt
 import numpy as np
+import sympy as smb
 from sympy import symbols, pi, sin, cos, Symbol
 
 import GridCalEngine as gce
 from GridCalEngine.Devices.Dynamic.variable import Var
 from GridCalEngine.Devices.Dynamic.equation import Equation
-
 from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver
 
 # grid data, this data will be automatically generated when the user builds the grid.
 
+#instantiate the grid
 grid = gce.MultiCircuit(idtag="d3bacc4e2684432991bb3533eff0c453")
-# Add the buses and the generators and loads attached
+
+# Add the buses, the generators and loads attached and lines
 bus1 = gce.Bus('Bus 1', Vnom=20)
 grid.add_bus(bus1)
 
@@ -26,16 +30,20 @@ grid.add_bus(bus2)
 line1 = gce.Line(bus_from=bus1, bus_to=bus2, name='line 1-2', r=0.05, x=0.11, b=0.02)
 grid.add_line(line1)
 
+# add generators
 # gen1 = gce.StaticGenerator(name="slack_gen_1", P=4.0, Q=2)
 # grid.add_static_generator(bus=bus1, api_obj=gen1)
 
 gen2 = gce.Generator('Sync Generator', vset=1.0)
 grid.add_generator(bus1, api_obj=gen2)
 
+# add loads
 Load1 = gce.Load('load_1', P=40, Q=20)
 grid.add_load(bus2, api_obj=Load1)
 
-# ----------------------------------------------------------------------------------------------------------------------
+# Now the grid is built with the elements attached and we need to add the dynamic model to each element
+
+# Data to parse for building dynamic models ----------------------------------------------------------------------------------------------------------------------
 bus1_data = {
     "name": "Bus",
     "idtag": "46afa8ba9d9d4f769296a972e23facfb",
@@ -58,12 +66,6 @@ bus2_data = {
     "algebraic_var_input": [{"name": "p2"},
                             {"name": "q2"}]}
 
-bus1_model = gce.DynamicModel()
-bus1_model.parse(bus1_data)
-
-bus2_model = gce.DynamicModel()
-bus2_model.parse(bus2_data)
-
 branch_data = {
     'name': 'ACLine',
     'idtag': 'd9e581da5fcc4fbdb9e44e57c412bed5',
@@ -76,29 +78,28 @@ branch_data = {
         {'name': 'Q_end'}
     ],
     'state_var_output': [],
+
     'algebraic_equations': [
-        {
-            'output': {'name': 'P_origin'},
-            'eq': '(Q_origin ** 2 * g  - Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))'
-        },
-        {
-            'output': {'name': 'Q_origin'},
-            'eq': '(- Q_origin ** 2 * (b + bsh / 2) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end)))'
-        },
-        {
-            'output': {'name': 'P_end'},
-            'eq': '(Q_end ** 2 * g  - Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))'
-        },
-        {
-            'output': {'name': 'Q_end'},
-            'eq': '(- Q_end ** 2 * (b + bsh / 2) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin)))'
-        }
-    ],
+    {
+        'output': Var(name='P_origin'),
+        'eq': smb.sympify('(Q_origin ** 2 * g  - Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))')
+    },
+    {
+        'output': Var(name='Q_origin'),
+        'eq': smb.sympify('(- Q_origin ** 2 * (b + bsh / 2) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end)))')
+    },
+    {
+        'output': Var(name='P_end'),
+        'eq': smb.sympify('(Q_end ** 2 * g  - Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))')
+    },
+    {
+        'output': Var(name='Q_end'),
+        'eq': smb.sympify('(- Q_end ** 2 * (b + bsh / 2) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin)))')
+    }
+],
     'state_equations': [],
     'state_var_output': []
 }
-branch_model = gce.DynamicModel()
-branch_model.parse(branch_data)
 
 slack_gen_data = {
     'name': 'Slack',
@@ -113,27 +114,25 @@ slack_gen_data = {
     ],
     'state_var_output': [],
     'algebraic_equations': [
-        {
-            'output': {'name': 'p'},
-            'eq': '(-p)'
-        },
-        {
-            'output': {'name': 'q'},
-            'eq': '(-q)'
-        },
-        {
-            'output': {'name': 'P_e_slack'},
-            'eq': 'p0-p + pmin-P_e_slack + pmax-P_e_slack'
-        },
-        {
-            'output': {'name': 'Q_e_slack'},
-            'eq': 'q0-q + qmin-Q_e_slack + qmax-Q_e_slack'
-        }
-    ],
+    {
+        'output': Var(name='p'),
+        'eq': smb.sympify('(-p)')
+    },
+    {
+        'output': Var(name='q'),
+        'eq': smb.sympify('(-q)')
+    },
+    {
+        'output': Var(name='P_e_slack'),
+        'eq': smb.sympify('p0-p + pmin-P_e_slack + pmax-P_e_slack')
+    },
+    {
+        'output': Var(name='Q_e_slack'),
+        'eq': smb.sympify('q0-q + qmin-Q_e_slack + qmax-Q_e_slack')
+    }
+],
     'state_equations': []
 }
-slack_gen_model = gce.DynamicModel()
-slack_gen_model.parse(slack_gen_data)
 
 load_data = {
     'name': 'ExpLoad',
@@ -146,20 +145,34 @@ load_data = {
     ],
     'state_var_output': [],
     'algebraic_equations': [
-        {
-            'output': {'name': 'Pl'},
-            'eq': 'Pl0 * Ql ** coeff_alfa'
-        },
-        {
-            'output': {'name': 'Ql'},
-            'eq': 'Ql0 * Ql ** coeff_beta'
-        }
-    ],
+    {
+        'output': Var(name='Pl'),
+        'eq': smb.sympify('Pl0 * Ql ** coeff_alfa')
+    },
+    {
+        'output': Var(name='Ql'),
+        'eq': smb.sympify('Ql0 * Ql ** coeff_beta')
+    }
+],
     'state_equations': []}
+
+bus1_model = gce.DynamicModel()
+bus1_model.parse(bus1_data)
+
+bus2_model = gce.DynamicModel()
+bus2_model.parse(bus2_data)
+
+
+branch_model = gce.DynamicModel()
+branch_model.parse(branch_data)
+
+
+slack_gen_model = gce.DynamicModel()
+slack_gen_model.parse(slack_gen_data)
+
+
 load_model = gce.DynamicModel()
 load_model.parse(load_data)
-
-# build the grid create models and add devices to the grid
 
 np.set_printoptions(precision=4)
 
@@ -244,8 +257,8 @@ line1.rms_model.template = branch_model
 #gen1.rms_model.template = slack_gen_model
 gen2.rms_model.template = gen2_rms_model
 Load1.rms_model.template = load_model
-# ----------------------------------------------------------------------------------------------------------------------
 
+pdb.set_trace()
 
 
 

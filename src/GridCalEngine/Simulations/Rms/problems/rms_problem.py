@@ -9,8 +9,8 @@ import numpy as np
 import sympy as sym
 import scipy.sparse as sp
 
-from GridCalEngine.Devices.Dynamic.dyn_param import IdxDynParam
-from GridCalEngine.Devices.Dynamic.dyn_var import StatVar, AlgebVar, InputState, InputAlgeb
+from GridCalEngine.Devices.Dynamic.variable import Var
+from GridCalEngine.Devices.Dynamic.equation import Equation
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Simulations.Rms.model.rms_model_store import RmsModelStore
 from GridCalEngine.Simulations.Rms.model.rms_model_compiler import RmsModelsCompiler
@@ -395,6 +395,8 @@ class RmsProblem:
         # Models_list (list of RmsModelStore for every model)
         # self.x (list of state variables), self.y (list of algeb variables), self.Tf, self.nx (num of state variables), self.ny (num of algeb variables)
         self.models_list, self.x, self.y, self.Tf, self.nx, self.ny = compile_rms_models(grid=grid)
+
+
 
         # Create variables_list (list to store all variables) and addresses_list (List to store all addresses),
         # these lists are used when updating f, g, and jacobian values.
