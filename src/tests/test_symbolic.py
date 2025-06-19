@@ -234,7 +234,7 @@ def test_numba_compilation_1():
     x, y, x2 = sym.Var("x"), sym.Var("y"), sym.Var("x")
     expr = sym.sin(x) * sym.exp(y) + x2 ** 2
 
-    f_fast = sym.compile_numba_positional(expr, ordering=[x, y, x2])
+    f_fast = sym.compile_numba_function(expr, sorting_vars=[x, y, x2])
 
     # Argument order is in the docstring:
     # print(f_fast.__doc__)  → "Positional order: v0 → x, v1 → y, v2 → x"
@@ -256,7 +256,7 @@ def test_jacobian():
     variables = [x, y, z]
 
     # ---- 2.  compile Jacobian with your library ----------------------
-    jac_fn, _ = sym.compile_sparse_jacobian(equations, variables)
+    jac_fn, _ = sym.get_jacobian(equations, variables)
 
     # ---- 3.  build the same in SymPy ---------------------------------
     xs, ys, zs = sympy.symbols('x y z')

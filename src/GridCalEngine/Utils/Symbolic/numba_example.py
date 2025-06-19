@@ -3,13 +3,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 import numpy as np
-from symbolic import (Var, sin, exp, compile_numba_positional, vars_order, compile_numba_system,
-                      compile_sparse_jacobian)
+from symbolic import (Var, sin, exp, compile_numba_function, find_vars_order, compile_numba_functions,
+                      get_jacobian)
 
 x, y, x2 = Var("x"), Var("y"), Var("x")
 expr = sin(x) * exp(y) + x2**2
 
-f_fast = compile_numba_positional(expr, ordering=[x, y, x2])
+f_fast = compile_numba_function(expr, sorting_vars=[x, y, x2])
 
 # Argument order is in the docstring:
 # print(f_fast.__doc__)  → "Positional order: v0 → x, v1 → y, v2 → x"
@@ -21,8 +21,8 @@ x, y, x2 = Var("x"), Var("y"), Var("x")
 eqs = [sin(x) + y,
        x2**2 + exp(y) * x]
 
-order = vars_order(eqs)          # deterministic list of Var objects
-f_fast = compile_numba_system(eqs)   # always returns *one* object
+order = find_vars_order(eqs)          # deterministic list of Var objects
+f_fast = compile_numba_functions(eqs)   # always returns *one* object
 
 print(order)          # [x, y, x2]
 print(f_fast.__doc__) # shows v0→x, v1→y, v2→x
@@ -36,7 +36,7 @@ eqs = [sin(x) + y*z,
        sin(x) + y*z]   # note repeated eq
 vars_ = [x, y, z]
 
-jac_fn, (rows, cols) = compile_sparse_jacobian(eqs, vars_)
+jac_fn, (rows, cols) = get_jacobian(eqs, vars_)
 print("Pattern:", list(zip(rows, cols)))
 
 vals = np.array([1.0, 2.0, 0.5])      # x, y, z

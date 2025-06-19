@@ -474,23 +474,57 @@ cosh = _make_unary("cosh")
 
 def _expr_to_dict(expr: Expr) -> Dict[str, Any]:
     """
-    Serialize expression to dictionary
-    :param expr:
-    :return:
+    Serialise any `Expr` tree into a plain Python dictionary that’s
+    JSON-friendly.  Each node type becomes a small dict that records:
+
+        • its own type      (\"Const\", \"Var\", \"BinOp\", …)
+        • the data it carries (value, name, operator…)
+        • its unique uid     (string, so it survives round-trip)
+        • nested children    (recursively serialised)
+
+    The reverse operation is handled by `_dict_to_expr`.
     """
-    match expr:
-        case Const(value=v, uid=uid):
-            return {"type": "Const", "value": v, "uid": uid}
-        case Var(name=n, uid=uid):
-            return {"type": "Var", "name": n, "uid": uid}
-        case BinOp(op=op, left=l, right=r, uid=uid):
-            return {"type": "BinOp", "op": op, "left": _expr_to_dict(l), "right": _expr_to_dict(r), "uid": uid}
-        case UnOp(op=op, operand=o, uid=uid):
-            return {"type": "UnOp", "op": op, "operand": _expr_to_dict(o), "uid": uid}
-        case Func(name=n, arg=a, uid=uid):
-            return {"type": "Func", "name": n, "arg": _expr_to_dict(a), "uid": uid}
-        case _:
-            raise TypeError("Unsupported Expr subclass")
+    # ------------------------------------------------------------------
+    # Atomic nodes
+    # ------------------------------------------------------------------
+    if isinstance(expr, Const):
+        return {"type": "Const", "value": expr.value, "uid": expr.uid}
+
+    if isinstance(expr, Var):
+        return {"type": "Var", "name": expr.name, "uid": expr.uid}
+
+    # ------------------------------------------------------------------
+    # Composite nodes
+    # ------------------------------------------------------------------
+    if isinstance(expr, BinOp):
+        return {
+            "type": "BinOp",
+            "op": expr.op,
+            "left": _expr_to_dict(expr.left),
+            "right": _expr_to_dict(expr.right),
+            "uid": expr.uid,
+        }
+
+    if isinstance(expr, UnOp):
+        return {
+            "type": "UnOp",
+            "op": expr.op,  # only \"-\" for now
+            "operand": _expr_to_dict(expr.operand),
+            "uid": expr.uid,
+        }
+
+    if isinstance(expr, Func):
+        return {
+            "type": "Func",
+            "name": expr.name,  # sin, cos, log, …
+            "arg": _expr_to_dict(expr.arg),
+            "uid": expr.uid,
+        }
+
+    # ------------------------------------------------------------------
+    # Anything else is an API bug
+    # ------------------------------------------------------------------
+    raise TypeError(f"Unsupported Expr subclass: {type(expr).__name__}")
 
 
 def _dict_to_expr(data: Dict[str, Any]) -> Expr:
@@ -520,7 +554,7 @@ def _dict_to_expr(data: Dict[str, Any]) -> Expr:
 # Convenience top‑level helpers
 # ----------------------------------------------------------------------------------------------------------------------
 
-def diff(expr: Expr, var: Union[Var, str], order: int = 1) -> Expr:  # noqa: D401 – simple
+def diff(expr: Expr, var: Var | str, order: int = 1) -> Expr:  # noqa: D401 – simple
     """
     Return ∂^order(expr)/∂var^order.
     :param expr: Expression
@@ -593,54 +627,64 @@ def _emit(expr: Expr, uid_map: Dict[int, str]) -> str:
     raise TypeError(type(expr))
 
 
-def vars_order(exprs: Union[Expr, Sequence[Expr]], ordering: Sequence[Union[Var, str]] | None = None, ) -> List[Var]:
+def find_vars_order(expressions: Union[Expr, Sequence[Expr]],
+                    ordering: Sequence[Var] | None = None,
+                    var_dict: Dict[int, Var] | None = None) -> List[Var]:
     """
     Return the variable list that positional JIT functions will expect.
-    :param exprs: Single expression or any iterable of expressions.
+    :param expressions: Single expression or any iterable of expressions.
     :param ordering: Is provided, it overrides the default left‑to‑right order.
                     Items in *ordering* can be Var objects or variable names (strings).
+    :param var_dict: Dictionary of var uid to var ({v.uid: v for v in vars_list})
     :return:
     """
 
-    if isinstance(exprs, Expr):
-        auto = _all_vars([exprs])
+    if isinstance(expressions, Expr):
+        vars_list = _all_vars([expressions])
     else:
-        auto = _all_vars(exprs)
+        vars_list = _all_vars(expressions)
 
     if ordering is None:
-        return auto
+        return vars_list
 
-    name_map = {v.name: v for v in auto}
-    return [v if isinstance(v, Var) else name_map[v] for v in ordering]
+    if var_dict is None:
+        var_dict: Dict[int, Var] = {v.uid: v for v in vars_list}
+
+    return [v if isinstance(v, Var) else var_dict[v.uid] for v in ordering]
 
 
-def _compile(exprs: Sequence[Expr], order: List[Var], add_doc_string: bool = True):
+def _compile(expressions: Sequence[Expr],
+             sorting_vars: List[Var],
+             uid2sym: Dict[int, str] | None,
+             add_doc_string: bool = True):
     """
-
-    :param exprs:
-    :param order:
-    :param add_doc_string:
-    :return:
+    Compile the array of expressions to an array of numba function pointers
+    :param expressions: Iterable of expressions (Expr)
+    :param sorting_vars: list of variables indicating the sorting order of the call
+    :param add_doc_string: add the docstring?
+    :return: Array of function pointers
     """
-    uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(order)}
-    arglist = ", ".join(uid2sym[v.uid] for v in order)
+    if uid2sym is None:
+        uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(sorting_vars)}
+
+    arg_list = ", ".join(uid2sym[v.uid] for v in sorting_vars)
 
     # Build body lines
-    lines = [f"    out{i} = {_emit(e, uid2sym)}" for i, e in enumerate(exprs)]
-    if len(exprs) == 1:
+    lines = [f"    out{i} = {_emit(e, uid2sym)}" for i, e in enumerate(expressions)]
+    if len(expressions) == 1:
         lines.append("    return out0")
     else:
-        outs = ", ".join(f"out{i}" for i in range(len(exprs)))
+        outs = ", ".join(f"out{i}" for i in range(len(expressions)))
         lines.append(f"    return ({outs})")
 
-    src = f"def _f({arglist}):\n" + "\n".join(lines) + "\n"
+    src = f"def _f({arg_list}):\n" + "\n".join(lines) + "\n"
     ns: Dict[str, Any] = {"math": math}
     exec(src, ns)
     fn = nb.njit(ns["_f"], fastmath=True)
 
     if add_doc_string:
         fn.__doc__ = "Positional order:\n  " + "\n  ".join(
-            f"v{i} → {v.name} (uid={v.uid}…)" for i, v in enumerate(order)
+            f"v{i} → {v.name} (uid={v.uid}…)" for i, v in enumerate(sorting_vars)
         )
     return fn
 
@@ -649,52 +693,53 @@ def _compile(exprs: Sequence[Expr], order: List[Var], add_doc_string: bool = Tru
 # Public – single expression
 # -----------------------------------------------------------------------------
 
-def compile_numba_positional(expr: Expr, ordering: Sequence[Union[Var, str]] | None = None):
+def compile_numba_function(expr: Expr, sorting_vars: Sequence[Var | str] | None = None):
     """
     Return a Numba‑JIT scalar function for *expr*.
     The function signature is positional floats; argument order is given by
     `vars_order(expr, ordering)`.
     :param expr:
-    :param ordering:
+    :param sorting_vars:
     :return:
     """
-    order = vars_order(expr, ordering)
-    return _compile([expr], order)
+    expanded_sorting_vars = find_vars_order(expr, sorting_vars)
+    return _compile(expressions=[expr], sorting_vars=expanded_sorting_vars, uid2sym=None)
 
 
 # -----------------------------------------------------------------------------
 # Public – system of expressions
 # -----------------------------------------------------------------------------
 
-def compile_numba_system(exprs: Sequence[Expr], ordering: Sequence[Union[Var, str]] | None = None):
+def compile_numba_functions(expressions: Sequence[Expr], sorting_vars: Sequence[Var | str] | None = None):
     """
     Return a Numba‑JIT function computing all *exprs* at once.
 
     The positional argument order is the same as `vars_order(exprs, ordering)`.
     The function returns a tuple of floats (one per expression).
-    :param exprs:
-    :param ordering:
-    :return:
+    :param expressions: Iterable of expressions (Expr)
+    :param sorting_vars: list of variables indicating the sorting order of the call
+    :return: List of function pointers
     """
-    order = vars_order(exprs, ordering)
-    return _compile(list(exprs), order)
+    extended_sorting_vars = find_vars_order(expressions, sorting_vars)
+    return _compile(list(expressions), extended_sorting_vars, uid2sym=None)
 
 
-def compile_sparse_jacobian(equations: List[Expr], variables: List[Var], params: List[Var]):
+def get_jacobian(equations: List[Expr], variables: List[Var], params: List[Var] | None = None):
     """
     JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
-    Returns
-    -------
-    jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
-        Fast evaluator in which *values* is a 1‑D NumPy vector of length
-        ``len(variables)``.
-    sparsity_pattern : tuple(np.ndarray, np.ndarray)
-        Row/col indices of structurally non‑zero entries.
-
-    :param equations:
-    :param variables:
+    :param equations: Array of equations
+    :param variables: Array of variables to differentiate against
+    :param params: Array of other variables required (i.e. parameters) (optional)
     :return:
+            jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
+                Fast evaluator in which *values* is a 1‑D NumPy vector of length
+                ``len(variables)``.
+            sparsity_pattern : tuple(np.ndarray, np.ndarray)
+                Row/col indices of structurally non‑zero entries.
     """
+
+    if params is None:
+        params = list()
 
     # Ensure deterministic variable order
     check_set = set()
@@ -704,17 +749,27 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var], params:
         else:
             check_set.add(v)
 
+    uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(variables + params)}
+
     # Cache compiled partials by UID so duplicates are reused
     fn_cache: Dict[str, Callable] = {}
     triplets: List[Tuple[int, int, Callable]] = []  # (col, row, fn)
 
     for row, eq in enumerate(equations):
         for col, var in enumerate(variables):
-            d = eq.diff(var).simplify()
-            if isinstance(d, Const) and d.value == 0:
+            d_expression = eq.diff(var).simplify()
+            if isinstance(d_expression, Const) and d_expression.value == 0:
                 continue  # structural zero
 
-            fn = fn_cache.setdefault(d.uid, compile_numba_positional(d, ordering=variables + params))
+            expanded_sorting_vars = find_vars_order(expressions=d_expression,
+                                                    ordering=variables + params)
+
+            function_ptr = _compile(expressions=[d_expression],
+                                    sorting_vars=expanded_sorting_vars,
+                                    uid2sym=uid2sym)
+
+            fn = fn_cache.setdefault(d_expression.uid, function_ptr)
+
             triplets.append((col, row, fn))
 
     # Sort by column, then row for CSC layout
@@ -749,4 +804,8 @@ __all__ = [
     "sin", "cos", "tan", "exp", "log", "sqrt",
     "asin", "acos", "atan", "sinh", "cosh",
     "diff", "eval_uid",
+    "compile_numba_function",
+    "find_vars_order",
+    "compile_numba_functions",
+    "get_jacobian"
 ]

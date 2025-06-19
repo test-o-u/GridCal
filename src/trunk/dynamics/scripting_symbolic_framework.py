@@ -7,7 +7,7 @@ import math
 import numpy as np
 
 import GridCalEngine as gce
-from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, compile_sparse_jacobian, cos, sin
+from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, get_jacobian, cos, sin
 
 # grid data, this data will be automatically generated when the user builds the grid.
 
@@ -54,13 +54,20 @@ coeff_beta = Const(8.0)
 
 # Generator
 pi = Const(math.pi)
-fn = Var("fn")
-tm = Var("tm")
-M = Var("M")
-D = Var("D")
-ra = Var("ra")
-xd = Var("xd")
-vf = Var("vf")
+# fn = Var("fn")
+# tm = Var("tm")
+# M = Var("M")
+# D = Var("D")
+# ra = Var("ra")
+# xd = Var("xd")
+# vf = Var("vf")
+fn = Const(50.0)
+tm = Const(10.0)
+M = Const(1.0)
+D = Const(0.003)
+ra = Const(0.3)
+xd = Const(0.86138701)
+vf = Const(3.81099313)
 # Define variables
 
 # Line
@@ -125,10 +132,13 @@ eq_Qg = Qg - (v_q * i_d + v_d * i_q)
 equations_list = [expr_psid, expr_psiq, expr_i_d, expr_i_q, expr_v_d, expr_v_q, expr_t_e, expr_P_e, expr_Q_e, eq_Qg,
                   eq_Pg]
 var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, t_e, P_e, Q_e, Pg, Qg]
-params_list = [fn, tm, M, D, ra,xd,vf]
-j_func, _ = compile_sparse_jacobian(equations=equations_list,
-                                    variables=var_list,
-                                    params=params_list)
+
+
+# params_list = [fn, tm, M, D, ra, xd, vf]
+params_list = list()
+j_func, _ = get_jacobian(equations=equations_list,
+                         variables=var_list,
+                         params=params_list)
 
 J = j_func(np.ones(len(var_list) + len(params_list)))
 
