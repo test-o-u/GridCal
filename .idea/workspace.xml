@@ -28,7 +28,10 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Reimplementation of vars and equations" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Reimplementation of vars and equations">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_symbolic_framework.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_symbolic_framework.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -74,6 +77,12 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "mrosesgh"
+  }
+}]]></component>
   <component name="GitSEFilterConfiguration">
     <file-type-list>
       <filtered-out-file-type name="LOCAL_BRANCH" />
@@ -82,13 +91,12 @@
       <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
     </file-type-list>
   </component>
-  <component name="GithubProjectSettings">
-    <option name="branchProtectionPatterns">
-      <list>
-        <option value="master" />
-      </list>
-    </option>
-  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/SanPen/GridCal.git",
+    "accountId": "3b6d5ff4-45d3-4f35-aebb-c26a8c4be222"
+  }
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/requirements.txt" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/src/GridCal/Gui/ConsoleWidget.py" root0="FORCE_HIGHLIGHTING" />
@@ -1153,16 +1161,16 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.ExecuteGridCal" />
-      <item itemvalue="Python.dynamic_model" />
-      <item itemvalue="Python.rms_model_editor_dialogue" />
-      <item itemvalue="Python.scripting_por_obj2" />
-      <item itemvalue="Python.scripting_por_obj" />
       <item itemvalue="Python.test_gslv_conversion" />
       <item itemvalue="Python.test_ntc" />
       <item itemvalue="Python.test_opf" />
       <item itemvalue="Python.test_power_flow" />
       <item itemvalue="Python.test_raw_cgmes_cross_roundtrip" />
+      <item itemvalue="Python.dynamic_model" />
+      <item itemvalue="Python.scripting_por_obj2" />
+      <item itemvalue="Python.scripting_por_obj" />
+      <item itemvalue="Python.rms_model_editor_dialogue" />
+      <item itemvalue="Python.ExecuteGridCal" />
       <item itemvalue="Python tests.test_ntc.py" />
     </list>
     <recent_temporary>
@@ -1178,7 +1186,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-53e2683a6804-9cdd278e9d02-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.26094.141" />
+        <option value="bundled-python-sdk-348a24fa61fa-5312c7369657-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.23774.444" />
       </set>
     </attachedChunks>
   </component>
@@ -2391,7 +2399,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="754" />
+    <option name="localTasksCounter" value="755" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -3019,7 +3027,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/trunk/dynamics/scripting_por_obj2.py</url>
-          <line>254</line>
+          <line>258</line>
           <option name="timeStamp" value="2813" />
         </line-breakpoint>
       </breakpoints>

@@ -3,17 +3,11 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 import math
-import pdb
 
-import matplotlib.pyplot as plt
 import numpy as np
-import sympy as smb
-from sympy import symbols, pi, sin, cos, Symbol
 
 import GridCalEngine as gce
-from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, BinOp, UnOp, Func
-from GridCalEngine.Devices.Dynamic.equation import Equation
-from GridCalEngine.Simulations.Rms.rms_driver import RmsSimulationDriver
+from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, compile_sparse_jacobian, cos, sin
 
 # grid data, this data will be automatically generated when the user builds the grid.
 
@@ -74,7 +68,7 @@ Q_origin = Var("Q_origin")
 Q_end = Var("Q_end")
 P_origin = Var("P_origin")
 P_end = Var("P_end")
-Const
+
 # Load
 Ql = Var("Ql")
 Pl = Var("Pl")
@@ -93,18 +87,21 @@ P_e = Var("P_e")
 Q_e = Var("Q_e")
 Pg = Var("Pg")
 Qg = Var("Qg")
+
+var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, v_q, v_d, t_e, P_e, Q_e, Pg, Qg]
 # Build equations
 
 # Line
-expr1 = (Q_origin**2 * g) - (Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))
-expr2 = -Q_origin**2 * (b + bsh / Const(2)) - Q_origin * Q_end * (g * sin(P_origin - P_end) - b * cos(P_origin - P_end))
-expr3 = (Q_end**2 * g) - (Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))
-expr4 = -Q_end**2 * (b + bsh / Const(2)) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin))
+expr1 = (Q_origin ** 2 * g) - (Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))
+expr2 = -Q_origin ** 2 * (b + bsh / Const(2)) - Q_origin * Q_end * (
+            g * sin(P_origin - P_end) - b * cos(P_origin - P_end))
+expr3 = (Q_end ** 2 * g) - (Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))
+expr4 = -Q_end ** 2 * (b + bsh / Const(2)) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin))
 
-#Load
+# Load
 
-expr5 = Pl0 * Ql**coeff_alfa
-expr6 = Ql0 * Ql**coeff_beta
+expr5 = Pl0 * Ql ** coeff_alfa
+expr6 = Ql0 * Ql ** coeff_beta
 
 # Generator
 
@@ -124,3 +121,13 @@ expr_P_e = P_e - (v_d * i_d + v_q * i_q - P_e)
 expr_Q_e = Q_e - (v_q * i_d - v_d * i_q - Q_e)
 eq_Pg = Pg - (v_d * i_d + v_q * i_q)
 eq_Qg = Qg - (v_q * i_d + v_d * i_q)
+
+equations_list = [expr_psid, expr_psiq, expr_i_d, expr_i_q, expr_v_d, expr_v_q, expr_t_e, expr_P_e, expr_Q_e, eq_Qg,
+                  eq_Pg]
+var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, v_q, v_d, t_e, P_e, Q_e, Pg, Qg]
+
+j_func, _ = compile_sparse_jacobian(equations_list, var_list)
+
+J = j_func(np.ones(len(var_list)))
+
+print(J.toarray())
