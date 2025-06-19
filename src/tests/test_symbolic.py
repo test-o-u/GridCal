@@ -1,9 +1,6 @@
 from __future__ import annotations
 import json
-import math
 import pytest
-
-
 import math
 from types import MappingProxyType
 from typing import Any, Callable, Dict
@@ -25,9 +22,9 @@ def test_var_eval():
 
 
 def test_binary_arithmetic():
-    x, y = sym.Var("x"), sym.Var("y")
+    x, y = sym.Var("x1"), sym.Var("y")
     expr = 2 * x + y / 4 - 1
-    result = expr.eval(x=8, y=20)  # 2*8 + 20/4 - 1 = 16 + 5 - 1 = 20
+    result = expr.eval(x1=8, y=20)  # 2*8 + 20/4 - 1 = 16 + 5 - 1 = 20
     assert result == 20
 
 
@@ -224,3 +221,60 @@ def test_frozen_dataclass_immutable():
     c = sym.Const(1)
     with pytest.raises(AttributeError):
         c.value = 2  # type: ignore[attr-defined]
+
+
+# -----------------------------------------------------------------------------
+# 10. numba compilation
+# -----------------------------------------------------------------------------
+
+def test_numba_compilation_1():
+    x, y, x2 = sym.Var("x"), sym.Var("y"), sym.Var("x")
+    expr = sym.sin(x) * sym.exp(y) + x2 ** 2
+
+    f_fast = sym.compile_numba_positional(expr, ordering=[x, y, x2])
+
+    # Argument order is in the docstring:
+    # print(f_fast.__doc__)  → "Positional order: v0 → x, v1 → y, v2 → x"
+    val= f_fast(1.0, 2.0, 3.0)  # x=1, y=2, x2=3
+
+    val_test = math.sin(1.0) * math.exp(2.0) + 3**2
+
+    assert val == val_test
+
+def test_jacobian():
+    # ---- 1.  problem definition --------------------------------------
+    import numpy as np
+    from scipy.sparse import csc_matrix
+    import sympy as sp
+
+    # symbolic-framework variables / equations
+    x, y, z = sym.Var('x'), sym.Var('y'), sym.Var('z')
+    equations = [sym.sin(x) + y * z,  # f₁
+                 x ** 2 + sym.exp(z),  # f₂
+                 sym.sin(x) + y * z]  # f₃  (repeat on purpose)
+    variables = [x, y, z]
+
+    # ---- 2.  compile Jacobian with your library ----------------------
+    jac_fn, _ = sym.compile_sparse_jacobian(equations, variables)
+
+    # ---- 3.  build the same in SymPy ---------------------------------
+    xs, ys, zs = sp.symbols('x y z')
+    sym_eqs = [sp.sin(xs) + ys * zs,
+               xs ** 2 + sp.exp(zs),
+               sp.sin(xs) + ys * zs]
+    sym_vars = [xs, ys, zs]
+    J_sym = sp.Matrix(sym_eqs).jacobian(sym_vars)  # dense SymPy matrix
+    J_sym_func = sp.lambdify((xs, ys, zs), J_sym, 'numpy')
+
+    # ---- 4.  evaluate & compare -------------------------------------
+    point = np.array([1.0, 2.0, 0.5])  # (x, y, z)
+
+    J_sparse: csc_matrix = jac_fn(point)
+    J_dense_symbolic = np.asarray(J_sparse.todense())  # for easy compare
+    J_dense_sympy = J_sym_func(*point)
+
+    print("Your Jacobian\n", J_dense_symbolic)
+    print("SymPy Jacobian\n", J_dense_sympy)
+
+    assert np.allclose(J_dense_symbolic, J_dense_sympy), "Jacobians differ!"
+    print("✅  They match!")
