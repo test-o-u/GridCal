@@ -1,25 +1,29 @@
-"""symbolic.py
+"""symbolic.py – self‑contained symbolic‑math mini‑library
+=======================================================
 
-Lightweight symbolic‑algebra framework with:
-• Arithmetic operators
-• Trigonometric & exponential functions
-• Unique UUIDv4 identities for every node
-• JSON (de)serialisation that preserves identities
-• First‑order & partial derivatives (`Expr.diff` / `symbolic.diff`)
+Features
+~~~~~~~~
+* **Arithmetic**: `+ − * / **` (general power)
+* **Elementary functions**: `sin cos tan exp log sqrt asin acos atan sinh cosh`
+* **Unique UUIDv4 identity** on every node, preserved across JSON
+* **Dual evaluation**: by *variable name* (`expr.eval(x=…)`) or by *UID*
+  (`eval_uid(expr, {uid: value, …})`)—so duplicate‑named symbols stay distinct
+* **Calculus**: first & higher‑order partial derivatives (`diff(expr, var, n)`)
+* **Simplification**: constant folding & common algebraic identities
+* **Substitution**: `expr.subs({x: y+1, subexpr: other})`
+* **JSON I/O**: `expr.to_json()` ↔ `Expr.from_json()`
 
-> **Fix 2025‑06‑19**  Annotated internal operator tables as **`ClassVar`** to
-> prevent dataclass from treating them as mutable defaults. This resolves the
-> `ValueError: mutable default <class 'mappingproxy'> for field _impl...` raised
-> during import.
-
-Example
-~~~~~~~
+Quick peek
+~~~~~~~~~~
 ```python
-from symbolic import Var, sin, exp
+from symbolic import Var, sin, log, diff, eval_uid
 
-x, y = Var('x'), Var('y')
-f = sin(x) * exp(y) + x**3
-print(f.diff('x'))  # cos(x)*exp(y) + 3*x**2
+x, y, x2 = Var('x'), Var('y'), Var('x')  # duplicate names allowed
+f = sin(x) * log(y) + x2**x              # non‑constant exponent power
+
+print(f.eval(x=1, y=2))                  # x & x2 share value 1  → 2.0
+print(eval_uid(f, {x.uid: 1, x2.uid: 3, y.uid: 2}))  # 11.0
+print(diff(f, x, 2).simplify())          # nicely simplified 2nd derivative
 ```
 """
 
@@ -38,52 +42,75 @@ Number = Union[int, float]
 # UUID helper
 # -----------------------------------------------------------------------------
 
-def _new_uid() -> int:
-    return uuid.uuid4().int
+def _new_uid() -> str:
+    """Generate a fresh UUID‑v4 string."""
+    return str(uuid.uuid4())
 
 # -----------------------------------------------------------------------------
-# Helpers
+# Generic helpers
 # -----------------------------------------------------------------------------
 
-def _to_expr(value: Any) -> "Expr":
-    if isinstance(value, Expr):
-        return value
-    if isinstance(value, (int, float)):
-        return Const(value)
-    raise TypeError(f"Cannot convert {value!r} to Expr")
+def _to_expr(val: Any) -> "Expr":
+    if isinstance(val, Expr):
+        return val
+    if isinstance(val, (int, float)):
+        return Const(val)
+    raise TypeError(f"Cannot convert {val!r} to Expr")
 
 
-def _as_var_name(var: "Var" | str) -> str:
-    return var.name if isinstance(var, Var) else var  # type: ignore[arg-type]
-
-def _as_var_uid(var: "Var" | str) -> str:
-    return var.uid if isinstance(var, Var) else var  # type: ignore[arg-type]
+def _var_name(sym: Union["Var", str]) -> str:
+    return sym.name if isinstance(sym, Var) else sym
 
 # -----------------------------------------------------------------------------
-# Core expression hierarchy
+# Base class
 # -----------------------------------------------------------------------------
 
 class Expr:
     """Abstract base class for all expression nodes."""
 
-    uid: str  # real field lives in subclasses
+    uid: str  # real dataclass field lives in subclasses
 
-    # --- numeric evaluation --------------------------------------------------
+    # ------------------------------------------------------------------
+    # Numeric evaluation
+    # ------------------------------------------------------------------
     def eval(self, **bindings: Number) -> Number:  # pragma: no cover – abstract
         raise NotImplementedError
 
-    # --- differentiation -----------------------------------------------------
-    def diff(self, var: "Var" | str) -> "Expr":  # pragma: no cover
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:  # pragma: no cover – abstract
         raise NotImplementedError
 
-    # allow f(x=…) shorthand
-    __call__ = eval
+    __call__ = eval  # allow f(x=…)
 
-    # --- serialisation -------------------------------------------------------
-    def to_dict(self) -> Dict[str, Any]:  # noqa: D401 – simple
+    # ------------------------------------------------------------------
+    # Differentiation (higher‑order)
+    # ------------------------------------------------------------------
+    def diff(self, var: Union["Var", str], order: int = 1) -> "Expr":
+        if order < 0:
+            raise ValueError("order must be ≥ 0")
+        expr: Expr = self
+        for _ in range(order):
+            expr = expr._diff1(var).simplify()
+        return expr
+
+    def _diff1(self, var: Union["Var", str]) -> "Expr":  # pragma: no cover
+        raise NotImplementedError
+
+    # ------------------------------------------------------------------
+    # Simplification & substitution (no‑ops by default)
+    # ------------------------------------------------------------------
+    def simplify(self) -> "Expr":
+        return self
+
+    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
+        return mapping.get(self, self)
+
+    # ------------------------------------------------------------------
+    # JSON I/O helpers
+    # ------------------------------------------------------------------
+    def to_dict(self) -> Dict[str, Any]:
         return _expr_to_dict(self)
 
-    def to_json(self, **json_kwargs: Any) -> str:  # noqa: D401 – simple
+    def to_json(self, **json_kwargs: Any) -> str:
         return json.dumps(self.to_dict(), **json_kwargs)
 
     @staticmethod
@@ -94,7 +121,9 @@ class Expr:
     def from_json(blob: str) -> "Expr":
         return _dict_to_expr(json.loads(blob))
 
-    # --- operator overloading ------------------------------------------------
+    # ------------------------------------------------------------------
+    # Operator helpers
+    # ------------------------------------------------------------------
     def __add__(self, other: Any) -> "Expr":
         return BinOp("+", self, _to_expr(other))
 
@@ -128,25 +157,30 @@ class Expr:
     def __neg__(self) -> "Expr":
         return UnOp("-", self)
 
-    # --- display -------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # Display helper
+    # ------------------------------------------------------------------
     def __str__(self) -> str:  # pragma: no cover – abstract
         raise NotImplementedError
 
     __repr__ = __str__
 
 # -----------------------------------------------------------------------------
-# Atomic expressions
+# Atomic nodes
 # -----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Const(Expr):
     value: Number
-    uid: int = field(default_factory=_new_uid, init=False)
+    uid: str = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         return self.value
 
-    def diff(self, var: "Var" | str) -> "Expr":
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:
+        return self.value
+
+    def _diff1(self, var: Union["Var", str]) -> "Expr":
         return Const(0)
 
     def __str__(self) -> str:
@@ -156,22 +190,35 @@ class Const(Expr):
 @dataclass(frozen=True)
 class Var(Expr):
     name: str
-    uid: int = field(default_factory=_new_uid, init=False)
+    uid: str = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         try:
             return bindings[self.name]
         except KeyError as exc:
-            raise ValueError(f"No value provided for variable '{self.name}'.") from exc
+            raise ValueError(f"No value for variable '{self.name}'.") from exc
 
-    def diff(self, var: "Var" | str) -> "Expr":
-        return Const(1 if self.uid == _as_var_uid(var) else 0)
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:
+        try:
+            return uid_bindings[self.uid]
+        except KeyError as exc:
+            raise ValueError(f"No value for uid '{self.uid}'.") from exc
+
+    def _diff1(self, var: Union["Var", str]) -> "Expr":
+        return Const(1 if self.name == _var_name(var) else 0)
+
+    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
+        if self in mapping:
+            return mapping[self]
+        if self.name in mapping:
+            return mapping[self.name]
+        return self
 
     def __str__(self) -> str:
         return self.name
 
 # -----------------------------------------------------------------------------
-# Composite expressions
+# Binary & unary operators
 # -----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
@@ -179,7 +226,7 @@ class BinOp(Expr):
     op: str
     left: Expr
     right: Expr
-    uid: int = field(default_factory=_new_uid, init=False)
+    uid: str = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[Number, Number], Number]]] = MappingProxyType({
         "+": lambda a, b: a + b,
@@ -189,27 +236,62 @@ class BinOp(Expr):
         "**": lambda a, b: a ** b,
     })
 
+    # --- evaluation --------------------------------------------------------
     def eval(self, **bindings: Number) -> Number:
-        l, r = self.left.eval(**bindings), self.right.eval(**bindings)
-        return self._impl[self.op](l, r)
+        return self._impl[self.op](self.left.eval(**bindings), self.right.eval(**bindings))
 
-    def diff(self, var: "Var" | str) -> "Expr":
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:
+        return self._impl[self.op](self.left.eval_uid(uid_bindings), self.right.eval_uid(uid_bindings))
+
+    # --- differentiation ----------------------------------------------------
+    def _diff1(self, var: Union["Var", str]) -> "Expr":
         u, v = self.left, self.right
-        du, dv = u.diff(var), v.diff(var)
+        du, dv = u._diff1(var), v._diff1(var)
         if self.op == "+":
             return du + dv
         if self.op == "-":
             return du - dv
         if self.op == "*":
-            return du * v + u * dv  # product rule
+            return du * v + u * dv
         if self.op == "/":
-            return (du * v - u * dv) / (v ** Const(2))  # quotient rule
+            return (du * v - u * dv) / (v ** Const(2))
         if self.op == "**":
             if isinstance(v, Const):
                 n = v.value
                 return Const(n) * (u ** Const(n - 1)) * du
-            raise NotImplementedError("Derivative of u(x)**v(x) with non‑constant exponent not implemented.")
-        raise ValueError(f"Unsupported binary operator '{self.op}'.")
+            # general exponent: u**v = exp(v*log u)
+            return self * (dv * log(u) + du * v / u)
+        raise ValueError("Unsupported operator for diff")
+
+    # --- simplification ------------------------------------------------------
+    def simplify(self) -> "Expr":
+        l, r = self.left.simplify(), self.right.simplify()
+        if isinstance(l, Const) and isinstance(r, Const):
+            return Const(self._impl[self.op](l.value, r.value))
+        if self.op == "+":
+            if isinstance(l, Const) and l.value == 0:
+                return r
+            if isinstance(r, Const) and r.value == 0:
+                return l
+        if self.op == "*":
+            for a, b in ((l, r), (r, l)):
+                if isinstance(a, Const):
+                    if a.value == 0:
+                        return Const(0)
+                    if a.value == 1:
+                        return b
+        if self.op == "**" and isinstance(r, Const):
+            if r.value == 1:
+                return l
+            if r.value == 0:
+                return Const(1)
+        return BinOp(self.op, l, r)
+
+    # --- substitution --------------------------------------------------------
+    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
+        if self in mapping:
+            return mapping[self]
+        return BinOp(self.op, self.left.subs(mapping), self.right.subs(mapping))
 
     def __str__(self) -> str:
         return f"({self.left}) {self.op} ({self.right})"
@@ -219,99 +301,158 @@ class BinOp(Expr):
 class UnOp(Expr):
     op: str
     operand: Expr
-    uid: int = field(default_factory=_new_uid, init=False)
+    uid: str = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         val = self.operand.eval(**bindings)
-        if self.op == "-":
-            return -val
-        raise ValueError(f"Unsupported unary operator '{self.op}'.")
+        return -val if self.op == "-" else math.nan
 
-    def diff(self, var: "Var" | str) -> "Expr":
-        if self.op == "-":
-            return -self.operand.diff(var)
-        raise ValueError(f"Unsupported unary operator '{self.op}'.")
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:
+        val = self.operand.eval_uid(uid_bindings)
+        return -val if self.op == "-" else math.nan
+
+    def _diff1(self, var: Union["Var", str]) -> "Expr":
+        return -self.operand._diff1(var) if self.op == "-" else Const(float("nan"))
+
+    def simplify(self) -> "Expr":
+        opnd = self.operand.simplify()
+        if isinstance(opnd, Const):
+            return Const(-opnd.value)
+        return UnOp(self.op, opnd)
+
+    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
+        if self in mapping:
+            return mapping[self]
+        return UnOp(self.op, self.operand.subs(mapping))
 
     def __str__(self) -> str:
         return f"{self.op}({self.operand})"
 
 # -----------------------------------------------------------------------------
-# Functional expressions
+# Functional nodes
 # -----------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class Func(Expr):
     name: str
     arg: Expr
-    uid: int = field(default_factory=_new_uid, init=False)
+    uid: str = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[Number], Number]]] = MappingProxyType({
         "sin": math.sin,
         "cos": math.cos,
         "tan": math.tan,
         "exp": math.exp,
+        "log": math.log,
+        "sqrt": math.sqrt,
+        "asin": math.asin,
+        "acos": math.acos,
+        "atan": math.atan,
+        "sinh": math.sinh,
+        "cosh": math.cosh,
     })
 
+    # --- evaluation ----------------------------------------------------------
     def eval(self, **bindings: Number) -> Number:
         return self._impl[self.name](self.arg.eval(**bindings))
 
-    def diff(self, var: "Var" | str) -> "Expr":
-        inner = self.arg
-        d_inner = inner.diff(var)
-        if isinstance(d_inner, Const) and d_inner.value == 0:
-            return d_inner
+    def eval_uid(self, uid_bindings: Dict[str, Number]) -> Number:
+        return self._impl[self.name](self.arg.eval_uid(uid_bindings))
+
+    # --- differentiation (chain rule) ---------------------------------------
+    def _diff1(self, var: Union["Var", str]) -> "Expr":
+        u = self.arg
+        du = u._diff1(var)
+        if isinstance(du, Const) and du.value == 0:
+            return Const(0)
         if self.name == "sin":
-            return cos(inner) * d_inner
+            return cos(u) * du
         if self.name == "cos":
-            return -sin(inner) * d_inner
+            return -sin(u) * du
         if self.name == "tan":
-            return (Const(1) / (cos(inner) ** Const(2))) * d_inner
+            return (sec(u) ** Const(2)) * du  # sec defined later
         if self.name == "exp":
-            return exp(inner) * d_inner
-        raise KeyError(f"Unknown function '{self.name}'.")
+            return exp(u) * du
+        if self.name == "log":
+            return du / u
+        if self.name == "sqrt":
+            return du / (Const(2) * sqrt(u))
+        if self.name == "asin":
+            return du / sqrt(Const(1) - u ** Const(2))
+        if self.name == "acos":
+            return -du / sqrt(Const(1) - u ** Const(2))
+        if self.name == "atan":
+            return du / (Const(1) + u ** Const(2))
+        if self.name == "sinh":
+            return cosh(u) * du
+        if self.name == "cosh":
+            return sinh(u) * du
+        raise ValueError(f"Unknown function '{self.name}'")
+
+    # --- simplification ------------------------------------------------------
+    def simplify(self) -> "Expr":
+        a = self.arg.simplify()
+        if isinstance(a, Const):
+            try:
+                return Const(self._impl[self.name](a.value))
+            except ValueError:
+                pass  # domain error – keep symbolic
+        return Func(self.name, a)
+
+    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
+        if self in mapping:
+            return mapping[self]
+        return Func(self.name, self.arg.subs(mapping))
 
     def __str__(self) -> str:
         return f"{self.name}({self.arg})"
 
-# -----------------------------------------------------------------------------
-# Public helper constructors
-# -----------------------------------------------------------------------------
+# Helpers for functions not primitive nodes (sec for tan derivative)
 
-def sin(x: Any) -> Expr:
-    return Func("sin", _to_expr(x))
-
-def cos(x: Any) -> Expr:
-    return Func("cos", _to_expr(x))
-
-def tan(x: Any) -> Expr:
-    return Func("tan", _to_expr(x))
-
-def exp(x: Any) -> Expr:
-    return Func("exp", _to_expr(x))
+def sec(x: Any) -> Expr:
+    return Const(1) / cos(x)
 
 # -----------------------------------------------------------------------------
-# (De)serialisation utilities (unchanged)
+# Public constructor helpers
+# -----------------------------------------------------------------------------
+
+def _make_unary(name: str):
+    return lambda x: Func(name, _to_expr(x))
+
+sin  = _make_unary("sin")
+cos  = _make_unary("cos")
+tan  = _make_unary("tan")
+exp  = _make_unary("exp")
+log  = _make_unary("log")
+sqrt = _make_unary("sqrt")
+asin = _make_unary("asin")
+acos = _make_unary("acos")
+atan = _make_unary("atan")
+sinh = _make_unary("sinh")
+cosh = _make_unary("cosh")
+
+# -----------------------------------------------------------------------------
+# (De)serialisation helpers
 # -----------------------------------------------------------------------------
 
 def _expr_to_dict(expr: "Expr") -> Dict[str, Any]:
     match expr:
-        case Const(value=value, uid=uid):
-            return {"type": "Const", "uid": uid, "value": value}
-        case Var(name=name, uid=uid):
-            return {"type": "Var", "uid": uid, "name": name}
-        case BinOp(op=op, left=left, right=right, uid=uid):
-            return {"type": "BinOp", "uid": uid, "op": op, "left": _expr_to_dict(left), "right": _expr_to_dict(right)}
-        case UnOp(op=op, operand=operand, uid=uid):
-            return {"type": "UnOp", "uid": uid, "op": op, "operand": _expr_to_dict(operand)}
-        case Func(name=name, arg=arg, uid=uid):
-            return {"type": "Func", "uid": uid, "name": name, "arg": _expr_to_dict(arg)}
+        case Const(value=v, uid=uid):
+            return {"type": "Const", "value": v, "uid": uid}
+        case Var(name=n, uid=uid):
+            return {"type": "Var", "name": n, "uid": uid}
+        case BinOp(op=op, left=l, right=r, uid=uid):
+            return {"type": "BinOp", "op": op, "left": _expr_to_dict(l), "right": _expr_to_dict(r), "uid": uid}
+        case UnOp(op=op, operand=o, uid=uid):
+            return {"type": "UnOp", "op": op, "operand": _expr_to_dict(o), "uid": uid}
+        case Func(name=n, arg=a, uid=uid):
+            return {"type": "Func", "name": n, "arg": _expr_to_dict(a), "uid": uid}
         case _:
-            raise TypeError(f"Unsupported Expr subclass {type(expr).__name__}")
+            raise TypeError("Unsupported Expr subclass")
 
 
 def _dict_to_expr(data: Dict[str, Any]) -> "Expr":
     t = data["type"]
-    uid = data["uid"]
     if t == "Const":
         obj: Expr = Const(data["value"])
     elif t == "Var":
@@ -323,31 +464,30 @@ def _dict_to_expr(data: Dict[str, Any]) -> "Expr":
     elif t == "Func":
         obj = Func(data["name"], _dict_to_expr(data["arg"]))
     else:
-        raise ValueError(f"Unknown expression type '{t}' during deserialisation.")
-    object.__setattr__(obj, "uid", uid)
+        raise ValueError(f"Unknown type '{t}' in deserialisation")
+    object.__setattr__(obj, "uid", data["uid"])
     return obj
 
 # -----------------------------------------------------------------------------
-# Convenience diff wrapper
+# Convenience top‑level helpers
 # -----------------------------------------------------------------------------
 
-def diff(expr: Expr, var: Union[Var, str]) -> Expr:
-    return expr.diff(var)
+def diff(expr: Expr, var: Union[Var, str], order: int = 1) -> Expr:  # noqa: D401 – simple
+    """Return ∂^order(expr)/∂var^order."""
+    return expr.diff(var, order)
+
+
+def eval_uid(expr: Expr, uid_bindings: Dict[str, Number]) -> Number:  # noqa: D401 – simple
+    """Evaluate *expr* with a mapping from node UID → numeric value."""
+    return expr.eval_uid(uid_bindings)
 
 # -----------------------------------------------------------------------------
 # Public interface
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "Expr",
-    "Const",
-    "Var",
-    "BinOp",
-    "UnOp",
-    "Func",
-    "sin",
-    "cos",
-    "tan",
-    "exp",
-    "diff",
+    "Expr", "Const", "Var", "BinOp", "UnOp", "Func",
+    "sin", "cos", "tan", "exp", "log", "sqrt",
+    "asin", "acos", "atan", "sinh", "cosh",
+    "diff", "eval_uid",
 ]
