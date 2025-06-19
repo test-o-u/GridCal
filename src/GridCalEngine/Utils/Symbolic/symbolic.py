@@ -7,10 +7,12 @@ from __future__ import annotations
 import json
 import math
 import uuid
+import numpy as np
+from scipy.sparse import csc_matrix
 import numba as nb
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List
+from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple
 
 NUMBER = Union[int, float]
 
@@ -39,6 +41,8 @@ def _to_expr(val: Any) -> "Expr":
 def _var_name(sym: Var | str) -> str:
     return sym.name if isinstance(sym, Var) else sym
 
+def _var_uid(sym: Var | str) -> str:
+    return sym.uid if isinstance(sym, Var) else sym
 
 # -----------------------------------------------------------------------------
 # Base class
@@ -186,7 +190,7 @@ class Var(Expr):
             raise ValueError(f"No value for uid '{self.uid}'.") from exc
 
     def _diff1(self, var: Var | str) -> Expr:
-        return Const(1 if self.name == _var_name(var) else 0)
+        return Const(1 if self.uid == _var_uid(var) else 0)
 
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
         if self in mapping:
@@ -528,15 +532,16 @@ def _collect_vars(expr: Expr, out: List[Var]) -> None:
         _collect_vars(expr.arg, out)
 
 
-def _all_vars(expr: Expr) -> List[Var]:
+def _all_vars(exprs: Sequence[Expr]) -> List[Var]:
     """
-    Collect all vars
-    :param expr: Some expression
-    :return: List of vars
+
+    :param exprs:
+    :return:
     """
-    lst: List[Var] = []
-    _collect_vars(expr, lst)
-    return lst
+    res: List[Var] = []
+    for e in exprs:
+        _collect_vars(e, res)
+    return res
 
 
 # ----------------------------------------------------------------------
@@ -559,46 +564,131 @@ def _emit(expr: Expr, uid_map: Dict[str, str]) -> str:
 # ----------------------------------------------------------------------
 # Public compiler
 # ----------------------------------------------------------------------
-def compile_numba(expr: Expr,
-                  ordering: list[Union[Var, str]] | None = None,
-                  generate_doc_string=True):
+def vars_order(
+    exprs: Union[Expr, Sequence[Expr]],
+    ordering: Sequence[Union[Var, str]] | None = None,
+) -> List[Var]:
     """
-    JIT-compile *expr* to a positional Numba function.
-    :param expr: symbolic.Expr
-    :param ordering: Optional list that fixes the argument order.
-                     Items may be Var objects or variable names (str).
-                     If None, variables are auto-collected left-to-right.
-    :param generate_doc_string: Generate the docstring explaining the inputs
+    Return the variable list that positional JIT functions will expect.
+    :param exprs: Single expression or any iterable of expressions.
+    :param ordering: Is provided, it overrides the default left‑to‑right order.
+                    Items in *ordering* can be Var objects or variable names (strings).
     :return:
     """
 
-    # ---------- choose variable list ----------
+    if isinstance(exprs, Expr):
+        exprs = [exprs]
+
+    auto = _all_vars(exprs)
     if ordering is None:
-        vars_: list[Var] = []
-        _collect_vars(expr, vars_)  # auto mode
+        return auto
+
+    name_map = {v.name: v for v in auto}
+    return [v if isinstance(v, Var) else name_map[v] for v in ordering]
+
+
+def _compile(exprs: Sequence[Expr], order: List[Var]):
+    uid2sym = {v.uid: f"v{i}" for i, v in enumerate(order)}
+    arglist = ", ".join(uid2sym[v.uid] for v in order)
+
+    # Build body lines
+    lines = [f"    out{i} = {_emit(e, uid2sym)}" for i, e in enumerate(exprs)]
+    if len(exprs) == 1:
+        lines.append("    return out0")
     else:
-        # normalise to Var objects
-        vars0_: list[Var] = []
-        _collect_vars(expr, vars0_)
-        name_map = {v.name: v for v in vars0_}
-        vars_ = [v if isinstance(v, Var) else name_map[v] for v in ordering]
+        outs = ", ".join(f"out{i}" for i in range(len(exprs)))
+        lines.append(f"    return ({outs})")
 
-    # Mapping: uid → positional symbol (v0, v1, …)
-    uid_sym = {v.uid: f"v{i}" for i, v in enumerate(vars_)}
-
-    # Build source
-    body = _emit(expr, uid_sym)
-    arg_list = ", ".join(uid_sym[v.uid] for v in vars_)
-    src = f"def _f({arg_list}):\n    return {body}\n"
-
-    ns = {"math": math}
+    src = f"def _f({arglist}):\n" + "\n".join(lines) + "\n"
+    ns: Dict[str, Any] = {"math": math}
     exec(src, ns)
-    fn = ns["_f"]
+    fn = nb.njit(ns["_f"], fastmath=True)
 
-    if generate_doc_string:
-        fn.__doc__ = "Positional order: " + ", ".join(f"{sym} → {v.name}" for v, sym in zip(vars_, uid_sym.values()))
+    fn.__doc__ = "Positional order:\n  " + "\n  ".join(
+        f"v{i} → {v.name} (uid={v.uid[:8]}…)" for i, v in enumerate(order)
+    )
+    return fn
 
-    return nb.njit(fn)  # JIT-compile and return
+# -----------------------------------------------------------------------------
+# Public – single expression
+# -----------------------------------------------------------------------------
+
+def compile_numba_positional(
+    expr: Expr,
+    ordering: Sequence[Union[Var, str]] | None = None,
+):
+    """Return a Numba‑JIT scalar function for *expr*.
+
+    The function signature is positional floats; argument order is given by
+    `vars_order(expr, ordering)`.
+    """
+    order = vars_order(expr, ordering)
+    return _compile([expr], order)
+
+# -----------------------------------------------------------------------------
+# Public – system of expressions
+# -----------------------------------------------------------------------------
+
+def compile_numba_system(
+    exprs: Sequence[Expr],
+    ordering: Sequence[Union[Var, str]] | None = None,
+):
+    """Return a Numba‑JIT function computing all *exprs* at once.
+
+    The positional argument order is the same as `vars_order(exprs, ordering)`.
+    The function returns a tuple of floats (one per expression).
+    """
+    order = vars_order(exprs, ordering)
+    return _compile(list(exprs), order)
+
+def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
+    """JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
+
+    Returns
+    -------
+    jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
+        Fast evaluator in which *values* is a 1‑D NumPy vector of length
+        ``len(variables)``.
+    sparsity_pattern : tuple(np.ndarray, np.ndarray)
+        Row/col indices of structurally non‑zero entries.
+    """
+    # Ensure deterministic variable order
+    order = variables
+
+    # Cache compiled partials by UID so duplicates are reused
+    fn_cache: Dict[str, Callable] = {}
+    triplets: List[Tuple[int, int, Callable]] = []  # (col, row, fn)
+
+    for row, eq in enumerate(equations):
+        for col, var in enumerate(variables):
+            d = eq.diff(var).simplify()
+            if isinstance(d, Const) and d.value == 0:
+                continue  # structural zero
+            uid = d.uid
+            fn = fn_cache.setdefault(uid, compile_numba_positional(d, ordering=order))
+            triplets.append((col, row, fn))
+
+    # Sort by column, then row for CSC layout
+    triplets.sort(key=lambda t: (t[0], t[1]))
+    cols_sorted, rows_sorted, fns_sorted = zip(*triplets) if triplets else ([], [], [])
+
+    nnz = len(fns_sorted)
+    indices = np.fromiter(rows_sorted, dtype=np.int32, count=nnz)
+    data    = np.empty(nnz, dtype=np.float64)
+
+    indptr = np.zeros(len(variables) + 1, dtype=np.int32)
+    for c in cols_sorted:
+        indptr[c + 1] += 1
+    np.cumsum(indptr, out=indptr)
+
+    def jac_fn(values: np.ndarray) -> csc_matrix:  # noqa: D401 – simple
+        assert values.shape == (len(variables),)
+        vals = [float(v) for v in values]
+        for k, fn in enumerate(fns_sorted):
+            data[k] = fn(*vals)
+        return csc_matrix((data, indices, indptr), shape=(len(equations), len(variables)))
+
+    return jac_fn, (indices, np.fromiter(cols_sorted, dtype=np.int32, count=nnz))
 
 
 # -----------------------------------------------------------------------------
