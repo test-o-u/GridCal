@@ -2,6 +2,9 @@ from __future__ import annotations
 import json
 import pytest
 import math
+import numpy as np
+from scipy.sparse import csc_matrix
+import sympy
 from types import MappingProxyType
 from typing import Any, Callable, Dict
 import GridCalEngine.Utils.Symbolic.symbolic as sym
@@ -243,9 +246,7 @@ def test_numba_compilation_1():
 
 def test_jacobian():
     # ---- 1.  problem definition --------------------------------------
-    import numpy as np
-    from scipy.sparse import csc_matrix
-    import sympy as sp
+
 
     # symbolic-framework variables / equations
     x, y, z = sym.Var('x'), sym.Var('y'), sym.Var('z')
@@ -258,13 +259,13 @@ def test_jacobian():
     jac_fn, _ = sym.compile_sparse_jacobian(equations, variables)
 
     # ---- 3.  build the same in SymPy ---------------------------------
-    xs, ys, zs = sp.symbols('x y z')
-    sym_eqs = [sp.sin(xs) + ys * zs,
-               xs ** 2 + sp.exp(zs),
-               sp.sin(xs) + ys * zs]
+    xs, ys, zs = sympy.symbols('x y z')
+    sym_eqs = [sympy.sin(xs) + ys * zs,
+               xs ** 2 + sympy.exp(zs),
+               sympy.sin(xs) + ys * zs]
     sym_vars = [xs, ys, zs]
-    J_sym = sp.Matrix(sym_eqs).jacobian(sym_vars)  # dense SymPy matrix
-    J_sym_func = sp.lambdify((xs, ys, zs), J_sym, 'numpy')
+    J_sym = sympy.Matrix(sym_eqs).jacobian(sym_vars)  # dense SymPy matrix
+    J_sym_func = sympy.lambdify((xs, ys, zs), J_sym, 'numpy')
 
     # ---- 4.  evaluate & compare -------------------------------------
     point = np.array([1.0, 2.0, 0.5])  # (x, y, z)

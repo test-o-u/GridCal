@@ -12,7 +12,7 @@ from scipy.sparse import csc_matrix
 import numba as nb
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple
+from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple, Set
 
 NUMBER = Union[int, float]
 
@@ -21,9 +21,9 @@ NUMBER = Union[int, float]
 # UUID helper
 # -----------------------------------------------------------------------------
 
-def _new_uid() -> str:
+def _new_uid() -> int:
     """Generate a fresh UUID‑v4 string."""
-    return str(uuid.uuid4())
+    return uuid.uuid4().int
 
 
 # -----------------------------------------------------------------------------
@@ -41,35 +41,49 @@ def _to_expr(val: Any) -> "Expr":
 def _var_name(sym: Var | str) -> str:
     return sym.name if isinstance(sym, Var) else sym
 
+
 def _var_uid(sym: Var | str) -> str:
     return sym.uid if isinstance(sym, Var) else sym
+
 
 # -----------------------------------------------------------------------------
 # Base class
 # -----------------------------------------------------------------------------
 
 class Expr:
-    """Abstract base class for all expression nodes."""
+    """
+    Abstract base class for all expression nodes.
+    """
 
     uid: str  # real dataclass field lives in subclasses
 
-    # ------------------------------------------------------------------
-    # Numeric evaluation
-    # ------------------------------------------------------------------
     def eval(self, **bindings: float | int) -> float | int:  # pragma: no cover – abstract
+        """
+        Numeric evaluation
+        :param bindings:
+        :return:
+        """
         raise NotImplementedError
 
     def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:  # pragma: no cover – abstract
+        """
+
+        :param uid_bindings:
+        :return:
+        """
         raise NotImplementedError
 
     __call__ = eval  # allow f(x=…)
 
-    # ------------------------------------------------------------------
-    # Differentiation (higher‑order)
-    # ------------------------------------------------------------------
     def diff(self, var: Var | str, order: int = 1) -> "Expr":
+        """
+        Differentiation (higher‑order)
+        :param var:
+        :param order:
+        :return:
+        """
         if order < 0:
-            raise ValueError("order must be ≥ 0")
+            raise ValueError("order must be >= 0")
         expr: Expr = self
         for _ in range(order):
             expr = expr._diff1(var).simplify()
@@ -78,18 +92,16 @@ class Expr:
     def _diff1(self, var: Var | str) -> "Expr":  # pragma: no cover
         raise NotImplementedError
 
-    # ------------------------------------------------------------------
-    # Simplification & substitution (no‑ops by default)
-    # ------------------------------------------------------------------
     def simplify(self) -> "Expr":
+        """
+        Simplification & substitution (no‑ops by default)
+        :return:
+        """
         return self
 
     def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
         return mapping.get(self, self)
 
-    # ------------------------------------------------------------------
-    # JSON I/O helpers
-    # ------------------------------------------------------------------
     def to_dict(self) -> Dict[str, Any]:
         return _expr_to_dict(self)
 
@@ -157,7 +169,7 @@ class Expr:
 @dataclass(frozen=True)
 class Const(Expr):
     value: NUMBER
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
         return self.value
@@ -175,7 +187,7 @@ class Const(Expr):
 @dataclass(frozen=True)
 class Var(Expr):
     name: str
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
         try:
@@ -183,7 +195,7 @@ class Var(Expr):
         except KeyError as exc:
             raise ValueError(f"No value for variable '{self.name}'.") from exc
 
-    def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:
+    def eval_uid(self, uid_bindings: Dict[int, NUMBER]) -> NUMBER:
         try:
             return uid_bindings[self.uid]
         except KeyError as exc:
@@ -202,6 +214,9 @@ class Var(Expr):
     def __str__(self) -> str:
         return self.name
 
+    def __eq__(self, other: "Var"):
+        return self.uid == other.uid
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Binary & unary operators
@@ -212,7 +227,7 @@ class BinOp(Expr):
     op: str
     left: Expr
     right: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[NUMBER, NUMBER], NUMBER]]] = MappingProxyType({
         "+": lambda a, b: a + b,
@@ -264,7 +279,6 @@ class BinOp(Expr):
                 return self * (dv * log(u) + du * v / u)
         raise ValueError("Unsupported operator for diff")
 
-    # --- simplification ------------------------------------------------------
     def simplify(self) -> Expr:
         """
         Simplify expression
@@ -314,7 +328,7 @@ class BinOp(Expr):
 class UnOp(Expr):
     op: str
     operand: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
         val = self.operand.eval(**bindings)
@@ -332,10 +346,10 @@ class UnOp(Expr):
 
         :return:
         """
-        opnd = self.operand.simplify()
-        if isinstance(opnd, Const):
-            return Const(-opnd.value)
-        return UnOp(self.op, opnd)
+        opr = self.operand.simplify()
+        if isinstance(opr, Const):
+            return Const(-opr.value)
+        return UnOp(self.op, opr)
 
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
         """
@@ -359,7 +373,7 @@ class UnOp(Expr):
 class Func(Expr):
     name: str
     arg: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[NUMBER], NUMBER]]] = MappingProxyType({
         "sin": math.sin,
@@ -458,11 +472,12 @@ sinh = _make_unary("sinh")
 cosh = _make_unary("cosh")
 
 
-# -----------------------------------------------------------------------------
-# (De)serialisation helpers
-# -----------------------------------------------------------------------------
-
 def _expr_to_dict(expr: Expr) -> Dict[str, Any]:
+    """
+    Serialize expression to dictionary
+    :param expr:
+    :return:
+    """
     match expr:
         case Const(value=v, uid=uid):
             return {"type": "Const", "value": v, "uid": uid}
@@ -478,7 +493,12 @@ def _expr_to_dict(expr: Expr) -> Dict[str, Any]:
             raise TypeError("Unsupported Expr subclass")
 
 
-def _dict_to_expr(data: Dict[str, Any]) -> "Expr":
+def _dict_to_expr(data: Dict[str, Any]) -> Expr:
+    """
+    De-Serialize expression from dictionary
+    :param data:
+    :return:
+    """
     t = data["type"]
     if t == "Const":
         obj: Expr = Const(data["value"])
@@ -501,20 +521,29 @@ def _dict_to_expr(data: Dict[str, Any]) -> "Expr":
 # ----------------------------------------------------------------------------------------------------------------------
 
 def diff(expr: Expr, var: Union[Var, str], order: int = 1) -> Expr:  # noqa: D401 – simple
-    """Return ∂^order(expr)/∂var^order."""
+    """
+    Return ∂^order(expr)/∂var^order.
+    :param expr: Expression
+    :param var: Variable to differentiate against
+    :param order: Derivative order
+    :return: Derivative expression
+    """
     return expr.diff(var, order)
 
 
 def eval_uid(expr: Expr, uid_bindings: Dict[str, NUMBER]) -> NUMBER:  # noqa: D401 – simple
-    """Evaluate *expr* with a mapping from node UID → numeric value."""
+    """
+    Evaluate *expr* with a mapping from node UID → numeric value.
+    :param expr:
+    :param uid_bindings:
+    :return:
+    """
     return expr.eval_uid(uid_bindings)
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Collect variables in a deterministic order
-# ----------------------------------------------------------------------------------------------------------------------
-def _collect_vars(expr: Expr, out: List[Var]) -> None:
+def _collect_vars(expr: Expr, out: Set[Var]) -> None:
     """
+    Collect variables in a deterministic order
     Depth-first, left-to-right variable harvest.
     :param expr: Some expression
     :param out: List to fill
@@ -522,7 +551,7 @@ def _collect_vars(expr: Expr, out: List[Var]) -> None:
     """
     if isinstance(expr, Var):
         if expr not in out:
-            out.append(expr)
+            out.add(expr)
     elif isinstance(expr, BinOp):
         _collect_vars(expr.left, out)
         _collect_vars(expr.right, out)
@@ -532,22 +561,25 @@ def _collect_vars(expr: Expr, out: List[Var]) -> None:
         _collect_vars(expr.arg, out)
 
 
-def _all_vars(exprs: Sequence[Expr]) -> List[Var]:
+def _all_vars(expressions: Sequence[Expr]) -> List[Var]:
     """
+    Collect all variables in a list of expressions
+    :param expressions: Any iterable of expressions
+    :return: List of non-repeated variables
+    """
+    res: Set[Var] = set()
+    for e in expressions:
+        _collect_vars(e, res)
+    return list(res)
 
-    :param exprs:
+
+def _emit(expr: Expr, uid_map: Dict[int, str]) -> str:
+    """
+    Emit a pure-Python (Numba-friendly) expression string
+    :param expr: Expr (expression)
+    :param uid_map:
     :return:
     """
-    res: List[Var] = []
-    for e in exprs:
-        _collect_vars(e, res)
-    return res
-
-
-# ----------------------------------------------------------------------
-# Emit a pure-Python (Numba-friendly) expression string
-# ----------------------------------------------------------------------
-def _emit(expr: Expr, uid_map: Dict[str, str]) -> str:
     if isinstance(expr, Const):
         return repr(expr.value)
     if isinstance(expr, Var):
@@ -561,13 +593,7 @@ def _emit(expr: Expr, uid_map: Dict[str, str]) -> str:
     raise TypeError(type(expr))
 
 
-# ----------------------------------------------------------------------
-# Public compiler
-# ----------------------------------------------------------------------
-def vars_order(
-    exprs: Union[Expr, Sequence[Expr]],
-    ordering: Sequence[Union[Var, str]] | None = None,
-) -> List[Var]:
+def vars_order(exprs: Union[Expr, Sequence[Expr]], ordering: Sequence[Union[Var, str]] | None = None, ) -> List[Var]:
     """
     Return the variable list that positional JIT functions will expect.
     :param exprs: Single expression or any iterable of expressions.
@@ -577,9 +603,10 @@ def vars_order(
     """
 
     if isinstance(exprs, Expr):
-        exprs = [exprs]
+        auto = _all_vars([exprs])
+    else:
+        auto = _all_vars(exprs)
 
-    auto = _all_vars(exprs)
     if ordering is None:
         return auto
 
@@ -587,8 +614,15 @@ def vars_order(
     return [v if isinstance(v, Var) else name_map[v] for v in ordering]
 
 
-def _compile(exprs: Sequence[Expr], order: List[Var]):
-    uid2sym = {v.uid: f"v{i}" for i, v in enumerate(order)}
+def _compile(exprs: Sequence[Expr], order: List[Var], add_doc_string: bool = True):
+    """
+
+    :param exprs:
+    :param order:
+    :param add_doc_string:
+    :return:
+    """
+    uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(order)}
     arglist = ", ".join(uid2sym[v.uid] for v in order)
 
     # Build body lines
@@ -604,46 +638,51 @@ def _compile(exprs: Sequence[Expr], order: List[Var]):
     exec(src, ns)
     fn = nb.njit(ns["_f"], fastmath=True)
 
-    fn.__doc__ = "Positional order:\n  " + "\n  ".join(
-        f"v{i} → {v.name} (uid={v.uid[:8]}…)" for i, v in enumerate(order)
-    )
+    if add_doc_string:
+        fn.__doc__ = "Positional order:\n  " + "\n  ".join(
+            f"v{i} → {v.name} (uid={v.uid}…)" for i, v in enumerate(order)
+        )
     return fn
+
 
 # -----------------------------------------------------------------------------
 # Public – single expression
 # -----------------------------------------------------------------------------
 
-def compile_numba_positional(
-    expr: Expr,
-    ordering: Sequence[Union[Var, str]] | None = None,
-):
-    """Return a Numba‑JIT scalar function for *expr*.
-
+def compile_numba_positional(expr: Expr, ordering: Sequence[Union[Var, str]] | None = None):
+    """
+    Return a Numba‑JIT scalar function for *expr*.
     The function signature is positional floats; argument order is given by
     `vars_order(expr, ordering)`.
+    :param expr:
+    :param ordering:
+    :return:
     """
     order = vars_order(expr, ordering)
     return _compile([expr], order)
+
 
 # -----------------------------------------------------------------------------
 # Public – system of expressions
 # -----------------------------------------------------------------------------
 
-def compile_numba_system(
-    exprs: Sequence[Expr],
-    ordering: Sequence[Union[Var, str]] | None = None,
-):
-    """Return a Numba‑JIT function computing all *exprs* at once.
+def compile_numba_system(exprs: Sequence[Expr], ordering: Sequence[Union[Var, str]] | None = None):
+    """
+    Return a Numba‑JIT function computing all *exprs* at once.
 
     The positional argument order is the same as `vars_order(exprs, ordering)`.
     The function returns a tuple of floats (one per expression).
+    :param exprs:
+    :param ordering:
+    :return:
     """
     order = vars_order(exprs, ordering)
     return _compile(list(exprs), order)
 
-def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
-    """JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
 
+def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
+    """
+    JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
     Returns
     -------
     jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
@@ -651,7 +690,12 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
         ``len(variables)``.
     sparsity_pattern : tuple(np.ndarray, np.ndarray)
         Row/col indices of structurally non‑zero entries.
+
+    :param equations:
+    :param variables:
+    :return:
     """
+
     # Ensure deterministic variable order
     order = variables
 
@@ -674,7 +718,7 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
 
     nnz = len(fns_sorted)
     indices = np.fromiter(rows_sorted, dtype=np.int32, count=nnz)
-    data    = np.empty(nnz, dtype=np.float64)
+    data = np.empty(nnz, dtype=np.float64)
 
     indptr = np.zeros(len(variables) + 1, dtype=np.int32)
     for c in cols_sorted:
