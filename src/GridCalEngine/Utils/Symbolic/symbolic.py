@@ -680,7 +680,7 @@ def compile_numba_system(exprs: Sequence[Expr], ordering: Sequence[Union[Var, st
     return _compile(list(exprs), order)
 
 
-def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
+def compile_sparse_jacobian(equations: List[Expr], variables: List[Var], params: List[Var]):
     """
     JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
     Returns
@@ -697,7 +697,12 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
     """
 
     # Ensure deterministic variable order
-    order = variables
+    check_set = set()
+    for v in variables:
+        if v in check_set:
+            raise ValueError(f"Repeated var {v.name} in the variables' list :(")
+        else:
+            check_set.add(v)
 
     # Cache compiled partials by UID so duplicates are reused
     fn_cache: Dict[str, Callable] = {}
@@ -708,8 +713,8 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
             d = eq.diff(var).simplify()
             if isinstance(d, Const) and d.value == 0:
                 continue  # structural zero
-            uid = d.uid
-            fn = fn_cache.setdefault(uid, compile_numba_positional(d, ordering=order))
+
+            fn = fn_cache.setdefault(d.uid, compile_numba_positional(d, ordering=variables + params))
             triplets.append((col, row, fn))
 
     # Sort by column, then row for CSC layout
@@ -726,7 +731,7 @@ def compile_sparse_jacobian(equations: List[Expr], variables: List[Var]):
     np.cumsum(indptr, out=indptr)
 
     def jac_fn(values: np.ndarray) -> csc_matrix:  # noqa: D401 – simple
-        assert values.shape == (len(variables),)
+        assert len(values) == len(variables) + len(params)
         vals = [float(v) for v in values]
         for k, fn in enumerate(fns_sorted):
             data[k] = fn(*vals)

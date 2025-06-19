@@ -18,7 +18,8 @@ print(f_fast(1.0, 2.0, 3.0))   # x=1, y=2, x2=3
 # -------------------------------------------------------------------------------
 
 x, y, x2 = Var("x"), Var("y"), Var("x")
-eqs = [sin(x) + y, x2**2 + exp(y)]
+eqs = [sin(x) + y,
+       x2**2 + exp(y) * x]
 
 order = vars_order(eqs)          # deterministic list of Var objects
 f_fast = compile_numba_system(eqs)   # always returns *one* object
@@ -31,7 +32,7 @@ print(f_fast(1, 2, 3))   # (sin 1 + 2, 9 + e²)
 
 x, y, z = Var('x'), Var('y'), Var('z')
 eqs = [sin(x) + y*z,
-       x**2 + exp(z),
+       x**2 + exp(z)*x,
        sin(x) + y*z]   # note repeated eq
 vars_ = [x, y, z]
 

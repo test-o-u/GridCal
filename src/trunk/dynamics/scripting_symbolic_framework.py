@@ -94,7 +94,7 @@ var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, v_q, v_d, t_e, P_e, Q_
 # Line
 expr1 = (Q_origin ** 2 * g) - (Q_origin * Q_end * (g * cos(P_origin - P_end) + b * sin(P_origin - P_end)))
 expr2 = -Q_origin ** 2 * (b + bsh / Const(2)) - Q_origin * Q_end * (
-            g * sin(P_origin - P_end) - b * cos(P_origin - P_end))
+        g * sin(P_origin - P_end) - b * cos(P_origin - P_end))
 expr3 = (Q_end ** 2 * g) - (Q_end * Q_origin * (g * cos(P_end - P_origin) + b * sin(P_end - P_origin)))
 expr4 = -Q_end ** 2 * (b + bsh / Const(2)) - Q_end * Q_origin * (g * sin(P_end - P_origin) - b * cos(P_end - P_origin))
 
@@ -124,10 +124,12 @@ eq_Qg = Qg - (v_q * i_d + v_d * i_q)
 
 equations_list = [expr_psid, expr_psiq, expr_i_d, expr_i_q, expr_v_d, expr_v_q, expr_t_e, expr_P_e, expr_Q_e, eq_Qg,
                   eq_Pg]
-var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, v_q, v_d, t_e, P_e, Q_e, Pg, Qg]
+var_list = [delta, omega, psid, psiq, i_d, i_q, v_q, v_d, t_e, P_e, Q_e, Pg, Qg]
+params_list = [fn, tm, M, D, ra,xd,vf]
+j_func, _ = compile_sparse_jacobian(equations=equations_list,
+                                    variables=var_list,
+                                    params=params_list)
 
-j_func, _ = compile_sparse_jacobian(equations_list, var_list)
-
-J = j_func(np.ones(len(var_list)))
+J = j_func(np.ones(len(var_list) + len(params_list)))
 
 print(J.toarray())
