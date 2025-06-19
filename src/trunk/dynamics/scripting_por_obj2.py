@@ -43,6 +43,10 @@ grid.add_load(bus2, api_obj=Load1)
 
 # Now the grid is built with the elements attached and we need to add the dynamic model to each element
 
+# First of all the variables are created:
+# Define constants
+
+
 # Data to parse for building dynamic models ----------------------------------------------------------------------------------------------------------------------
 bus1_data = {
     "name": "Bus",
