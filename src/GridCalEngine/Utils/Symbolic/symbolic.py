@@ -38,8 +38,8 @@ Number = Union[int, float]
 # UUID helper
 # -----------------------------------------------------------------------------
 
-def _new_uid() -> str:
-    return str(uuid.uuid4())
+def _new_uid() -> int:
+    return uuid.uuid4().int
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -53,8 +53,11 @@ def _to_expr(value: Any) -> "Expr":
     raise TypeError(f"Cannot convert {value!r} to Expr")
 
 
-def _as_var_name(var: Union["Var", str]) -> str:
+def _as_var_name(var: "Var" | str) -> str:
     return var.name if isinstance(var, Var) else var  # type: ignore[arg-type]
+
+def _as_var_uid(var: "Var" | str) -> str:
+    return var.uid if isinstance(var, Var) else var  # type: ignore[arg-type]
 
 # -----------------------------------------------------------------------------
 # Core expression hierarchy
@@ -70,7 +73,7 @@ class Expr:
         raise NotImplementedError
 
     # --- differentiation -----------------------------------------------------
-    def diff(self, var: Union["Var", str]) -> "Expr":  # pragma: no cover
+    def diff(self, var: "Var" | str) -> "Expr":  # pragma: no cover
         raise NotImplementedError
 
     # allow f(x=…) shorthand
@@ -138,12 +141,12 @@ class Expr:
 @dataclass(frozen=True)
 class Const(Expr):
     value: Number
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         return self.value
 
-    def diff(self, var: Union["Var", str]) -> "Expr":
+    def diff(self, var: "Var" | str) -> "Expr":
         return Const(0)
 
     def __str__(self) -> str:
@@ -153,7 +156,7 @@ class Const(Expr):
 @dataclass(frozen=True)
 class Var(Expr):
     name: str
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         try:
@@ -161,8 +164,8 @@ class Var(Expr):
         except KeyError as exc:
             raise ValueError(f"No value provided for variable '{self.name}'.") from exc
 
-    def diff(self, var: Union["Var", str]) -> "Expr":
-        return Const(1 if self.name == _as_var_name(var) else 0)
+    def diff(self, var: "Var" | str) -> "Expr":
+        return Const(1 if self.uid == _as_var_uid(var) else 0)
 
     def __str__(self) -> str:
         return self.name
@@ -176,7 +179,7 @@ class BinOp(Expr):
     op: str
     left: Expr
     right: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[Number, Number], Number]]] = MappingProxyType({
         "+": lambda a, b: a + b,
@@ -190,7 +193,7 @@ class BinOp(Expr):
         l, r = self.left.eval(**bindings), self.right.eval(**bindings)
         return self._impl[self.op](l, r)
 
-    def diff(self, var: Union["Var", str]) -> "Expr":
+    def diff(self, var: "Var" | str) -> "Expr":
         u, v = self.left, self.right
         du, dv = u.diff(var), v.diff(var)
         if self.op == "+":
@@ -216,7 +219,7 @@ class BinOp(Expr):
 class UnOp(Expr):
     op: str
     operand: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: Number) -> Number:
         val = self.operand.eval(**bindings)
@@ -224,7 +227,7 @@ class UnOp(Expr):
             return -val
         raise ValueError(f"Unsupported unary operator '{self.op}'.")
 
-    def diff(self, var: Union["Var", str]) -> "Expr":
+    def diff(self, var: "Var" | str) -> "Expr":
         if self.op == "-":
             return -self.operand.diff(var)
         raise ValueError(f"Unsupported unary operator '{self.op}'.")
@@ -240,7 +243,7 @@ class UnOp(Expr):
 class Func(Expr):
     name: str
     arg: Expr
-    uid: str = field(default_factory=_new_uid, init=False)
+    uid: int = field(default_factory=_new_uid, init=False)
 
     _impl: ClassVar[Mapping[str, Callable[[Number], Number]]] = MappingProxyType({
         "sin": math.sin,
@@ -252,7 +255,7 @@ class Func(Expr):
     def eval(self, **bindings: Number) -> Number:
         return self._impl[self.name](self.arg.eval(**bindings))
 
-    def diff(self, var: Union["Var", str]) -> "Expr":
+    def diff(self, var: "Var" | str) -> "Expr":
         inner = self.arg
         d_inner = inner.diff(var)
         if isinstance(d_inner, Const) and d_inner.value == 0:
@@ -307,7 +310,8 @@ def _expr_to_dict(expr: "Expr") -> Dict[str, Any]:
 
 
 def _dict_to_expr(data: Dict[str, Any]) -> "Expr":
-    t, uid = data["type"], data["uid"]
+    t = data["type"]
+    uid = data["uid"]
     if t == "Const":
         obj: Expr = Const(data["value"])
     elif t == "Var":
