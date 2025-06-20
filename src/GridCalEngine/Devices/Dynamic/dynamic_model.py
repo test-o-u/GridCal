@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: MPL-2.0
 from typing import List, Dict, Any
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
-from GridCalEngine.Devices.Dynamic.variable import Var
-from GridCalEngine.Devices.Dynamic.equation import Equation
+from GridCalEngine.Utils.Symbolic.symbolic import Const, Var
+from GridCalEngine.Devices.Dynamic.equation_2 import Equation
 
 
 class DynamicModel(EditableDevice):
@@ -62,22 +62,22 @@ class DynamicModel(EditableDevice):
 
         self._algebraic_var_input.clear()
         for elm in data["algebraic_var_input"]:
-            obj = Var(elm["name"])
+            obj = elm["name"]
             self.add_algebraic_var_input(obj)
 
         self._state_var_input.clear()
         for elm in data["state_var_input"]:
-            obj = Var(elm["name"])
+            obj = elm["name"]
             self.add_state_var_input(obj)
 
         self._algebraic_var_output.clear()
         for elm in data["algebraic_var_output"]:
-            obj = Var(elm["name"])
+            obj = elm["name"]
             self.add_algebraic_var_output(obj)
 
         self._state_var_output.clear()
         for elm in data["state_var_output"]:
-            obj = Var(elm["name"])
+            obj = elm["name"]
             self.add_state_var_output(obj)
 
         self._algebraic_equations.clear()
@@ -91,40 +91,40 @@ class DynamicModel(EditableDevice):
             self.add_state_equations(obj)
 
     def add_algebraic_var_input(self, val: Var):
-        self._algebraic_var_input[val.idtag] = val
+        self._algebraic_var_input[val.uid] = val
 
     def add_state_var_input(self, val: Var):
-        self._state_var_input[val.idtag] = val
+        self._state_var_input[val.uid] = val
 
     def add_algebraic_var_output(self, val: Var):
-        self._algebraic_var_output[val.idtag] = val
+        self._algebraic_var_output[val.uid] = val
 
     def add_state_var_output(self, val: Var):
-        self._state_var_output[val.idtag] = val
+        self._state_var_output[val.uid] = val
 
     def add_algebraic_equations(self, val: Equation):
-        self._algebraic_equations[val.output.idtag] = val
+        self._algebraic_equations[val.output.uid] = val
 
     def add_state_equations(self, val: Equation):
-        self._state_equations[val.output.idtag] = val
+        self._state_equations[val.output.uid] = val
 
-    def get_algebraic_var_input(self, idtag: int):
-        return self._algebraic_var_input[idtag]
+    def get_algebraic_var_input(self, uid: int):
+        return self._algebraic_var_input[uid]
 
-    def get_state_var_input(self, idtag: int):
-        return self._state_var_input[idtag]
+    def get_state_var_input(self, uid: int):
+        return self._state_var_input[uid]
 
-    def get_algebraic_var_output(self, idtag: int):
-        return self._algebraic_var_output[idtag]
+    def get_algebraic_var_output(self, uid: int):
+        return self._algebraic_var_output[uid]
 
-    def get_state_var_output(self, idtag: int):
-        return self._state_var_output[idtag]
+    def get_state_var_output(self, uid: int):
+        return self._state_var_output[uid]
 
-    def get_algebraic_equations(self, idtag: int):
-        return self._algebraic_var_output[idtag]
+    def get_algebraic_equations(self, uid: int):
+        return self._algebraic_equations[uid]
 
-    def get_state_equations(self, idtag: int):
-        return self._state_var_output[idtag]
+    def get_state_equations(self, uid: int):
+        return self._state_equations[uid]
 
 
 class Sum(DynamicModel):

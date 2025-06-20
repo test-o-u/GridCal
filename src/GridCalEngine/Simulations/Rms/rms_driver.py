@@ -3,6 +3,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
+from GridCalEngine.Simulations.Rms.model.rms_equations_wrapper import EquationsWrapp
 from GridCalEngine.Simulations.driver_template import DriverTemplate
 from GridCalEngine.Simulations.Rms.rms_options import RmsOptions
 from GridCalEngine.Simulations.Rms.rms_results import RmsResults
@@ -53,9 +54,7 @@ class RmsSimulationDriver(DriverTemplate):
         :return:
         """
         # Time domain simulation
-        dae = RmsProblem(grid=self.grid)  # DAE system manager for equations.
-
-        dae.initilize_fg()
+        equations = EquationsWrapp(grid=self.grid)  # DAE system manager for equations.
 
         # Get integration method
         if self.options.integration_method == DynamicIntegrationMethod.Trapezoid:
