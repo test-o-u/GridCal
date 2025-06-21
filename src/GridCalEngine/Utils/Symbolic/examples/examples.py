@@ -8,9 +8,7 @@ from __future__ import annotations
 
 import json
 import math
-from pprint import pprint
-
-import symbolic as sym
+import GridCalEngine.Utils.Symbolic.symbolic as sym
 
 # -----------------------------------------------------------------------------
 # 1. Build basic expressions with arithmetic operators

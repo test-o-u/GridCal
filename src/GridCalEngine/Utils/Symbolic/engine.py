@@ -1,82 +1,219 @@
-import networkx as nx
-from typing import Iterable, List
-from GridCalEngine.Utils.Symbolic.block import Block, Port
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+# SPDX-License-Identifier: MPL-2.0
 
 
-class Engine:
-    """
-    Fixed-step scheduler for a directed block graph.
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Tuple, Sequence
+import math
+import numpy as np
+from typing import Dict, List, Literal
+from matplotlib import pyplot as plt
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, BinOp, compile_numba_functions
+from GridCalEngine.Utils.Symbolic.block import Block
 
-    Parameters
-    ----------
-    blocks : list[Block]
-        All *top-level* blocks (leaf or Subsystem) that form the model.
-        Connection wires are discovered automatically.
 
-    Notes
-    -----
-    * Uses NetworkX to topo-sort once on construction.
-    * If a loop is detected (algebraic cycle) a `ValueError` is raised.
-    * Each major step does:
-        1. block.step(dt, t)  in topo order
-        2. immediately propagates the block’s outputs to connected inputs
-    """
+class BlockSystem:
+    """A network of Blocks that behaves roughly like a Simulink diagram."""
+
+    # ------------------------------------------ helper: deep substitution until fixed‑point
+    @staticmethod
+    def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
+        cur = expr
+        for _ in range(max_iter):
+            nxt = cur.subs(mapping).simplify()
+            if str(nxt) == str(cur):  # no further change
+                break
+            cur = nxt
+        return cur
+
+    # ------------------------------------------ ctor
+
+    def __init__(self, blocks: Sequence[Block]):
+        self.blocks = list(blocks)
+
+        # Flatten the block lists, preserving declaration order
+        self.algebraic_vars: List[Var] = []
+        self.algebraic_eqs: List[Expr] = []
+        self.state_vars: List[Var] = []
+        self.state_eqs: List[Expr] = []
+        for b in self.blocks:
+            self.algebraic_vars.extend(b.algebraic_vars)
+            self.algebraic_eqs.extend(b.algebraic_eqs)
+            self.state_vars.extend(b.state_vars)
+            self.state_eqs.extend(b.state_eqs)
+
+        # ---------------------------------- algebraic substitution map  y → rhs
+        self._alg_subs: Dict[Var, Expr] = {}
+        for y, eq in zip(self.algebraic_vars, self.algebraic_eqs):
+            if isinstance(eq, BinOp) and eq.op == "-" and str(eq.left) == str(y):
+                rhs = eq.right
+            else:
+                rhs = y - eq  # generic fallback
+            # Flatten RHS using *already‑known* substitutions
+            rhs_flat = self._fully_substitute(rhs, self._alg_subs)
+            self._alg_subs[y] = rhs_flat
+
+        # ---------------------------------- pure‑state RHS after full substitution
+        self._state_rhs: List[Expr] = [
+            self._fully_substitute(expr, self._alg_subs).simplify() for expr in self.state_eqs
+        ]
+
+        # ---------------------------------- JIT compile (if there are states)
+        self._rhs_fn = None
+        if self.state_vars:
+            self._rhs_fn = compile_numba_functions(self._state_rhs, sorting_vars=self.state_vars)
+
+    # ------------------------------------------------------------------ public API
+
+    def rhs(self, state: Sequence[float]) -> np.ndarray:
+        """Return 𝑑x/dt given the current *state* vector."""
+        if self._rhs_fn is None:
+            return np.array([])
+        return np.asarray(self._rhs_fn(*state))
+
+    def equations(self) -> Tuple[List[Expr], List[Expr]]:
+        """(algebraic_eqs, state_eqs) as *originally declared* (no substitution)."""
+        return list(self.algebraic_eqs), list(self.state_eqs)
+
+    def simulate(
+            self,
+            t0: float,
+            t_end: float,
+            h: float,
+            init_state: Sequence[float],
+            *,
+            method: Literal["rk4", "euler", "adaptive"] = "rk4",
+            abs_tol: float = 1e-6,
+            rel_tol: float = 1e-3,
+            h_min: float | None = None,
+            h_max: float | None = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Simulate the system.
+
+        Parameters
+        ----------
+        t0, t_end : float
+            Start / end times (same units as RHS)
+        h : float
+            Initial step size (for adaptive) or fixed size
+        init_state : Sequence[float]
+            Initial conditions (len == number of state variables)
+        method : {"rk4", "euler", "adaptive"}
+            Integration scheme
+        abs_tol, rel_tol : float
+            Error tolerances for adaptive mode (ignored otherwise)
+        h_min, h_max : float | None
+            Optional bounds for step size in adaptive mode
+        """
+        if len(init_state) != len(self.state_vars):
+            raise ValueError("init_state length mismatch with state_vars")
+
+        if method == "adaptive":
+            return self._simulate_adaptive(t0, t_end, h, init_state, abs_tol, rel_tol, h_min, h_max)
+        else:
+            return self._simulate_fixed(t0, t_end, h, init_state, method)
 
     # ------------------------------------------------------------------
-    def __init__(self, blocks: List["Block"]):
-        self.blocks = blocks
-        self.order  = self._toposort(blocks)
+    # Fixed‑step helpers (Euler, RK‑4)
+    # ------------------------------------------------------------------
+    def _simulate_fixed(
+            self,
+            t0: float,
+            t_end: float,
+            h: float,
+            init_state: Sequence[float],
+            method: Literal["rk4", "euler"],
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        n_steps = int(math.floor((t_end - t0) / h)) + 1
+        t = np.linspace(t0, t0 + h * (n_steps - 1), n_steps)
+        y = np.empty((n_steps, len(init_state)))
+        y[0] = init_state
+
+        rhs = self._rhs_fn  # local alias for speed
+
+        for i in range(1, n_steps):
+            yi = y[i - 1]
+            if method == "euler":
+                k1 = rhs(*yi)
+                y[i] = yi + h * np.asarray(k1)
+            elif method == "rk4":
+                k1 = np.asarray(rhs(*yi))
+                k2 = np.asarray(rhs(*(yi + 0.5 * h * k1)))
+                k3 = np.asarray(rhs(*(yi + 0.5 * h * k2)))
+                k4 = np.asarray(rhs(*(yi + h * k3)))
+                y[i] = yi + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+        return t, y
 
     # ------------------------------------------------------------------
-    def _toposort(self, blks: Iterable["Block"]) -> List["Block"]:
-        g = nx.DiGraph()
-        for b in blks:
-            g.add_node(b)
-
-        # add edges: src block  → dst block
-        for b in blks:
-            for p_out in b.outputs.values():
-                for p_dst in p_out.connections:
-                    g.add_edge(b, p_dst.owner)
-
-        if not nx.is_directed_acyclic_graph(g):
-            raise ValueError("Algebraic loop detected in block diagram. "
-                             "Insert delay/integrator blocks to break the loop.")
-
-        return list(nx.topological_sort(g))
-
+    # Adaptive RKF‑45 implementation
     # ------------------------------------------------------------------
-    def step_once(self, dt: float, t: float) -> None:
-        """
-        Advance the entire model by a single major step *dt*.
+    def _simulate_adaptive(
+            self,
+            t0: float,
+            t_end: float,
+            h0: float,
+            init_state: Sequence[float],
+            abs_tol: float,
+            rel_tol: float,
+            h_min: float | None,
+            h_max: float | None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        rhs = self._rhs_fn
+        t_list: List[float] = [t0]
+        y_list: List[np.ndarray] = [np.asarray(init_state, dtype=float)]
 
-        * Each block’s `step(dt, t)` is called in topological order.
-        * After a block finishes, its outputs are pushed to all connected
-          destination ports so downstream blocks see fresh values.
-        """
-        for blk in self.order:
-            blk.step(dt, t)
-
-            # propagate this block's outputs
-            for p_out in blk.outputs.values():
-                for p_dst in p_out.connections:
-                    p_dst.value = p_out.value
-
-    # ------------------------------------------------------------------
-    def simulate(self,
-                 t0: float,
-                 tf: float,
-                 dt: float):
-        """
-        Generator that advances the system from *t0* to *tf* (inclusive),
-        yielding the new time after each successful step.
-
-            >>> for t in engine.simulate(0.0, 1.0, 0.01):
-            ...     print(t)
-        """
         t = t0
-        steps = int(round((tf - t0) / dt))
-        for _ in range(steps):
-            self.step_once(dt, t)
-            t += dt
-            yield t
+        y = np.asarray(init_state, dtype=float)
+        h = h0
+        safety = 0.9
+        pow_ = 0.2  # 1/(order+1) with order=4
+        h_min = h_min if h_min is not None else h0 * 1e-6
+        h_max = h_max if h_max is not None else (t_end - t0)
+
+        while t < t_end:
+            if h < h_min:
+                raise RuntimeError("Step size underflow in adaptive integrator")
+            if t + h > t_end:
+                h = t_end - t  # final partial step
+
+            # --------------------------------------------------
+            # RKF‑45 coefficients
+            # --------------------------------------------------
+            k1 = np.asarray(rhs(*y))
+            k2 = np.asarray(rhs(*(y + h * 0.25 * k1)))
+            k3 = np.asarray(rhs(*(y + h * (3.0 / 32.0 * k1 + 9.0 / 32.0 * k2))))
+            k4 = np.asarray(rhs(*(y + h * (1932.0 / 2197.0 * k1 - 7200.0 / 2197.0 * k2 + 7296.0 / 2197.0 * k3))))
+            k5 = np.asarray(rhs(*(y + h * (439.0 / 216.0 * k1 - 8.0 * k2 + 3680.0 / 513.0 * k3 - 845.0 / 4104.0 * k4))))
+            k6 = np.asarray(rhs(*(y + h * (
+                        -8.0 / 27.0 * k1 + 2.0 * k2 - 3544.0 / 2565.0 * k3 + 1859.0 / 4104.0 * k4 - 11.0 / 40.0 * k5))))
+
+            y4 = y + h * (25.0 / 216.0 * k1 + 1408.0 / 2565.0 * k3 + 2197.0 / 4104.0 * k4 - 1.0 / 5.0 * k5)
+            y5 = y + h * (
+                    16.0 / 135.0 * k1 + 6656.0 / 12825.0 * k3 + 28561.0 / 56430.0 * k4
+                    - 9.0 / 50.0 * k5 + 2.0 / 55.0 * k6
+            )
+
+            # Error estimate
+            scale = abs_tol + np.maximum(np.abs(y), np.abs(y5)) * rel_tol
+            err_est = np.max(np.abs(y5 - y4) / scale)
+
+            if err_est <= 1.0:
+                # Accept step
+                t += h
+                y = y5
+                t_list.append(t)
+                y_list.append(y)
+
+            # Step size adjustment
+            if err_est == 0.0:
+                h_new = h_max
+            else:
+                h_new = safety * h * err_est ** (-pow_)
+            h = min(max(h_new, h_min), h_max)
+
+        t_arr = np.asarray(t_list)
+        y_arr = np.vstack(y_list)
+        return t_arr, y_arr

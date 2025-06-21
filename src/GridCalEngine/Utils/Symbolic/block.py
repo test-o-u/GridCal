@@ -4,139 +4,91 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from __future__ import annotations
-from typing import List, Dict, Callable
+from dataclasses import dataclass
+from typing import Tuple, Sequence, List
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr, compile_numba_functions
 
 
-class Port:
-    """
-    A scalar signal line.
-    """
-
-    def __init__(self, owner: "Block", name: str):
-        self.owner, self.name = owner, name
-        self.value: float = 0.0
-        self.connections: list["Port"] = []
-        self.sym: Var | None = None  # filled later for equation extraction
-
-    def connect(self, other: "Port"):
-        self.connections.append(other)
-
-
+@dataclass
 class Block:
+    """A declarative container: no methods, just equation lists."""
+
+    algebraic_vars: List[Var]
+    algebraic_eqs: List[Expr]
+    state_vars: List[Var]
+    state_eqs: List[Expr]
+    name: str = ""
+
+    def __post_init__(self) -> None:
+        if len(self.algebraic_vars) != len(self.algebraic_eqs):
+            raise ValueError("algebraic_vars and algebraic_eqs must have the same length")
+        if len(self.state_vars) != len(self.state_eqs):
+            raise ValueError("state_vars and state_eqs must have the same length")
+
+
+def compose_block(name: str,
+                  inputs: list[Var],
+                  outputs: list[Var],
+                  inner_blocks: list[Block]) -> Block:
     """
-    Base class—all concrete blocks inherit from this.
+    Bundle *inner_blocks* into a single reusable Block.
+
+    *inputs*  – Vars that outside world will drive
+    *outputs* – Vars that outside world will observe
+    Anything else is considered internal wiring.
     """
+    alg_v, alg_e, st_v, st_e = [], [], [], []
 
-    def __init__(self, name: str):
-        self.name = name
-        self.inputs: Dict[str, Port] = {}
-        self.outputs: Dict[str, Port] = {}
-        self.state_vars: list[str] = []  # names of internal state scalars
+    for blk in inner_blocks:
+        alg_v.extend(blk.algebraic_vars)
+        alg_e.extend(blk.algebraic_eqs)
+        st_v.extend(blk.state_vars)
+        st_e.extend(blk.state_eqs)
 
-    # helpers ------------------------------------------------------
-    def in_port(self, n: str) -> Port: return self.inputs[n]
+    # Keep only those algebraic signals that the outer world needs to see
+    # (outputs) or drive (inputs); everybody else is internal
+    exposed = set(inputs) | set(outputs)
+    keep = [i for i, v in enumerate(alg_v) if v in exposed]
+    alg_v = [alg_v[i] for i in keep]
+    alg_e = [alg_e[i] for i in keep]
 
-    def out_port(self, n: str) -> Port: return self.outputs[n]
-
-    # overridable --------------------------------------------------
-    def step(self, dt: float, t: float):
-        """Compute new outputs and update any internal state."""
-        raise NotImplementedError
-
-    def equations(self) -> list[Expr]:
-        """Return symbolic equations for this block (default none)."""
-        return []
-
-
-def connect(src: Port, dst: Port):
-    """
-    Wiring helper
-    :param src:
-    :param dst:
-    :return:
-    """
-    src.connect(dst)
+    return Block(
+        algebraic_vars=alg_v,
+        algebraic_eqs=alg_e,
+        state_vars=st_v,
+        state_eqs=st_e,
+        name=name,
+    )
 
 
-class EquationBlock(Block):
-    """
-    Generic block defined only by symbolic equations—no subclassing required.
+# --------------------------------------------------------------------------------------
+# Block factory helpers – each returns (output_var, Block)
+# --------------------------------------------------------------------------------------
 
-    Parameters
-    ----------
-    name        : str
-    inputs      : list[Var]
-    outputs     : dict[str, Expr] (Exprs may reference state vars)
-    states      : dict[Var, Expr] | None
-        Mapping from state variable to its *RHS* time derivative expression.
-        Omit or pass {} for stateless blocks.
-    integrator  : callable(x, rhs, dt) -> new_x
-        Defaults to forward Euler.
-    """
+def constant(value: float, name: str = "const") -> Tuple[Var, Block]:
+    y = Var(name)
+    blk = Block([y], [y - Const(value)], [], [])
+    return y, blk
 
-    # ---------- default forward-Euler integrator -----------------------
-    @staticmethod
-    def _euler(x: float, rhs: float, dt: float) -> float:
-        return x + dt * rhs
 
-    # ------------------------------------------------------------------
-    def __init__(self,
-                 name: str,
-                 inputs: List[Var],
-                 outputs: Dict[str, Expr],
-                 states: Dict[Var, Expr] | None = None,
-                 integrator: Callable[[float, float, float], float] | None = None):
-        super().__init__(name)
+def gain(k: float, u: Var, name: str = "gain_out") -> Tuple[Var, Block]:
+    y = Var(name)
+    blk = Block([y], [y - Const(k) * u], [], [])
+    return y, blk
 
-        # create input & output ports
-        self.inputs = {v.name: Port(self, v.name) for v in inputs}
-        self.outputs = {k: Port(self, k) for k in outputs}
 
-        self._state_vars: List[Var] = list(states or {})
-        self.state_vars = [v.name for v in self._state_vars]  # Engine’s API
+def adder(inputs: Sequence[Var], name: str = "sum_out") -> Tuple[Var, Block]:
+    if not inputs:
+        raise ValueError("adder() needs at least one input variable")
+    y = Var(name)
+    expr: Expr = inputs[0]
+    for v in inputs[1:]:
+        expr = expr + v
+    blk = Block([y], [y - expr], [], [])
+    return y, blk
 
-        # runtime storage for state values
-        self._state_values = {v.uid: 0.0 for v in self._state_vars}
 
-        # pick integrator
-        self._step_state = integrator or self._euler
-
-        # ---- compile kernels -----------------------------------------
-        all_inputs_for_kernel = self._state_vars + list(self.inputs.values())
-
-        # RHS kernel (only if dynamic)
-        if states:
-            rhs_exprs = [states[v] for v in self._state_vars]
-            self._rhs_kernel = compile_numba_functions(rhs_exprs, sorting_vars=all_inputs_for_kernel)
-        else:
-            self._rhs_kernel = None
-
-        # output kernel
-        out_exprs = list(outputs.values())
-        self._out_kernel = compile_numba_functions(out_exprs,
-                                                   sorting_vars=self._state_vars + list(self.inputs.values()))
-
-    # ------------------------------------------------------------------
-    def step(self, dt: float, t: float):
-        # positional list: states | inputs
-        in_values = [self._state_values[v.uid] for v in self._state_vars] + [p.value for p in self.inputs]
-
-        # 1. advance states if any
-        if self._rhs_kernel:
-            rhs_vals = self._rhs_kernel(*in_values)
-            if len(self._state_vars) == 1:
-                rhs_vals = (rhs_vals,)  # unify scalar/tuple
-            for v, rhs in zip(self._state_vars, rhs_vals):
-                self._state_values[v.uid] = self._step_state(self._state_values[v.uid],
-                                                             rhs, dt)
-
-            # refresh in_values with updated state values
-            in_values = [self._state_values[v.uid] for v in self._state_vars] + in_values[len(self._state_vars):]
-
-        # 2. compute outputs
-        outs = self._out_kernel(*in_values)
-        if len(self.outputs) == 1:
-            outs = (outs,)
-        for port, val in zip(self.outputs.values(), outs):
-            port.value = val
+def integrator(u: Var, name: str = "x") -> Tuple[Var, Block]:
+    x = Var(name)
+    blk = Block([], [], [x], [u])
+    return x, blk
