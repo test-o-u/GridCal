@@ -10,7 +10,7 @@ import numpy as np
 from scipy.sparse import csc_matrix
 from typing import Dict, List, Literal
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, compile_numba_functions, get_jacobian, BinOp
-from GridCalEngine.Utils.Symbolic.block import BlockSystem
+from GridCalEngine.Utils.Symbolic.block import Block
 
 
 def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
@@ -28,7 +28,7 @@ class BlockSolver:
     A network of Blocks that behaves roughly like a Simulink diagram.
     """
 
-    def __init__(self, block_system: BlockSystem):
+    def __init__(self, block_system: Block):
         """
         Constructor        
         :param block_system: BlockSystem

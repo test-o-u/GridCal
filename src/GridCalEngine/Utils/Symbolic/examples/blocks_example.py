@@ -19,7 +19,7 @@ def demo_oscillator():
     blk_x.state_eqs[0] = v
     blk_v.state_eqs[0] = Const(-1) * x
 
-    sys = BlockSystem(name="oscillator", elements=[blk_x, blk_v])
+    sys = Block(name="oscillator", children=[blk_x, blk_v])
 
     slv = BlockSolver(sys)
     x0 = np.array([1.0, 0.0])
@@ -64,7 +64,7 @@ def demo_power_system():
     Pe = Const(B12) * (delta - theta2) + Const(B13) * (delta - theta3)
     blk_omega.state_eqs[0] = (Const(Pm) - Pe - Const(D) * omega) / Const(M)
 
-    sys = BlockSystem(elements=[blk_delta, blk_omega, blk_angles])
+    sys = Block(children=[blk_delta, blk_omega, blk_angles])
     slv = BlockSolver(sys)
 
     x0 = slv.build_init_vector({delta: 0.0, omega: 0.0})
@@ -96,7 +96,7 @@ def demo_pi_controller():
     # Plant dynamics ẏ = -y + u
     blk_y.state_eqs[0] = Const(-1) * y + pi_block.out_vars[0]
 
-    sys = BlockSystem(elements=[blk_r, blk_err, blk_y, pi_block])
+    sys = Block(children=[blk_r, blk_err, blk_y, pi_block])
 
     slv = BlockSolver(sys)
     x0 = slv.build_init_vector({y: 0.0})

@@ -13,7 +13,6 @@ from PySide6.QtGui import QPen, QBrush, QPainterPath, QAction, QPainter
 from PySide6.QtCore import Qt, QPointF
 from GridCalEngine.Utils.Symbolic.block import (
     Block,
-    BlockSystem,
     adder,
     constant,
     gain,
@@ -183,10 +182,10 @@ class ResizeHandle(QGraphicsRectItem):
 
 
 class BlockItem(QGraphicsRectItem):
-    def __init__(self, block_sys: BlockSystem):
+    def __init__(self, block_sys: Block):
         """
 
-        :param block_sys: BlockSystem
+        :param block_sys: Block
         """
         super().__init__(0, 0, 100, 60)
 
@@ -423,7 +422,7 @@ class BlockEditor(QMainWindow):
         self.view = GraphicsView(self.scene)
         self.setCentralWidget(self.view)
 
-        self.block_system = BlockSystem()
+        self.block_system = Block()
 
         self.resize(800, 600)
 

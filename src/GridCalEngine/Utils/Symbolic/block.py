@@ -12,14 +12,21 @@ from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr
 @dataclass(frozen=True)
 class Block:
     """
-    A block as a declarative container: no methods, just equation lists.
+    This represents a group of equations or a group of blocks
     """
 
+    # internal vars
     algebraic_vars: List[Var] = field(default_factory=list)
     algebraic_eqs: List[Expr] = field(default_factory=list)
     state_vars: List[Var] = field(default_factory=list)
     state_eqs: List[Expr] = field(default_factory=list)
+
     name: str = ""
+
+    # vars to make this recursive
+    children: list["Block"] = field(default_factory=list)
+    in_vars: List[Var] = field(default_factory=list)
+    out_vars: List[Var] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if len(self.algebraic_vars) != len(self.algebraic_eqs):
@@ -27,43 +34,22 @@ class Block:
         if len(self.state_vars) != len(self.state_eqs):
             raise ValueError("state_vars and state_eqs must have the same length")
 
-
-class BlockSystem:
-    """
-    A network of Blocks that behaves roughly like a Simulink diagram.
-    """
-
-    def __init__(self, name: str = "",
-                 elements: Sequence[Block | "BlockSystem"] | None = None,
-                 in_vars: List[Var] | None = None,
-                 out_vars: List[Var] | None = None):
+    def add(self, val: "Block"):
         """
-        Constructor
-        :param name: Name of the block system
-        :param elements: list of blocks (optional)
+        Add another block
+        :param val: Block
         """
-        assert isinstance(name, str)
-        self.name = name
-
-        self._elements: List[Block | "BlockSystem"] = list(elements) if elements is not None else list()
-        self.in_vars = list(in_vars) if in_vars else list()
-        self.out_vars = list(out_vars) if out_vars else list()
-
-    def add(self, elem: Block | "BlockSystem") -> None:
-        self._elements.append(elem)
+        self.children.append(val)
 
     def get_flattened_blocks(self) -> List[Block]:
         """
         Depth-first collection of all *primitive* Blocks.
         """
-        flat: List[Block] = list()
-        for el in self._elements:
-            if isinstance(el, Block):
-                flat.append(el)
-            elif isinstance(el, BlockSystem):  # nested BlockSystem
-                flat.extend(el.get_flattened_blocks())
-            else:
-                raise ValueError(f"Unrecognized type {type(el)}")
+
+        flat: List[Block] = [self]
+        for el in self.children:
+            flat.extend(el.get_flattened_blocks())
+
         return flat
 
 
@@ -139,12 +125,12 @@ def integrator(u: Var | Const, name: str = "x") -> Tuple[Var, Block]:
     return x, blk
 
 
-def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> BlockSystem:
+def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> Block:
     up, blk_kp = gain(kp, err, f"{name}_up")
     ie, blk_int = integrator(err, f"{name}_int")
     ui, blk_ki = gain(ki, ie, f"{name}_ui")
     u, blk_sum = adder([up, ui], f"{name}_u")
-    return BlockSystem(name="",
-                       elements=[blk_kp, blk_int, blk_ki, blk_sum],
-                       in_vars=[err],
-                       out_vars=[u])
+    return Block(name="",
+                 children=[blk_kp, blk_int, blk_ki, blk_sum],
+                 in_vars=[err],
+                 out_vars=[u])
