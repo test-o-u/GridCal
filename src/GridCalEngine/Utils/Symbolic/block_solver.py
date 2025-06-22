@@ -58,7 +58,7 @@ class BlockSolver:
         self._algebraic_eqs.clear()
         self._state_vars.clear()
         self._state_eqs.clear()
-        for b in self.block_system.blocks:
+        for b in self.block_system.get_flattened_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
             self._algebraic_eqs.extend(b.algebraic_eqs)
             self._state_vars.extend(b.state_vars)
@@ -89,6 +89,9 @@ class BlockSolver:
         if self._rhs_fn is None:
             return np.array([])
         return np.asarray(self._rhs_fn(*state))
+
+    def get_dummy_x0(self):
+        return np.zeros(self._n_state)
 
     def equations(self) -> Tuple[List[Expr], List[Expr]]:
         """

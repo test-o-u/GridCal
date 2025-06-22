@@ -33,20 +33,38 @@ class BlockSystem:
     A network of Blocks that behaves roughly like a Simulink diagram.
     """
 
-    def __init__(self, blocks: Sequence[Block] | None = None):
+    def __init__(self, name: str = "",
+                 elements: Sequence[Block | "BlockSystem"] | None = None,
+                 in_vars: List[Var] | None = None,
+                 out_vars: List[Var] | None = None):
         """
         Constructor
-        :param blocks: list of blocks (optional)
+        :param name: Name of the block system
+        :param elements: list of blocks (optional)
         """
+        assert isinstance(name, str)
+        self.name = name
 
-        if blocks is not None:
-            self._blocks = list(blocks)
-        else:
-            self._blocks = list()
+        self._elements: List[Block | "BlockSystem"] = list(elements) if elements is not None else list()
+        self.in_vars = list(in_vars) if in_vars else list()
+        self.out_vars = list(out_vars) if out_vars else list()
 
-    @property
-    def blocks(self):
-        return self._blocks
+    def add(self, elem: Block | "BlockSystem") -> None:
+        self._elements.append(elem)
+
+    def get_flattened_blocks(self) -> List[Block]:
+        """
+        Depth-first collection of all *primitive* Blocks.
+        """
+        flat: List[Block] = list()
+        for el in self._elements:
+            if isinstance(el, Block):
+                flat.append(el)
+            elif isinstance(el, BlockSystem):  # nested BlockSystem
+                flat.extend(el.get_flattened_blocks())
+            else:
+                raise ValueError(f"Unrecognized type {type(el)}")
+        return flat
 
 
 def compose_block(name: str,
@@ -55,12 +73,16 @@ def compose_block(name: str,
                   inner_blocks: list[Block]) -> Block:
     """
     Bundle *inner_blocks* into a single reusable Block.
-
-    *inputs*  – Vars that outside world will drive
-    *outputs* – Vars that outside world will observe
-    Anything else is considered internal wiring.
+    :param name: Name for the new block
+    :param inputs: Vars that outside world will drive
+    :param outputs:  Vars that outside world will observe
+    :param inner_blocks:
+    :return: Single block
     """
-    alg_v, alg_e, st_v, st_e = [], [], [], []
+    alg_v = list()
+    alg_e = list()
+    st_v = list()
+    st_e = list()
 
     for blk in inner_blocks:
         alg_v.extend(blk.algebraic_vars)
@@ -84,9 +106,9 @@ def compose_block(name: str,
     )
 
 
-# --------------------------------------------------------------------------------------
-# Block factory helpers – each returns (output_var, Block)
-# --------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+# Pre defined blocks
+# ----------------------------------------------------------------------------------------------------------------------
 
 def constant(value: float, name: str = "const") -> Tuple[Var, Block]:
     y = Var(name)
@@ -117,9 +139,12 @@ def integrator(u: Var | Const, name: str = "x") -> Tuple[Var, Block]:
     return x, blk
 
 
-def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> Tuple[Var, List[Block]]:
+def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> BlockSystem:
     up, blk_kp = gain(kp, err, f"{name}_up")
     ie, blk_int = integrator(err, f"{name}_int")
     ui, blk_ki = gain(ki, ie, f"{name}_ui")
     u, blk_sum = adder([up, ui], f"{name}_u")
-    return u, [blk_kp, blk_int, blk_ki, blk_sum]
+    return BlockSystem(name="",
+                       elements=[blk_kp, blk_int, blk_ki, blk_sum],
+                       in_vars=[err],
+                       out_vars=[u])

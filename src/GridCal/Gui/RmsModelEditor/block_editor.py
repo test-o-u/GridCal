@@ -4,15 +4,31 @@
 # SPDX-License-Identifier: MPL-2.0
 from enum import Enum, auto
 from typing import List, Dict, Optional
-from collections import defaultdict
-import sympy as sym
-
+from dataclasses import dataclass
+import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QGraphicsItem,
                                QGraphicsRectItem, QGraphicsEllipseItem, QGraphicsTextItem, QMenu, QGraphicsPathItem,
                                QDialog, QVBoxLayout, QComboBox, QDialogButtonBox)
 from PySide6.QtGui import QPen, QBrush, QPainterPath, QAction, QPainter
 from PySide6.QtCore import Qt, QPointF
-import sys
+from GridCalEngine.Utils.Symbolic.block import (
+    Block,
+    BlockSystem,
+    adder,
+    constant,
+    gain,
+    integrator,
+)
+from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
+from GridCalEngine.Utils.Symbolic.symbolic import Var
+
+
+@dataclass
+class BlockBridge:
+    gui: "BlockItem"  # visual node
+    outs: List[Var]  # exactly len(gui.outputs)
+    ins: List[Var]  # exactly len(gui.inputs) – placeholders
+    api_blocks: List[Block]  # usually length 1, but e.g. PI returns 4
 
 
 class BlockType(Enum):
@@ -57,84 +73,17 @@ class BlockTypeDialog(QDialog):
         return self.combo.currentData()
 
 
-class SymbolicBlock:
-    def __init__(self, block_id: int, name: str, block_type: BlockType,
-                 inputs: List[object], outputs: List[object]) -> None:
-        self.block_id: int = block_id
-        self.name: str = name
-        self.block_type: BlockType = block_type
-        self.inputs: List[object] = inputs
-        self.outputs: List[object] = outputs
-        self.input_symbols: List[sym.Symbol] = []
-        self.output_symbols: List[sym.Symbol] = []
-        self.state_symbol: Optional[sym.Symbol] = None
-        self.equations: List[sym.Expr] = []
-
-    def generate_equations(self) -> None:
-        inp = self.input_symbols
-        if not self.output_symbols:
-            return  # No outputs to define
-        out = self.output_symbols[0]
-        match self.block_type:
-            case BlockType.GAIN:
-                k = sym.Symbol(f"{self.name}_k")
-                self.equations.append(sym.Eq(out, k * inp[0]))
-            case BlockType.SUM:
-                self.equations.append(sym.Eq(out, sum(inp)))
-            case BlockType.INTEGRATOR:
-                x = sym.Symbol(f"x_{self.block_id}")
-                self.state_symbol = x
-                self.equations.append(sym.Eq(sym.Derivative(x), inp[0]))
-                self.equations.append(sym.Eq(out, x))
-            case BlockType.DERIVATIVE:
-                self.equations.append(sym.Eq(out, sym.Derivative(inp[0])))
-            case BlockType.PRODUCT:
-                prod = inp[0]
-                for i in inp[1:]:
-                    prod *= i
-                self.equations.append(sym.Eq(out, prod))
-            case BlockType.DIVIDE:
-                self.equations.append(sym.Eq(out, inp[0] / inp[1]))
-            case BlockType.SQRT:
-                self.equations.append(sym.Eq(out, inp[0] ** 0.5))
-            case BlockType.SQUARE:
-                self.equations.append(sym.Eq(out, inp[0] ** 2))
-            case BlockType.ABS:
-                self.equations.append(sym.Eq(out, sym.Abs(inp[0])))
-            case BlockType.MIN:
-                self.equations.append(sym.Eq(out, sym.Min(*inp)))
-            case BlockType.MAX:
-                self.equations.append(sym.Eq(out, sym.Max(*inp)))
-            case BlockType.STEP:
-                threshold = sym.Symbol(f"{self.name}_threshold")
-                level = sym.Symbol(f"{self.name}_level")
-                self.equations.append(sym.Eq(out, sym.Piecewise((0, inp[0] < threshold), (level, True))))
-            case BlockType.CONSTANT:
-                const_val = sym.Symbol(f"{self.name}_val")
-                self.equations.append(sym.Eq(out, const_val))
-            case BlockType.SATURATION:
-                u_min = sym.Symbol(f"{self.name}_min")
-                u_max = sym.Symbol(f"{self.name}_max")
-                self.equations.append(sym.Eq(out, sym.Min(sym.Max(inp[0], u_min), u_max)))
-            case BlockType.RELATIONAL:
-                self.equations.append(sym.Eq(out, sym.Piecewise((1, inp[0] > inp[1]), (0, True))))
-            case BlockType.LOGICAL:
-                self.equations.append(sym.Eq(out, sym.Piecewise((1, inp[0] & inp[1]), (0, True))))
-            case BlockType.SOURCE:
-                src_val = sym.Symbol(f"{self.name}_val")
-                self.equations.append(sym.Eq(out, src_val))
-            case BlockType.DRAIN:
-                pass
-            case _:
-                self.equations.append(sym.Eq(out, sum(inp)))
-
-
-class Port(QGraphicsEllipseItem):
+class PortItem(QGraphicsEllipseItem):
     """
     Port of a block
     """
 
-    def __init__(self, block: "Block", is_input: bool, index: int, total: int, radius=6):
+    def __init__(self,
+                 block: "BlockItem",
+                 is_input: bool,
+                 index: int,
+                 total: int,
+                 radius=6):
         """
 
         :param block:
@@ -233,16 +182,22 @@ class ResizeHandle(QGraphicsRectItem):
         return super().itemChange(change, value)
 
 
-class Block(QGraphicsRectItem):
-    def __init__(self, name, inputs=1, outputs=1, block_type=BlockType.GENERIC):
+class BlockItem(QGraphicsRectItem):
+    def __init__(self, block_sys: BlockSystem):
         """
 
-        :param name:
-        :param inputs:
-        :param outputs:
-        :param block_type:
+        :param block_sys: BlockSystem
         """
         super().__init__(0, 0, 100, 60)
+
+        # ------------------------
+        # API
+        # ------------------------
+        self.subsys = block_sys  # << NEW
+
+        # ---------------------------
+        # Graphical stuff
+        # ---------------------------
         self.setBrush(Qt.GlobalColor.lightGray)
         self.setFlags(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
@@ -252,14 +207,15 @@ class Block(QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self.setAcceptHoverEvents(True)
 
-        self.name_item = QGraphicsTextItem(name, self)
+        self.name_item = QGraphicsTextItem(self.subsys.name, self)
 
         self.name_item.setPos(10, 5)
 
-        self.inputs = [Port(self, True, i, inputs) for i in range(inputs)]
-        self.outputs = [Port(self, False, i, outputs) for i in range(outputs)]
+        n_inputs = len(self.subsys.in_vars)
+        n_outputs = len(self.subsys.out_vars)
 
-        self.block_type: BlockType = block_type
+        self.inputs = [PortItem(self, True, i, n_inputs) for i in range(n_inputs)]
+        self.outputs = [PortItem(self, False, i, n_outputs) for i in range(n_outputs)]
 
         self.resize_handle = ResizeHandle(self)
 
@@ -269,6 +225,7 @@ class Block(QGraphicsRectItem):
         self.update_handle_position()
 
         self._resizing_from_handle = False
+
 
     def resize_block(self, width, height):
         # Update geometry safely
@@ -362,8 +319,8 @@ class GraphicsView(QGraphicsView):
         if self._panning:
             delta = event.position() - self._pan_start
             self._pan_start = event.position()
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+            self.horizontalScrollBar().setValue(int(self.horizontalScrollBar().value() - delta.x()))
+            self.verticalScrollBar().setValue(int(self.verticalScrollBar().value() - delta.y()))
         else:
             super().mouseMoveEvent(event)
 
@@ -382,6 +339,8 @@ class DiagramScene(QGraphicsScene):
         self.temp_line = None
         self.source_port = None
 
+        self._bridges: Dict[BlockItem, BlockBridge] = {}
+
     def contextMenuEvent(self, event):
         item = self.itemAt(event.scenePos(), self.views()[0].transform())
 
@@ -389,23 +348,6 @@ class DiagramScene(QGraphicsScene):
         if item is not None:
             if not isinstance(item, DiagramScene):
                 return super().contextMenuEvent(event)
-
-        # menu = QMenu()
-        # scene_pos = event.scenePos()
-        # for label, ins, outs in [
-        #     ("1 in / 1 out", 1, 1),
-        #     ("2 in / 1 out", 2, 1),
-        #     ("2 in / 2 out", 2, 2),
-        #     ("Source", 0, 1),
-        #     ("Drain", 1, 0),
-        # ]:
-        #     action = QAction(label, menu)
-        #     action.triggered.connect(lambda _, x=scene_pos,
-        #                                     i=ins,
-        #                                     o=outs:
-        #                              self.add_block(pos=x, ins=i, outs=o))
-        #     menu.addAction(action)
-        # menu.exec(event.screenPos())
 
         dialog = BlockTypeDialog()
         if dialog.exec():
@@ -417,6 +359,7 @@ class DiagramScene(QGraphicsScene):
             elif block_type == BlockType.DRAIN:
                 outs = 0
             self.add_block(event.scenePos(), ins, outs, block_type)
+        return None
 
     def add_block(self, pos, ins, outs, block_type=BlockType.GENERIC):
         """
@@ -427,16 +370,16 @@ class DiagramScene(QGraphicsScene):
         :param block_type:
         :return:
         """
-        block = Block(name=f"{block_type.name}_{len(self.items())}",
-                      inputs=ins,
-                      outputs=outs,
-                      block_type=block_type)
+        block = BlockItem(name=f"{block_type.name}_{len(self.items())}",
+                          inputs=ins,
+                          outputs=outs,
+                          block_type=block_type)
         self.addItem(block)
         block.setPos(pos)
 
     def mousePressEvent(self, event):
         for item in self.items(event.scenePos()):
-            if isinstance(item, Port) and not item.is_input and not item.is_connected():
+            if isinstance(item, PortItem) and not item.is_input and not item.is_connected():
                 self.source_port = item
                 path = QPainterPath(item.scenePos())
                 self.temp_line = self.addPath(path, QPen(Qt.PenStyle.DashLine))
@@ -460,7 +403,7 @@ class DiagramScene(QGraphicsScene):
         if self.temp_line:
             # FIX: scan items under mouse for a valid input Port
             for item in self.items(event.scenePos()):
-                if isinstance(item, Port) and item.is_input and not item.is_connected():
+                if isinstance(item, PortItem) and item.is_input and not item.is_connected():
                     connection = Connection(self.source_port, item)
                     self.addItem(connection)
                     break
@@ -469,39 +412,6 @@ class DiagramScene(QGraphicsScene):
             self.source_port = None
         else:
             super().mouseReleaseEvent(event)
-
-
-def extract_dae_from_scene(scene: QGraphicsScene) -> List[sym.Expr]:
-    """
-
-    :param scene:
-    :return:
-    """  # Adjust if these classes are moved
-    symbol_counter: Dict[str, int] = defaultdict(int)
-    block_map: Dict[object, SymbolicBlock] = {}
-
-    for i, item in enumerate(scene.items()):
-        if isinstance(item, Block):
-            block = SymbolicBlock(i, item.name_item.toPlainText(), item.block_type, item.inputs, item.outputs)
-            block.input_symbols = [sym.Symbol(f"u_{i}_{j}") for j in range(len(block.inputs))]
-            block.output_symbols = [sym.Symbol(f"y_{i}_{j}") for j in range(len(block.outputs))]
-            block_map[item] = block
-
-    for item in scene.items():
-        if isinstance(item, Connection):
-            src_block = item.source_port.block
-            tgt_block = item.target_port.block
-            src_idx = src_block.outputs.index(item.source_port)
-            tgt_idx = tgt_block.inputs.index(item.target_port)
-            output_sym = block_map[src_block].output_symbols[src_idx]
-            block_map[tgt_block].input_symbols[tgt_idx] = output_sym
-
-    equations: List[sym.Expr] = []
-    for block in block_map.values():
-        block.generate_equations()
-        equations.extend(block.equations)
-
-    return equations
 
 
 class BlockEditor(QMainWindow):
@@ -513,11 +423,19 @@ class BlockEditor(QMainWindow):
         self.view = GraphicsView(self.scene)
         self.setCentralWidget(self.view)
 
+        self.block_system = BlockSystem()
+
         self.resize(800, 600)
 
-    def extract_dae(self):
-        eqs = extract_dae_from_scene(self.scene)
-        return eqs
+    def run(self):
+        engine = BlockSolver(block_system=self.block_system)
+        engine.simulate(
+            t0=0,
+            t_end=10,
+            h=0.01,
+            x0=engine.get_dummy_x0(),
+            method="implicit_euler"
+        )
 
 
 if __name__ == "__main__":
