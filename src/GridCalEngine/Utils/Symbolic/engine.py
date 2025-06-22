@@ -29,44 +29,62 @@ class BlockSystem:
             cur = nxt
         return cur
 
-    # ------------------------------------------ ctor
-
-    def __init__(self, blocks: Sequence[Block]):
-        self.blocks = list(blocks)
+    def __init__(self, blocks: Sequence[Block] | None = None):
+        """
+        Constructor        
+        :param blocks: list of blocks 
+        """
 
         # Flatten the block lists, preserving declaration order
-        self.algebraic_vars: List[Var] = []
-        self.algebraic_eqs: List[Expr] = []
-        self.state_vars: List[Var] = []
-        self.state_eqs: List[Expr] = []
-        for b in self.blocks:
-            self.algebraic_vars.extend(b.algebraic_vars)
-            self.algebraic_eqs.extend(b.algebraic_eqs)
-            self.state_vars.extend(b.state_vars)
-            self.state_eqs.extend(b.state_eqs)
+        self._algebraic_vars: List[Var] = list()
+        self._algebraic_eqs: List[Expr] = list()
+        self._state_vars: List[Var] = list()
+        self._state_eqs: List[Expr] = list()
+
+        self._alg_subs: Dict[Var, Expr] = dict()
+        self._state_rhs: List[Expr] = list()
+        self._rhs_fn = None
+
+        if blocks is not None:
+            self._blocks = list(blocks)
+            self._initialize()
+        else:
+            self._blocks = list()
+    
+    def _initialize(self):
+
+        # Flatten the block lists, preserving declaration order
+        self._algebraic_vars.clear()
+        self._algebraic_eqs.clear()
+        self._state_vars.clear()
+        self._state_eqs.clear()
+        for b in self._blocks:
+            self._algebraic_vars.extend(b.algebraic_vars)
+            self._algebraic_eqs.extend(b.algebraic_eqs)
+            self._state_vars.extend(b.state_vars)
+            self._state_eqs.extend(b.state_eqs)
 
         # ---------------------------------- algebraic substitution map  y → rhs
         self._alg_subs: Dict[Var, Expr] = {}
-        for y, eq in zip(self.algebraic_vars, self.algebraic_eqs):
+        for y, eq in zip(self._algebraic_vars, self._algebraic_eqs):
             if isinstance(eq, BinOp) and eq.op == "-" and str(eq.left) == str(y):
                 rhs = eq.right
             else:
                 rhs = y - eq  # generic fallback
+
             # Flatten RHS using *already‑known* substitutions
             rhs_flat = self._fully_substitute(rhs, self._alg_subs)
             self._alg_subs[y] = rhs_flat
 
         # ---------------------------------- pure‑state RHS after full substitution
         self._state_rhs: List[Expr] = [
-            self._fully_substitute(expr, self._alg_subs).simplify() for expr in self.state_eqs
+            self._fully_substitute(expr, self._alg_subs).simplify() for expr in self._state_eqs
         ]
 
         # ---------------------------------- JIT compile (if there are states)
         self._rhs_fn = None
-        if self.state_vars:
-            self._rhs_fn = compile_numba_functions(self._state_rhs, sorting_vars=self.state_vars)
-
-    # ------------------------------------------------------------------ public API
+        if self._state_vars:
+            self._rhs_fn = compile_numba_functions(self._state_rhs, sorting_vars=self._state_vars)
 
     def rhs(self, state: Sequence[float]) -> np.ndarray:
         """Return 𝑑x/dt given the current *state* vector."""
@@ -76,7 +94,7 @@ class BlockSystem:
 
     def equations(self) -> Tuple[List[Expr], List[Expr]]:
         """(algebraic_eqs, state_eqs) as *originally declared* (no substitution)."""
-        return list(self.algebraic_eqs), list(self.state_eqs)
+        return list(self._algebraic_eqs), list(self._state_eqs)
 
     def simulate(
             self,
@@ -108,7 +126,10 @@ class BlockSystem:
         h_min, h_max : float | None
             Optional bounds for step size in adaptive mode
         """
-        if len(init_state) != len(self.state_vars):
+        if len(self._state_vars) + len(self._algebraic_vars) == 0:
+            self._initialize()
+
+        if len(init_state) != len(self._state_vars):
             raise ValueError("init_state length mismatch with state_vars")
 
         if method == "adaptive":

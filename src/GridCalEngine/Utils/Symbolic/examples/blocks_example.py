@@ -46,7 +46,7 @@ def demo_harmonic(method: str, h: float = 0.01, adaptive: bool = False):
     else:
         t, y = sys.simulate(0.0, 10.0, h, init, method=method)
 
-    fig, ax = _figure(f"Harmonic oscillator – {method}")
+    fig, ax = _figure(f"Harmonic oscillator – {method} & adaptive:{adaptive}")
     ax.plot(t, y[:, 0], label="x")
     ax.plot(t, y[:, 1], label="ẋ")
     ax.legend()
@@ -105,7 +105,7 @@ def demo_power_system(h: float = 0.005):
     blk_int_delta.state_eqs[0] = omega  # δ̇ = ω
     blk_int_omega.state_eqs[0] = (Const(P_m) - P_e - Const(D) * omega) / Const(M)  # ω̇
 
-    sys = BlockSystem([blk_int_delta, blk_int_omega, blk_angles])
+    sys = BlockSystem(blocks=[blk_int_delta, blk_int_omega, blk_angles])
 
     init = [0.0, 0.0]  # δ=0 rad, ω=0 pu at t=0
     t, y = sys.simulate(0.0, 20.0, h, init, method="rk4")
@@ -120,11 +120,11 @@ def demo_power_system(h: float = 0.005):
 
 def build_init_vector(sys: BlockSystem, mapping: dict[Var, float]) -> np.ndarray:
     """Return a NumPy 1‑D vector whose elements align with sys.state_vars."""
-    return np.array([mapping.get(v, 0.0) for v in sys.state_vars], dtype=float)
+    return np.array([mapping.get(v, 0.0) for v in sys._state_vars], dtype=float)
 
 
 def demo_pi_controller():
-    print("★ Demo 3 – PI controller closed loop…")
+    print("★ Demo3 – PI controller closed loop…")
 
     # Plant state (output) variable ẏ = u
     y, blk_dummy = integrator(Const(0), "y")
@@ -162,7 +162,7 @@ def demo_pi_controller():
 
     t, states = sys.simulate(0.0, 10.0, 0.01, init_vec, method="rk4")
 
-    idx_y, idx_ie = map(sys.state_vars.index, (y, ie))
+    idx_y, idx_ie = map(sys._state_vars.index, (y, ie))
 
     y_trace  = states[:, idx_y]
     ie_trace = states[:, idx_ie]
@@ -172,14 +172,14 @@ def demo_pi_controller():
     plt.figure("PI – output vs reference")
     plt.plot(t, y_trace, label="y (output)")
     plt.plot(t, np.ones_like(t), "--", label="reference = 1.0")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time[s]")
     plt.ylabel("Output")
     plt.title("PI closed‑loop response")
     plt.legend()
 
     plt.figure("PI – control effort")
     plt.plot(t, u_trace, label="u (control)")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time[s]")
     plt.ylabel("u")
     plt.title("PI control effort vs time")
     plt.legend()

@@ -28,16 +28,12 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Further improved the time series &amp; associations linking to the objects table">
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/blocks_example.py" afterDir="false" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="block system doing something">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/blocks_example.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/examples.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/leaf_blocks.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/numba_example.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/numba_example.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/blocks_example.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/examples/blocks_example.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -222,6 +218,7 @@
     "Python.GridCalMain.executor": "Run",
     "Python.LineBuilderDialogue.executor": "Run",
     "Python.admittance_matrices.executor": "Run",
+    "Python.blocks_example.executor": "Run",
     "Python.blocks_example2.executor": "Run",
     "Python.cgmes_rdfs_graph.executor": "Run",
     "Python.circuit_to_optimods.executor": "Run",
@@ -300,7 +297,7 @@
       <recent name="D:\SIROCO\GridCal\src\GridCal\Gui\Diagrams\MapWidget\Substation" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.blocks_example2">
+  <component name="RunManager" selected="Python.blocks_example">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -1169,7 +1166,7 @@
       <item itemvalue="Python.test_power_flow" />
       <item itemvalue="Python.test_raw_cgmes_cross_roundtrip" />
       <item itemvalue="Python.test_gslv_conversion" />
-      <item itemvalue="Python.blocks_example2" />
+      <item itemvalue="Python.blocks_example" />
       <item itemvalue="Python.examples" />
       <item itemvalue="Python.numba_example" />
       <item itemvalue="Python.scripting_por_obj" />
@@ -1177,7 +1174,7 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.blocks_example2" />
+        <item itemvalue="Python.blocks_example" />
         <item itemvalue="Python.examples" />
         <item itemvalue="Python.numba_example" />
         <item itemvalue="Python.scripting_por_obj" />
@@ -2394,7 +2391,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="701" />
+    <option name="localTasksCounter" value="702" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2440,7 +2437,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="minor refactorings" />
     <MESSAGE value="Important opf refurbishing&#10;Added tests about generation, battery and load shedding" />
     <MESSAGE value="Added power by technology summary at the OPF results&#10;Much better implementation of the stacked results plot" />
     <MESSAGE value="Split storage vars, and now it works as expected" />
@@ -2465,7 +2461,8 @@
     <MESSAGE value="refactored a bit" />
     <MESSAGE value="Improved gui db object filtering" />
     <MESSAGE value="Further improved the time series &amp; associations linking to the objects table" />
-    <option name="LAST_COMMIT_MESSAGE" value="Further improved the time series &amp; associations linking to the objects table" />
+    <MESSAGE value="block system doing something" />
+    <option name="LAST_COMMIT_MESSAGE" value="block system doing something" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

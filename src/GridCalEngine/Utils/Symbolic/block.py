@@ -4,19 +4,21 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Tuple, Sequence, List
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr, compile_numba_functions
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr
 
 
-@dataclass
+@dataclass(frozen=True)
 class Block:
-    """A declarative container: no methods, just equation lists."""
+    """
+    A block as a declarative container: no methods, just equation lists.
+    """
 
-    algebraic_vars: List[Var]
-    algebraic_eqs: List[Expr]
-    state_vars: List[Var]
-    state_eqs: List[Expr]
+    algebraic_vars: List[Var] = field(default_factory=list)
+    algebraic_eqs: List[Expr]= field(default_factory=list)
+    state_vars: List[Var]= field(default_factory=list)
+    state_eqs: List[Expr]= field(default_factory=list)
     name: str = ""
 
     def __post_init__(self) -> None:
@@ -67,28 +69,28 @@ def compose_block(name: str,
 
 def constant(value: float, name: str = "const") -> Tuple[Var, Block]:
     y = Var(name)
-    blk = Block([y], [y - Const(value)], [], [])
+    blk = Block(algebraic_vars=[y], algebraic_eqs=[y - Const(value)])
     return y, blk
 
 
-def gain(k: float, u: Var, name: str = "gain_out") -> Tuple[Var, Block]:
+def gain(k: float, u: Var | Const, name: str = "gain_out") -> Tuple[Var, Block]:
     y = Var(name)
-    blk = Block([y], [y - Const(k) * u], [], [])
+    blk = Block(algebraic_vars=[y], algebraic_eqs=[y - Const(k) * u])
     return y, blk
 
 
-def adder(inputs: Sequence[Var], name: str = "sum_out") -> Tuple[Var, Block]:
-    if not inputs:
+def adder(inputs: Sequence[Var | Const], name: str = "sum_out") -> Tuple[Var, Block]:
+    if len(inputs) == 0:
         raise ValueError("adder() needs at least one input variable")
     y = Var(name)
     expr: Expr = inputs[0]
     for v in inputs[1:]:
-        expr = expr + v
-    blk = Block([y], [y - expr], [], [])
+        expr += v
+    blk = Block(algebraic_vars=[y], algebraic_eqs=[y - expr])
     return y, blk
 
 
-def integrator(u: Var, name: str = "x") -> Tuple[Var, Block]:
+def integrator(u: Var | Const, name: str = "x") -> Tuple[Var, Block]:
     x = Var(name)
-    blk = Block([], [], [x], [u])
+    blk = Block(state_vars=[x], state_eqs=[u])
     return x, blk

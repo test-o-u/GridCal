@@ -168,6 +168,9 @@ class Expr:
 
 @dataclass(frozen=True)
 class Const(Expr):
+    """
+    Constant expression (i.e a number)
+    """
     value: NUMBER
     uid: int = field(default_factory=_new_uid, init=False)
 
@@ -186,6 +189,9 @@ class Const(Expr):
 
 @dataclass(frozen=True)
 class Var(Expr):
+    """
+    Any variable
+    """
     name: str
     uid: int = field(default_factory=_new_uid, init=False)
 
@@ -218,12 +224,11 @@ class Var(Expr):
         return self.uid == other.uid
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Binary & unary operators
-# ----------------------------------------------------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class BinOp(Expr):
+    """
+    Binary operation expression
+    """
     op: str
     left: Expr
     right: Expr
@@ -326,6 +331,9 @@ class BinOp(Expr):
 
 @dataclass(frozen=True)
 class UnOp(Expr):
+    """
+    Unary operation expression
+    """
     op: str
     operand: Expr
     uid: int = field(default_factory=_new_uid, init=False)
@@ -656,13 +664,13 @@ def find_vars_order(expressions: Union[Expr, Sequence[Expr]],
 def _compile(expressions: Sequence[Expr],
              sorting_vars: List[Var],
              uid2sym: Dict[int, str] | None,
-             add_doc_string: bool = True):
+             add_doc_string: bool = True) -> Callable[[Any], Sequence[float]]:
     """
-    Compile the array of expressions to an array of numba function pointers
+    Compile the array of expressions to a function that returns an array of values for those expressions
     :param expressions: Iterable of expressions (Expr)
     :param sorting_vars: list of variables indicating the sorting order of the call
     :param add_doc_string: add the docstring?
-    :return: Array of function pointers
+    :return: Function pointer that returns an array
     """
     if uid2sym is None:
         uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(sorting_vars)}
@@ -693,7 +701,8 @@ def _compile(expressions: Sequence[Expr],
 # Public – single expression
 # -----------------------------------------------------------------------------
 
-def compile_numba_function(expr: Expr, sorting_vars: Sequence[Var | str] | None = None):
+def compile_numba_function(expr: Expr,
+                           sorting_vars: Sequence[Var | str] | None = None) -> Callable[[Any], Sequence[float]]:
     """
     Return a Numba‑JIT scalar function for *expr*.
     The function signature is positional floats; argument order is given by
@@ -710,7 +719,8 @@ def compile_numba_function(expr: Expr, sorting_vars: Sequence[Var | str] | None 
 # Public – system of expressions
 # -----------------------------------------------------------------------------
 
-def compile_numba_functions(expressions: Sequence[Expr], sorting_vars: Sequence[Var | str] | None = None):
+def compile_numba_functions(expressions: Sequence[Expr],
+                            sorting_vars: Sequence[Var | str] | None = None)-> Callable[[Any], Sequence[float]]:
     """
     Return a Numba‑JIT function computing all *exprs* at once.
 
