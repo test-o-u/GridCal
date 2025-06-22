@@ -5,18 +5,18 @@
 
 
 from __future__ import annotations
-from dataclasses import dataclass
 from typing import Tuple, Sequence
-import math
 import numpy as np
-from typing import Dict, List, Literal
-from matplotlib import pyplot as plt
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, BinOp, compile_numba_functions
+from scipy.sparse import csc_matrix
+from typing import Dict, List
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, compile_numba_functions, get_jacobian, BinOp
 from GridCalEngine.Utils.Symbolic.block import Block
 
 
 class BlockSystem:
-    """A network of Blocks that behaves roughly like a Simulink diagram."""
+    """
+    A network of Blocks that behaves roughly like a Simulink diagram.
+    """
 
     # ------------------------------------------ helper: deep substitution until fixed‑point
     @staticmethod
@@ -44,15 +44,19 @@ class BlockSystem:
         self._alg_subs: Dict[Var, Expr] = dict()
         self._state_rhs: List[Expr] = list()
         self._rhs_fn = None
+        self._jac_fn = None
+        self._n_state = 0
 
         if blocks is not None:
             self._blocks = list(blocks)
             self._initialize()
         else:
             self._blocks = list()
-    
-    def _initialize(self):
 
+    def _initialize(self):
+        """
+        Initialize for simulation
+        """
         # Flatten the block lists, preserving declaration order
         self._algebraic_vars.clear()
         self._algebraic_eqs.clear()
@@ -64,177 +68,157 @@ class BlockSystem:
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
 
-        # ---------------------------------- algebraic substitution map  y → rhs
-        self._alg_subs: Dict[Var, Expr] = {}
-        for y, eq in zip(self._algebraic_vars, self._algebraic_eqs):
-            if isinstance(eq, BinOp) and eq.op == "-" and str(eq.left) == str(y):
-                rhs = eq.right
-            else:
-                rhs = y - eq  # generic fallback
+        # Substitute algebraic equations into state equations (fixed‑point)
+        subst_map = {}
+        for v, eq in zip(self._algebraic_vars, self._algebraic_eqs):
+            # assume the algebraic eq is either (v - rhs) or (rhs - v)
+            if isinstance(eq, BinOp) and eq.op == "-":
+                if eq.left == v:
+                    subst_map[v] = eq.right  # v  – rhs = 0  → v = rhs
+                elif eq.right == v:
+                    subst_map[v] = eq.left  # rhs – v  = 0  → v = rhs
 
-            # Flatten RHS using *already‑known* substitutions
-            rhs_flat = self._fully_substitute(rhs, self._alg_subs)
-            self._alg_subs[y] = rhs_flat
+        new_eqs = []
+        for e in self._state_eqs:
+            e_sub = self._fully_substitute(e, subst_map)  # <- one-liner
+            new_eqs.append(e_sub)
 
-        # ---------------------------------- pure‑state RHS after full substitution
-        self._state_rhs: List[Expr] = [
-            self._fully_substitute(expr, self._alg_subs).simplify() for expr in self._state_eqs
-        ]
+        self._state_eqs = new_eqs
 
-        # ---------------------------------- JIT compile (if there are states)
-        self._rhs_fn = None
-        if self._state_vars:
-            self._rhs_fn = compile_numba_functions(self._state_rhs, sorting_vars=self._state_vars)
+        # Compile RHS and Jacobian
+        self._rhs_fn = compile_numba_functions(self._state_eqs, sorting_vars=self._state_vars)
+        self._jac_fn, _ = get_jacobian(self._state_eqs, self._state_vars)
+        self._n_state = len(self._state_vars)
 
     def rhs(self, state: Sequence[float]) -> np.ndarray:
-        """Return 𝑑x/dt given the current *state* vector."""
+        """
+        Return 𝑑x/dt given the current *state* vector.
+        :param state: get the right-hand-side give a state vector
+        """
         if self._rhs_fn is None:
             return np.array([])
         return np.asarray(self._rhs_fn(*state))
 
     def equations(self) -> Tuple[List[Expr], List[Expr]]:
-        """(algebraic_eqs, state_eqs) as *originally declared* (no substitution)."""
-        return list(self._algebraic_eqs), list(self._state_eqs)
+        """
+        Return (algebraic_eqs, state_eqs) as *originally declared* (no substitution).
+        """
+        return self._algebraic_eqs, self._state_eqs
 
     def simulate(
             self,
             t0: float,
             t_end: float,
             h: float,
-            init_state: Sequence[float],
-            *,
-            method: Literal["rk4", "euler", "adaptive"] = "rk4",
-            abs_tol: float = 1e-6,
-            rel_tol: float = 1e-3,
-            h_min: float | None = None,
-            h_max: float | None = None,
+            x0: np.ndarray,
+            method: str = "rk4",
+            newton_tol: float = 1e-8,
+            newton_max_iter: int = 20,
     ) -> Tuple[np.ndarray, np.ndarray]:
-        """Simulate the system.
-
-        Parameters
-        ----------
-        t0, t_end : float
-            Start / end times (same units as RHS)
-        h : float
-            Initial step size (for adaptive) or fixed size
-        init_state : Sequence[float]
-            Initial conditions (len == number of state variables)
-        method : {"rk4", "euler", "adaptive"}
-            Integration scheme
-        abs_tol, rel_tol : float
-            Error tolerances for adaptive mode (ignored otherwise)
-        h_min, h_max : float | None
-            Optional bounds for step size in adaptive mode
         """
-        if len(self._state_vars) + len(self._algebraic_vars) == 0:
-            self._initialize()
 
-        if len(init_state) != len(self._state_vars):
-            raise ValueError("init_state length mismatch with state_vars")
+        :param t0:
+        :param t_end:
+        :param h:
+        :param x0:
+        :param method:
+        :param newton_tol:
+        :param newton_max_iter:
+        :return:
+        """
+        if method == "euler":
+            return self._simulate_fixed(t0, t_end, h, x0, stepper="euler")
+        if method == "rk4":
+            return self._simulate_fixed(t0, t_end, h, x0, stepper="rk4")
+        if method == "implicit_euler":
+            return self._simulate_implicit_euler(
+                t0, t_end, h, x0,
+                tol=newton_tol, max_iter=newton_max_iter,
+            )
+        raise ValueError(f"Unknown method '{method}'")
 
-        if method == "adaptive":
-            return self._simulate_adaptive(t0, t_end, h, init_state, abs_tol, rel_tol, h_min, h_max)
-        else:
-            return self._simulate_fixed(t0, t_end, h, init_state, method)
+    def _simulate_fixed(self, t0, t_end, h, x0, stepper="euler"):
+        """
+        Fixed‑step helpers (Euler, RK‑4)
+        :param t0:
+        :param t_end:
+        :param h:
+        :param x0:
+        :param stepper:
+        :return:
+        """
+        steps = int(np.ceil((t_end - t0) / h))
+        t = np.empty(steps + 1)
+        y = np.empty((steps + 1, self._n_state))
+        t[0] = t0
+        y[0] = x0.copy()
 
-    # ------------------------------------------------------------------
-    # Fixed‑step helpers (Euler, RK‑4)
-    # ------------------------------------------------------------------
-    def _simulate_fixed(
-            self,
-            t0: float,
-            t_end: float,
-            h: float,
-            init_state: Sequence[float],
-            method: Literal["rk4", "euler"],
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        n_steps = int(math.floor((t_end - t0) / h)) + 1
-        t = np.linspace(t0, t0 + h * (n_steps - 1), n_steps)
-        y = np.empty((n_steps, len(init_state)))
-        y[0] = init_state
-
-        rhs = self._rhs_fn  # local alias for speed
-
-        for i in range(1, n_steps):
-            yi = y[i - 1]
-            if method == "euler":
-                k1 = rhs(*yi)
-                y[i] = yi + h * np.asarray(k1)
-            elif method == "rk4":
-                k1 = np.asarray(rhs(*yi))
-                k2 = np.asarray(rhs(*(yi + 0.5 * h * k1)))
-                k3 = np.asarray(rhs(*(yi + 0.5 * h * k2)))
-                k4 = np.asarray(rhs(*(yi + h * k3)))
-                y[i] = yi + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+        for i in range(steps):
+            tn = t[i]
+            xn = y[i]
+            if stepper == "euler":
+                k1 = np.array(self._rhs_fn(*xn))
+                y[i + 1] = xn + h * k1
+            elif stepper == "rk4":
+                k1 = np.array(self._rhs_fn(*xn))
+                k2 = np.array(self._rhs_fn(*(xn + 0.5 * h * k1)))
+                k3 = np.array(self._rhs_fn(*(xn + 0.5 * h * k2)))
+                k4 = np.array(self._rhs_fn(*(xn + h * k3)))
+                y[i + 1] = xn + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
+            else:
+                raise RuntimeError("unknown stepper")
+            t[i + 1] = tn + h
         return t, y
 
-    # ------------------------------------------------------------------
-    # Adaptive RKF‑45 implementation
-    # ------------------------------------------------------------------
-    def _simulate_adaptive(
-            self,
-            t0: float,
-            t_end: float,
-            h0: float,
-            init_state: Sequence[float],
-            abs_tol: float,
-            rel_tol: float,
-            h_min: float | None,
-            h_max: float | None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
-        rhs = self._rhs_fn
-        t_list: List[float] = [t0]
-        y_list: List[np.ndarray] = [np.asarray(init_state, dtype=float)]
+    def _simulate_implicit_euler(self, t0, t_end, h, x0, tol=1e-8, max_iter=20):
+        """
 
-        t = t0
-        y = np.asarray(init_state, dtype=float)
-        h = h0
-        safety = 0.9
-        pow_ = 0.2  # 1/(order+1) with order=4
-        h_min = h_min if h_min is not None else h0 * 1e-6
-        h_max = h_max if h_max is not None else (t_end - t0)
+        :param t0:
+        :param t_end:
+        :param h:
+        :param x0:
+        :param tol:
+        :param max_iter:
+        :return:
+        """
+        steps = int(np.ceil((t_end - t0) / h))
+        t = np.empty(steps + 1)
+        y = np.empty((steps + 1, self._n_state))
+        t[0] = t0
+        y[0] = x0.copy()
+        I = np.eye(self._n_state)
 
-        while t < t_end:
-            if h < h_min:
-                raise RuntimeError("Step size underflow in adaptive integrator")
-            if t + h > t_end:
-                h = t_end - t  # final partial step
-
-            # --------------------------------------------------
-            # RKF‑45 coefficients
-            # --------------------------------------------------
-            k1 = np.asarray(rhs(*y))
-            k2 = np.asarray(rhs(*(y + h * 0.25 * k1)))
-            k3 = np.asarray(rhs(*(y + h * (3.0 / 32.0 * k1 + 9.0 / 32.0 * k2))))
-            k4 = np.asarray(rhs(*(y + h * (1932.0 / 2197.0 * k1 - 7200.0 / 2197.0 * k2 + 7296.0 / 2197.0 * k3))))
-            k5 = np.asarray(rhs(*(y + h * (439.0 / 216.0 * k1 - 8.0 * k2 + 3680.0 / 513.0 * k3 - 845.0 / 4104.0 * k4))))
-            k6 = np.asarray(rhs(*(y + h * (
-                        -8.0 / 27.0 * k1 + 2.0 * k2 - 3544.0 / 2565.0 * k3 + 1859.0 / 4104.0 * k4 - 11.0 / 40.0 * k5))))
-
-            y4 = y + h * (25.0 / 216.0 * k1 + 1408.0 / 2565.0 * k3 + 2197.0 / 4104.0 * k4 - 1.0 / 5.0 * k5)
-            y5 = y + h * (
-                    16.0 / 135.0 * k1 + 6656.0 / 12825.0 * k3 + 28561.0 / 56430.0 * k4
-                    - 9.0 / 50.0 * k5 + 2.0 / 55.0 * k6
-            )
-
-            # Error estimate
-            scale = abs_tol + np.maximum(np.abs(y), np.abs(y5)) * rel_tol
-            err_est = np.max(np.abs(y5 - y4) / scale)
-
-            if err_est <= 1.0:
-                # Accept step
-                t += h
-                y = y5
-                t_list.append(t)
-                y_list.append(y)
-
-            # Step size adjustment
-            if err_est == 0.0:
-                h_new = h_max
+        for i in range(steps):
+            xn = y[i]
+            x_new = xn.copy()  # initial guess
+            for _ in range(max_iter):
+                f_val = np.array(self._rhs_fn(*x_new))
+                res = x_new - xn - h * f_val
+                if np.linalg.norm(res, np.inf) < tol:
+                    break
+                Jf = self._jac_fn(x_new)  # sparse matrix
+                A = I - h * Jf.toarray()
+                delta = np.linalg.solve(A, -res)
+                x_new += delta
             else:
-                h_new = safety * h * err_est ** (-pow_)
-            h = min(max(h_new, h_min), h_max)
+                raise RuntimeError("Newton failed in implicit Euler")
+            y[i + 1] = x_new
+            t[i + 1] = t[i] + h
+        return t, y
 
-        t_arr = np.asarray(t_list)
-        y_arr = np.vstack(y_list)
-        return t_arr, y_arr
+    # ------------------------------------------------------------------ jacobian accessor
+    def jacobian(self, x_vec: np.ndarray) -> csc_matrix:
+        """
+
+        :param x_vec:
+        :return:
+        """
+        return self._jac_fn(*x_vec)
+
+    def build_init_vector(self, mapping: dict[Var, float]) -> np.ndarray:
+        """
+        Helper function to build the initial vector
+        :param mapping: var->initial value mapping
+        :return: array matching the mapping
+        """
+        return np.array([mapping.get(v, 0.0) for v in self._state_vars], dtype=float)

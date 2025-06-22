@@ -94,3 +94,10 @@ def integrator(u: Var | Const, name: str = "x") -> Tuple[Var, Block]:
     x = Var(name)
     blk = Block(state_vars=[x], state_eqs=[u])
     return x, blk
+
+def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> Tuple[Var, List[Block]]:
+    up, blk_kp = gain(kp, err, f"{name}_up")
+    ie, blk_int = integrator(err, f"{name}_int")
+    ui, blk_ki = gain(ki, ie, f"{name}_ui")
+    u, blk_sum = adder([up, ui], f"{name}_u")
+    return u, [blk_kp, blk_int, blk_ki, blk_sum]
