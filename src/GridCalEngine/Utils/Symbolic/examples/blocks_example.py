@@ -7,9 +7,7 @@
 from __future__ import annotations
 from matplotlib import pyplot as plt
 import numpy as np
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const
-from GridCalEngine.Utils.Symbolic.block import Block, integrator, gain, adder, compose_block, constant, pi_controller
-from GridCalEngine.Utils.Symbolic.engine import BlockSystem
+from GridCalEngine.Utils.Symbolic import *
 
 
 
@@ -22,15 +20,21 @@ def demo_oscillator():
     blk_v.state_eqs[0] = Const(-1) * x
 
     sys = BlockSystem([blk_x, blk_v])
+
+    slv = BlockSolver(sys)
     x0 = np.array([1.0, 0.0])
 
-    t_rk4, y_rk4 = sys.simulate(0, 10, 0.01, x0, method="rk4")
-    t_eu, y_eu   = sys.simulate(0, 10, 0.01, x0, method="euler")
+    t_rk4, y_rk4 = slv.simulate(0, 10, 0.01, x0, method="rk4")
+    t_eu, y_eu   = slv.simulate(0, 10, 0.01, x0, method="euler")
+    t_eu_impl, y_eu_impl = slv.simulate(0, 10, 0.01, x0, method="implicit_euler")
 
     plt.figure("Harmonic oscillator")
     plt.plot(t_rk4, y_rk4[:, 0], label="x (RK4)")
     plt.plot(t_eu,  y_eu[:, 0], label="x (Euler)")
+    plt.plot(t_eu_impl, y_eu_impl[:, 0], label="x (Euler Implicit)")
     plt.plot(t_rk4, y_rk4[:, 1], "--", label="v (RK4)")
+    plt.plot(t_eu, y_eu[:, 1], "--", label="v (Euler)")
+    plt.plot(t_eu_impl, y_eu_impl[:, 1], "--", label="v (Euler Implicit)")
     plt.xlabel("time [s]"); plt.ylabel("state"); plt.legend()
 
 # --------------------------------------------------------------------------------------
@@ -61,14 +65,16 @@ def demo_power_system():
     blk_omega.state_eqs[0] = (Const(Pm) - Pe - Const(D) * omega) / Const(M)
 
     sys = BlockSystem([blk_delta, blk_omega, blk_angles])
-    x0 = sys.build_init_vector({delta: 0.0, omega: 0.0})
+    slv = BlockSolver(sys)
 
-    t, y = sys.simulate(0, 20, 0.01, x0, method="rk4")
+    x0 = slv.build_init_vector({delta: 0.0, omega: 0.0})
+
+    t, y = slv.simulate(0, 20, 0.01, x0, method="rk4")
 
     plt.figure("Swing generator")
     plt.plot(t, y[:, 0], label="delta [rad]")
     plt.plot(t, y[:, 1], label="omega [pu]")
-    plt.xlabel("time [s]"); plt.legend();
+    plt.xlabel("time [s]"); plt.legend()
 
 # --------------------------------------------------------------------------------------
 # Demo 3 – PI‑controlled first‑order plant
@@ -91,9 +97,11 @@ def demo_pi_controller():
     blk_y.state_eqs[0] = Const(-1) * y + u_ctrl
 
     sys = BlockSystem([blk_r, blk_err, blk_y] + pi_blocks)
-    x0 = sys.build_init_vector({y: 0.0})
 
-    t, y_hist = sys.simulate(0, 10, 0.02, x0, method="implicit_euler")
+    slv = BlockSolver(sys)
+    x0 = slv.build_init_vector({y: 0.0})
+
+    t, y_hist = slv.simulate(0, 10, 0.02, x0, method="implicit_euler")
 
     plt.figure("PI closed loop")
     plt.plot(t, y_hist[:, 0], label="y(t)")

@@ -16,9 +16,9 @@ class Block:
     """
 
     algebraic_vars: List[Var] = field(default_factory=list)
-    algebraic_eqs: List[Expr]= field(default_factory=list)
-    state_vars: List[Var]= field(default_factory=list)
-    state_eqs: List[Expr]= field(default_factory=list)
+    algebraic_eqs: List[Expr] = field(default_factory=list)
+    state_vars: List[Var] = field(default_factory=list)
+    state_eqs: List[Expr] = field(default_factory=list)
     name: str = ""
 
     def __post_init__(self) -> None:
@@ -26,6 +26,27 @@ class Block:
             raise ValueError("algebraic_vars and algebraic_eqs must have the same length")
         if len(self.state_vars) != len(self.state_eqs):
             raise ValueError("state_vars and state_eqs must have the same length")
+
+
+class BlockSystem:
+    """
+    A network of Blocks that behaves roughly like a Simulink diagram.
+    """
+
+    def __init__(self, blocks: Sequence[Block] | None = None):
+        """
+        Constructor
+        :param blocks: list of blocks (optional)
+        """
+
+        if blocks is not None:
+            self._blocks = list(blocks)
+        else:
+            self._blocks = list()
+
+    @property
+    def blocks(self):
+        return self._blocks
 
 
 def compose_block(name: str,
@@ -94,6 +115,7 @@ def integrator(u: Var | Const, name: str = "x") -> Tuple[Var, Block]:
     x = Var(name)
     blk = Block(state_vars=[x], state_eqs=[u])
     return x, blk
+
 
 def pi_controller(err: Var, kp: float, ki: float, name: str = "pi") -> Tuple[Var, List[Block]]:
     up, blk_kp = gain(kp, err, f"{name}_up")

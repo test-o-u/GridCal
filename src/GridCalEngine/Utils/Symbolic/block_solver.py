@@ -8,32 +8,32 @@ from __future__ import annotations
 from typing import Tuple, Sequence
 import numpy as np
 from scipy.sparse import csc_matrix
-from typing import Dict, List
+from typing import Dict, List, Literal
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, compile_numba_functions, get_jacobian, BinOp
-from GridCalEngine.Utils.Symbolic.block import Block
+from GridCalEngine.Utils.Symbolic.block import BlockSystem
 
 
-class BlockSystem:
+def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
+    cur = expr
+    for _ in range(max_iter):
+        nxt = cur.subs(mapping).simplify()
+        if str(nxt) == str(cur):  # no further change
+            break
+        cur = nxt
+    return cur
+
+
+class BlockSolver:
     """
     A network of Blocks that behaves roughly like a Simulink diagram.
     """
 
-    # ------------------------------------------ helper: deep substitution until fixed‑point
-    @staticmethod
-    def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
-        cur = expr
-        for _ in range(max_iter):
-            nxt = cur.subs(mapping).simplify()
-            if str(nxt) == str(cur):  # no further change
-                break
-            cur = nxt
-        return cur
-
-    def __init__(self, blocks: Sequence[Block] | None = None):
+    def __init__(self, block_system: BlockSystem):
         """
         Constructor        
-        :param blocks: list of blocks 
+        :param block_system: BlockSystem
         """
+        self.block_system = block_system
 
         # Flatten the block lists, preserving declaration order
         self._algebraic_vars: List[Var] = list()
@@ -47,11 +47,7 @@ class BlockSystem:
         self._jac_fn = None
         self._n_state = 0
 
-        if blocks is not None:
-            self._blocks = list(blocks)
-            self._initialize()
-        else:
-            self._blocks = list()
+        self._initialize()
 
     def _initialize(self):
         """
@@ -62,14 +58,14 @@ class BlockSystem:
         self._algebraic_eqs.clear()
         self._state_vars.clear()
         self._state_eqs.clear()
-        for b in self._blocks:
+        for b in self.block_system.blocks:
             self._algebraic_vars.extend(b.algebraic_vars)
             self._algebraic_eqs.extend(b.algebraic_eqs)
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
 
         # Substitute algebraic equations into state equations (fixed‑point)
-        subst_map = {}
+        subst_map = dict()
         for v, eq in zip(self._algebraic_vars, self._algebraic_eqs):
             # assume the algebraic eq is either (v - rhs) or (rhs - v)
             if isinstance(eq, BinOp) and eq.op == "-":
@@ -78,12 +74,7 @@ class BlockSystem:
                 elif eq.right == v:
                     subst_map[v] = eq.left  # rhs – v  = 0  → v = rhs
 
-        new_eqs = []
-        for e in self._state_eqs:
-            e_sub = self._fully_substitute(e, subst_map)  # <- one-liner
-            new_eqs.append(e_sub)
-
-        self._state_eqs = new_eqs
+        self._state_eqs = [_fully_substitute(e, subst_map) for e in self._state_eqs]
 
         # Compile RHS and Jacobian
         self._rhs_fn = compile_numba_functions(self._state_eqs, sorting_vars=self._state_vars)
@@ -111,20 +102,20 @@ class BlockSystem:
             t_end: float,
             h: float,
             x0: np.ndarray,
-            method: str = "rk4",
+            method: Literal["rk4", "euler", "implicit_euler"] = "rk4",
             newton_tol: float = 1e-8,
             newton_max_iter: int = 20,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
 
-        :param t0:
-        :param t_end:
-        :param h:
-        :param x0:
-        :param method:
+        :param t0: start time
+        :param t_end: end time
+        :param h: step
+        :param x0: initial values
+        :param method: method
         :param newton_tol:
         :param newton_max_iter:
-        :return:
+        :return: 1D time array, 2D array of simulated variables
         """
         if method == "euler":
             return self._simulate_fixed(t0, t_end, h, x0, stepper="euler")
@@ -151,7 +142,7 @@ class BlockSystem:
         t = np.empty(steps + 1)
         y = np.empty((steps + 1, self._n_state))
         t[0] = t0
-        y[0] = x0.copy()
+        y[0, :] = x0.copy()
 
         for i in range(steps):
             tn = t[i]
