@@ -9,12 +9,13 @@ from PySide6 import QtWidgets
 from GridCal.Gui.gui_functions import get_icon_list_model
 from GridCal.Gui.RmsModelEditor.rms_model_editor import Ui_MainWindow
 from GridCal.Gui.RmsModelEditor.block_editor import BlockEditor
+from GridCalEngine.Utils.Symbolic.block import Block
 import GridCalEngine.Devices as dev
 
 
 class RmsModelEditorGUI(QtWidgets.QMainWindow):
 
-    def __init__(self, model: dev.DynamicModel, parent=None, ):
+    def __init__(self, model: Block, parent=None, ):
         """
 
         :param parent:
@@ -45,7 +46,7 @@ class RmsModelEditorGUI(QtWidgets.QMainWindow):
         self.ui.actionCheckModel.triggered.connect(self.extract_dae)
 
     def extract_dae(self):
-        eqs = self.editor.extract_dae()
+        eqs = self.editor.run()
 
         for eq in eqs:
             print(str(eq))

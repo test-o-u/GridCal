@@ -3,7 +3,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
-from GridCalEngine.Simulations.Rms.model.rms_equations_wrapper import EquationsWrapp
 from GridCalEngine.Simulations.driver_template import DriverTemplate
 from GridCalEngine.Simulations.Rms.rms_options import RmsOptions
 from GridCalEngine.Simulations.Rms.rms_results import RmsResults
@@ -53,8 +52,6 @@ class RmsSimulationDriver(DriverTemplate):
         Performs the numerical integration using the chosen method.
         :return:
         """
-        # Time domain simulation
-        equations = EquationsWrapp(grid=self.grid)  # DAE system manager for equations.
 
         # Get integration method
         if self.options.integration_method == DynamicIntegrationMethod.Trapezoid:
@@ -63,20 +60,3 @@ class RmsSimulationDriver(DriverTemplate):
             integrator = BackEuler()
         else:
             raise ValueError(f"integrator not implemented :( {self.options.integration_method}")
-
-        t = 0
-        while t < self.options.simulation_time:
-
-            # Solve DAE step
-            converged = integrator.step(dae=dae,
-                                        dt=self.options.time_step,
-                                        method=integrator,
-                                        tol=self.options.tolerance,
-                                        max_iter=self.options.max_integrator_iterations)
-
-            if not converged:
-                raise RuntimeError("Integration step did not converge.")
-
-            t += self.options.time_step
-            self.results.add(t, dae.x.copy(), dae.y.copy())
-

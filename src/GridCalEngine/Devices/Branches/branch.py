@@ -15,7 +15,6 @@ from GridCalEngine.Devices.Branches.tap_changer import TapChanger
 from GridCalEngine.Devices.Branches.transformer import Transformer2W
 from GridCalEngine.Devices.Branches.line import Line
 from GridCalEngine.Devices.profile import Profile
-from GridCalEngine.Devices.Dynamic.dynamic_model import DynamicModel
 from GridCalEngine.Devices.Parents.editable_device import DeviceType
 
 # Global sqrt of 3 (bad practice?)

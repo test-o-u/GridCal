@@ -4,9 +4,15 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from __future__ import annotations
+import uuid
 from dataclasses import dataclass, field
 from typing import Tuple, Sequence, List
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr
+
+
+def _new_uid() -> int:
+    """Generate a fresh UUID‑v4 string."""
+    return uuid.uuid4().int
 
 
 @dataclass(frozen=True)
@@ -14,6 +20,7 @@ class Block:
     """
     This represents a group of equations or a group of blocks
     """
+    uid: int = field(default_factory=_new_uid)
 
     # internal vars
     algebraic_vars: List[Var] = field(default_factory=list)
@@ -41,16 +48,22 @@ class Block:
         """
         self.children.append(val)
 
-    def get_flattened_blocks(self) -> List[Block]:
+    def get_all_blocks(self) -> List[Block]:
         """
         Depth-first collection of all *primitive* Blocks.
         """
 
         flat: List[Block] = [self]
         for el in self.children:
-            flat.extend(el.get_flattened_blocks())
+            flat.extend(el.get_all_blocks())
 
         return flat
+
+    def to_dict(self):
+        return dict()
+
+    def parse(self, data):
+        pass
 
 
 def compose_block(name: str,

@@ -7,7 +7,8 @@
 from __future__ import annotations
 from typing import Tuple, Sequence
 import numpy as np
-from scipy.sparse import csc_matrix
+import scipy.sparse as sp
+from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, compile_numba_functions, get_jacobian, BinOp
 from GridCalEngine.Utils.Symbolic.block import Block
@@ -58,7 +59,7 @@ class BlockSolver:
         self._algebraic_eqs.clear()
         self._state_vars.clear()
         self._state_eqs.clear()
-        for b in self.block_system.get_flattened_blocks():
+        for b in self.block_system.get_all_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
             self._algebraic_eqs.extend(b.algebraic_eqs)
             self._state_vars.extend(b.state_vars)
@@ -180,7 +181,7 @@ class BlockSolver:
         y = np.empty((steps + 1, self._n_state))
         t[0] = t0
         y[0] = x0.copy()
-        I = np.eye(self._n_state)
+        I = sp.eye(m=self._n_state, n=self._n_state)
 
         for i in range(steps):
             xn = y[i]
@@ -191,8 +192,8 @@ class BlockSolver:
                 if np.linalg.norm(res, np.inf) < tol:
                     break
                 Jf = self._jac_fn(x_new)  # sparse matrix
-                A = I - h * Jf.toarray()
-                delta = np.linalg.solve(A, -res)
+                A = I - h * Jf
+                delta = sp.linalg.spsolve(A, -res)
                 x_new += delta
             else:
                 raise RuntimeError("Newton failed in implicit Euler")
@@ -201,7 +202,7 @@ class BlockSolver:
         return t, y
 
     # ------------------------------------------------------------------ jacobian accessor
-    def jacobian(self, x_vec: np.ndarray) -> csc_matrix:
+    def jacobian(self, x_vec: np.ndarray) -> sp.csc_matrix:
         """
 
         :param x_vec:

@@ -59,7 +59,9 @@ def demo_power_system():
     theta2_expr = (a22 * Const(P2) - a12 * Const(P3)) / Const(det) + (a22 * B12 - a12 * B13) / Const(det) * delta
     theta3_expr = (-a21 * Const(P2) + a11 * Const(P3)) / Const(det) + (-a21 * B12 + a11 * B13) / Const(det) * delta
 
-    blk_angles = Block([theta2, theta3], [theta2 - theta2_expr, theta3 - theta3_expr], [], [], "angles")
+    blk_angles = Block(name="angles",
+                       algebraic_vars=[theta2, theta3],
+                       algebraic_eqs=[theta2 - theta2_expr, theta3 - theta3_expr])
 
     Pe = Const(B12) * (delta - theta2) + Const(B13) * (delta - theta3)
     blk_omega.state_eqs[0] = (Const(Pm) - Pe - Const(D) * omega) / Const(M)

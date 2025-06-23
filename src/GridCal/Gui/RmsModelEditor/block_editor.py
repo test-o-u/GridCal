@@ -115,7 +115,7 @@ class PortItem(QGraphicsEllipseItem):
         return self.connection is not None
 
 
-class Connection(QGraphicsPathItem):
+class ConnectionItem(QGraphicsPathItem):
     def __init__(self, source_port, target_port):
         super().__init__()
         self.setZValue(-1)
@@ -224,7 +224,6 @@ class BlockItem(QGraphicsRectItem):
         self.update_handle_position()
 
         self._resizing_from_handle = False
-
 
     def resize_block(self, width, height):
         # Update geometry safely
@@ -338,7 +337,7 @@ class DiagramScene(QGraphicsScene):
         self.temp_line = None
         self.source_port = None
 
-        self._bridges: Dict[BlockItem, BlockBridge] = {}
+        self._main_block = Block()
 
     def contextMenuEvent(self, event):
         item = self.itemAt(event.scenePos(), self.views()[0].transform())
@@ -369,12 +368,11 @@ class DiagramScene(QGraphicsScene):
         :param block_type:
         :return:
         """
-        block = BlockItem(name=f"{block_type.name}_{len(self.items())}",
-                          inputs=ins,
-                          outputs=outs,
-                          block_type=block_type)
-        self.addItem(block)
-        block.setPos(pos)
+        block = Block()
+        block_item = BlockItem(block)
+        self._main_block.add(block)
+        self.addItem(block_item)
+        block_item.setPos(pos)
 
     def mousePressEvent(self, event):
         for item in self.items(event.scenePos()):
@@ -403,7 +401,10 @@ class DiagramScene(QGraphicsScene):
             # FIX: scan items under mouse for a valid input Port
             for item in self.items(event.scenePos()):
                 if isinstance(item, PortItem) and item.is_input and not item.is_connected():
-                    connection = Connection(self.source_port, item)
+                    dst_port: PortItem = item
+                    connection = ConnectionItem(self.source_port, dst_port)
+                    src_var = self.source_port.block.out_vars[self.source_port.index]
+                    dst_var = dst_port.block.in_vars[dst_port.index]
                     self.addItem(connection)
                     break
             self.removeItem(self.temp_line)
