@@ -34,7 +34,7 @@ class BlockSolver:
         Constructor        
         :param block_system: BlockSystem
         """
-        self.block_system = block_system
+        self.block_system: Block = block_system
 
         # Flatten the block lists, preserving declaration order
         self._algebraic_vars: List[Var] = list()

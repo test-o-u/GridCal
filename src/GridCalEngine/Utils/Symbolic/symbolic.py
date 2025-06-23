@@ -731,7 +731,9 @@ def compile_numba_functions(expressions: Sequence[Expr],
     :return: List of function pointers
     """
     extended_sorting_vars = find_vars_order(expressions, sorting_vars)
-    return _compile(list(expressions), extended_sorting_vars, uid2sym=None)
+    return _compile(expressions=list(expressions),
+                    sorting_vars=extended_sorting_vars,
+                    uid2sym=None)
 
 
 def get_jacobian(equations: List[Expr], variables: List[Var], params: List[Var] | None = None):
