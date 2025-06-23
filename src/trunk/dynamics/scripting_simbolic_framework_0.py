@@ -47,8 +47,8 @@ Pl = Var("Pl")
 
 load_block = Block(
     algebraic_eqs=[
-        Pl0 * Ql ** coeff_alfa,
-        Ql0 * Ql ** coeff_beta
+        Pl - (Pl0 * Ql ** coeff_alfa),
+        Ql - (Ql0 * Ql ** coeff_beta)
     ],
     algebraic_vars=[Ql, Pl]
 )
@@ -82,20 +82,26 @@ Qg = Var("Qg")
 
 generator_block = Block(
     state_eqs=[
-        delta - (2 * pi * fn) * (omega - 1),
-        omega - (-tm / M + t_e / M - D / M * (omega - 1))
+        # delta - (2 * pi * fn) * (omega - 1),
+        # omega - (-tm / M + t_e / M - D / M * (omega - 1))
+        (2 * pi * fn) * (omega - 1),  # dδ/dt
+        (-tm + t_e - D * (omega - 1)) / M  # dω/dt
     ],
     state_vars=[delta, omega],
     algebraic_eqs=[
-        psid - ((-ra * i_q + v_q) - psid),
-        psiq - ((-ra * i_d + v_d) - psiq),
+        # psid - ((-ra*i_q + v_q) - psid),
+        psid - (-ra * i_q + v_q),
+        # psiq - ((-ra * i_d + v_d) - psiq),
+        psiq - (-ra * i_d + v_d),
         i_d - (psid + xd * i_d - vf),
         i_q - (psiq + xd * i_q),
         v_d - (Qg * sin(delta - Pg)),
         v_q - (Qg * cos(delta - Pg)),
         t_e - ((psid * i_q - psiq * i_d) - t_e),
-        P_e - (v_d * i_d + v_q * i_q - P_e),
-        Q_e - (v_q * i_d - v_d * i_q - Q_e),
+        # P_e - (v_d * i_d + v_q * i_q - P_e),
+        # Q_e - (v_q * i_d - v_d * i_q - Q_e),
+        P_e - (v_d * i_d + v_q * i_q),
+        Q_e - (v_q * i_d - v_d * i_q),
         Pg - (v_d * i_d + v_q * i_q),
         Qg - (v_q * i_d + v_d * i_q)
     ],
@@ -185,5 +191,8 @@ t, y = slv.simulate(
 )
 
 fig = plt.figure(figsize=(12, 8))
-plt.plot(t, y)
+# plt.plot(t, y)
+plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
+plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
+plt.legend()
 plt.show()

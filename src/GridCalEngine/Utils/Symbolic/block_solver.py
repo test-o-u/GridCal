@@ -180,6 +180,12 @@ class BlockSolver:
 
         print("done!")
 
+    def get_var_idx(self, v: Var) -> int:
+        return self.uid2idx[v.uid]
+
+    def get_vars_idx(self, variables: Sequence[Var]) -> np.ndarray:
+        return np.array([self.uid2idx[v.uid] for v in variables])
+
     def sort_vars(self, mapping: dict[Var, float]) -> np.ndarray:
         """
         Helper function to build the initial vector
