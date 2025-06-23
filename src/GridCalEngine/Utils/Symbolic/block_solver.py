@@ -131,7 +131,6 @@ class BlockSolver:
         self._algebraic_eqs: List[Expr] = list()
         self._state_vars: List[Var] = list()
         self._state_eqs: List[Expr] = list()
-        self._all_vars: List[Var] = list()
 
         for b in self.block_system.get_all_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
@@ -139,16 +138,16 @@ class BlockSolver:
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
 
-        # this is a list of all variables, that must be not repeated
-        self._all_vars = self._state_vars + self._algebraic_vars
+        self._n_state = len(self._state_vars)
+        self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
 
         """
-          state Var   algeb var  
-        |J11        | J12       |    | ∆ state var|    | ∆ state eq |
-        |           |           |    |            |    |            |
-        ------------------------- x  |------------|  = |------------|
-        |J21        | J22       |    | ∆ algeb var|    | ∆ algeb eq |
-        |           |           |    |            |    |            |
+                   state Var   algeb var  
+        state eq |J11        | J12       |    | ∆ state var|    | ∆ state eq |
+                 |           |           |    |            |    |            |
+                 ------------------------- x  |------------|  = |------------|
+        algeb eq |J21        | J22       |    | ∆ algeb var|    | ∆ algeb eq |
+                 |           |           |    |            |    |            |
         """
 
         # generate the in-code names for each variable
@@ -157,9 +156,16 @@ class BlockSolver:
 
         uid2sym: Dict[int, str] = dict()
         self.uid2idx: Dict[int, int] = dict()
-        for i, v in enumerate(self._all_vars):
+        i = 0
+        for v in self._state_vars:
             uid2sym[v.uid] = f"vars[{i}]"
             self.uid2idx[v.uid] = i
+            i += 1
+
+        for v in self._algebraic_vars:
+            uid2sym[v.uid] = f"vars[{i}]"
+            self.uid2idx[v.uid] = i
+            i += 1
 
         # Compile RHS and Jacobian
         print("Compiling...", end="")
@@ -171,9 +177,22 @@ class BlockSolver:
         self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym=uid2sym)
         self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym=uid2sym)
 
-        self._n_state = len(self._state_vars)
-        self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
+
         print("done!")
+
+    def sort_vars(self, mapping: dict[Var, float]) -> np.ndarray:
+        """
+        Helper function to build the initial vector
+        :param mapping: var->initial value mapping
+        :return: array matching with the mapping, matching the solver ordering
+        """
+        x = np.zeros(len(self._state_vars) + len(self._algebraic_vars), dtype=object)
+
+        for key, val in mapping.items():
+            i = self.uid2idx[key.uid]
+            x[i] = key
+
+        return x
 
     def build_init_vector(self, mapping: dict[Var, float]) -> np.ndarray:
         """
@@ -303,8 +322,8 @@ class BlockSolver:
         y[0] = x0.copy()
         I = sp.eye(m=self._n_vars, n=self._n_vars)
 
-        for i in range(steps):
-            xn = y[i]
+        for step_idx in range(steps):
+            xn = y[step_idx]
             x_new = xn.copy()  # initial guess
             converged = False
             n_iter = 0
@@ -318,6 +337,11 @@ class BlockSolver:
                 x_new += delta
                 n_iter += 1
 
-            y[i + 1] = x_new
-            t[i + 1] = t[i] + h
+            if converged:
+                y[step_idx + 1] = x_new
+                t[step_idx + 1] = t[step_idx] + h
+            else:
+                print(f"Failed to converge at step {step_idx}")
+                break
+
         return t, y
