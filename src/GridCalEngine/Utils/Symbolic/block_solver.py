@@ -39,8 +39,11 @@ class BlockSolver:
         # Flatten the block lists, preserving declaration order
         self._algebraic_vars: List[Var] = list()
         self._algebraic_eqs: List[Expr] = list()
+
         self._state_vars: List[Var] = list()
         self._state_eqs: List[Expr] = list()
+
+        self._all_vars: List[Var] = list()
 
         self._alg_subs: Dict[Var, Expr] = dict()
         self._state_rhs: List[Expr] = list()
@@ -65,6 +68,9 @@ class BlockSolver:
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
 
+        # this is a list of all variables, that must be not repeated
+        self._all_vars = self._algebraic_vars + self._state_vars
+
         # Substitute algebraic equations into state equations (fixed‑point)
         subst_map = dict()
         for v, eq in zip(self._algebraic_vars, self._algebraic_eqs):
@@ -78,9 +84,17 @@ class BlockSolver:
         self._state_eqs = [_fully_substitute(e, subst_map) for e in self._state_eqs]
 
         # Compile RHS and Jacobian
-        self._rhs_fn = compile_numba_functions(self._state_eqs, sorting_vars=self._state_vars)
-        self._jac_fn, _ = get_jacobian(self._state_eqs, self._state_vars)
+        print("Compiling...", end="")
+        self._rhs_fn = compile_numba_functions(expressions=self._state_eqs,
+                                               sorting_vars=self._state_vars,
+                                               params=self._algebraic_vars)
+
+        self._jac_fn, _ = get_jacobian(equations=self._state_eqs,
+                                       variables=self._state_vars,
+                                       params=self._algebraic_vars)
+
         self._n_state = len(self._state_vars)
+        print("done!")
 
     def rhs(self, state: Sequence[float]) -> np.ndarray:
         """

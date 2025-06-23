@@ -663,6 +663,7 @@ def find_vars_order(expressions: Union[Expr, Sequence[Expr]],
 
 def _compile(expressions: Sequence[Expr],
              sorting_vars: List[Var],
+             params: Sequence[Var] | None,
              uid2sym: Dict[int, str] | None,
              add_doc_string: bool = True) -> Callable[[Any], Sequence[float]]:
     """
@@ -673,7 +674,13 @@ def _compile(expressions: Sequence[Expr],
     :return: Function pointer that returns an array
     """
     if uid2sym is None:
-        uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(sorting_vars)}
+        uid2sym: Dict[int, str] = {v.uid: f"arg{i}" for i, v in enumerate(sorting_vars)}
+        if params is not None:
+            n_sorting_vars = len(sorting_vars)
+            for i, v in enumerate(params):
+                uid2sym[v.uid] = f"arg{i + n_sorting_vars}"
+
+
 
     arg_list = ", ".join(uid2sym[v.uid] for v in sorting_vars)
 
@@ -692,7 +699,7 @@ def _compile(expressions: Sequence[Expr],
 
     if add_doc_string:
         fn.__doc__ = "Positional order:\n  " + "\n  ".join(
-            f"v{i} → {v.name} (uid={v.uid}…)" for i, v in enumerate(sorting_vars)
+            f"arg{i} → {v.name} (uid={v.uid}…)" for i, v in enumerate(sorting_vars)
         )
     return fn
 
@@ -720,7 +727,8 @@ def compile_numba_function(expr: Expr,
 # -----------------------------------------------------------------------------
 
 def compile_numba_functions(expressions: Sequence[Expr],
-                            sorting_vars: Sequence[Var | str] | None = None)-> Callable[[Any], Sequence[float]]:
+                            sorting_vars: Sequence[Var | str] | None = None,
+                            params: Sequence[Var] | None = None)-> Callable[[Any], Sequence[float]]:
     """
     Return a Numba‑JIT function computing all *exprs* at once.
 
@@ -730,9 +738,10 @@ def compile_numba_functions(expressions: Sequence[Expr],
     :param sorting_vars: list of variables indicating the sorting order of the call
     :return: List of function pointers
     """
-    extended_sorting_vars = find_vars_order(expressions, sorting_vars)
+    extended_sorting_vars = find_vars_order(expressions=expressions, ordering=sorting_vars)
     return _compile(expressions=list(expressions),
                     sorting_vars=extended_sorting_vars,
+                    params=params,
                     uid2sym=None)
 
 
@@ -778,6 +787,7 @@ def get_jacobian(equations: List[Expr], variables: List[Var], params: List[Var] 
 
             function_ptr = _compile(expressions=[d_expression],
                                     sorting_vars=expanded_sorting_vars,
+                                    params=params,
                                     uid2sym=uid2sym)
 
             fn = fn_cache.setdefault(d_expression.uid, function_ptr)

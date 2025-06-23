@@ -28,11 +28,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Integration in process">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Worked the scripting_simbolic_framework_0.py">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -302,7 +302,7 @@
       <recent name="D:\SIROCO\GridCal\src\GridCal\Gui\Diagrams\MapWidget\Substation" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.blocks_example">
+  <component name="RunManager" selected="Python.scripting_simbolic_framework_0">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -1179,8 +1179,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.blocks_example" />
         <item itemvalue="Python.scripting_simbolic_framework_0" />
+        <item itemvalue="Python.blocks_example" />
         <item itemvalue="Python.ExecuteGridCal" />
         <item itemvalue="Python.block_editor" />
         <item itemvalue="Python.block_editor2" />
@@ -2396,7 +2396,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="707" />
+    <option name="localTasksCounter" value="708" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2442,7 +2442,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed all _api_object typos&#10;Fixed the test_valid_circuit_idx test" />
     <MESSAGE value="Touched on some CGMES craziness..." />
     <MESSAGE value="Fixed VL border issue" />
     <MESSAGE value="Refactored unused code" />
@@ -2467,7 +2466,8 @@
     <MESSAGE value="Further unified the API" />
     <MESSAGE value="Made the BlockSystem recursive&#10;Started GUI integration" />
     <MESSAGE value="Integration in process" />
-    <option name="LAST_COMMIT_MESSAGE" value="Integration in process" />
+    <MESSAGE value="Worked the scripting_simbolic_framework_0.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="Worked the scripting_simbolic_framework_0.py" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3008,14 +3008,24 @@
           <option name="timeStamp" value="2789" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py</url>
-          <line>732</line>
-          <option name="timeStamp" value="2815" />
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
+          <line>171</line>
+          <option name="timeStamp" value="2824" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py</url>
-          <line>733</line>
-          <option name="timeStamp" value="2821" />
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
+          <line>172</line>
+          <option name="timeStamp" value="2825" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
+          <line>173</line>
+          <option name="timeStamp" value="2826" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
+          <line>174</line>
+          <option name="timeStamp" value="2827" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

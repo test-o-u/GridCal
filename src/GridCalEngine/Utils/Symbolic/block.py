@@ -59,50 +59,18 @@ class Block:
 
         return flat
 
+    def get_vars(self) -> List[Var]:
+        """
+        Get a list of algebraic + state vars
+        :return: List[Var]
+        """
+        return self.algebraic_vars + self.state_vars
+
     def to_dict(self):
         return dict()
 
     def parse(self, data):
         pass
-
-
-def compose_block(name: str,
-                  inputs: list[Var],
-                  outputs: list[Var],
-                  inner_blocks: list[Block]) -> Block:
-    """
-    Bundle *inner_blocks* into a single reusable Block.
-    :param name: Name for the new block
-    :param inputs: Vars that outside world will drive
-    :param outputs:  Vars that outside world will observe
-    :param inner_blocks:
-    :return: Single block
-    """
-    alg_v = list()
-    alg_e = list()
-    st_v = list()
-    st_e = list()
-
-    for blk in inner_blocks:
-        alg_v.extend(blk.algebraic_vars)
-        alg_e.extend(blk.algebraic_eqs)
-        st_v.extend(blk.state_vars)
-        st_e.extend(blk.state_eqs)
-
-    # Keep only those algebraic signals that the outer world needs to see
-    # (outputs) or drive (inputs); everybody else is internal
-    exposed = set(inputs) | set(outputs)
-    keep = [i for i, v in enumerate(alg_v) if v in exposed]
-    alg_v = [alg_v[i] for i in keep]
-    alg_e = [alg_e[i] for i in keep]
-
-    return Block(
-        algebraic_vars=alg_v,
-        algebraic_eqs=alg_e,
-        state_vars=st_v,
-        state_eqs=st_e,
-        name=name,
-    )
 
 
 # ----------------------------------------------------------------------------------------------------------------------
