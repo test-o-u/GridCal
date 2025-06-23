@@ -162,7 +162,7 @@ sys = Block(
 slv = BlockSolver(sys)
 t, y = slv.simulate(
     t0=0,
-    t_end=3.0,
+    t_end=1.0,
     h=0.01,
     x0=slv.build_init_vector({
         delta: 0.0,
@@ -194,8 +194,10 @@ t, y = slv.simulate(
         t_e: 0.1,  # electromagnetic torque (pu)
         P_e: 0.2,  # real power (pu)
         Q_e: 0.2,  # reactive power (pu)
-    })
+    }),
+    method="implicit_euler"
 )
 
 fig = plt.figure(figsize=(12, 8))
 plt.plot(t, y)
+plt.show()

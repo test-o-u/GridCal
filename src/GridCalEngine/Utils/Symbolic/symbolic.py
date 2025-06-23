@@ -674,25 +674,17 @@ def _compile(expressions: Sequence[Expr],
     :return: Function pointer that returns an array
     """
     if uid2sym is None:
-        uid2sym: Dict[int, str] = {v.uid: f"arg{i}" for i, v in enumerate(sorting_vars)}
+        uid2sym: Dict[int, str] = {v.uid: f"vars[{i}]" for i, v in enumerate(sorting_vars)}
         if params is not None:
             n_sorting_vars = len(sorting_vars)
             for i, v in enumerate(params):
-                uid2sym[v.uid] = f"arg{i + n_sorting_vars}"
+                uid2sym[v.uid] = f"param[{i + n_sorting_vars}]"
 
-
-
-    arg_list = ", ".join(uid2sym[v.uid] for v in sorting_vars)
-
-    # Build body lines
-    lines = [f"    out{i} = {_emit(e, uid2sym)}" for i, e in enumerate(expressions)]
-    if len(expressions) == 1:
-        lines.append("    return out0")
-    else:
-        outs = ", ".join(f"out{i}" for i in range(len(expressions)))
-        lines.append(f"    return ({outs})")
-
-    src = f"def _f({arg_list}):\n" + "\n".join(lines) + "\n"
+    # Build source
+    src = f"def _f(args, params):\n"
+    src += f"    out = np.zeros({len(expressions)})\n"
+    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym)}" for i, e in enumerate(expressions)]) + "\n"
+    src += f"    return out"
     ns: Dict[str, Any] = {"math": math}
     exec(src, ns)
     fn = nb.njit(ns["_f"], fastmath=True)
@@ -728,7 +720,7 @@ def compile_numba_function(expr: Expr,
 
 def compile_numba_functions(expressions: Sequence[Expr],
                             sorting_vars: Sequence[Var | str] | None = None,
-                            params: Sequence[Var] | None = None)-> Callable[[Any], Sequence[float]]:
+                            params: Sequence[Var] | None = None) -> Callable[[Any], Sequence[float]]:
     """
     Return a Numba‑JIT function computing all *exprs* at once.
 

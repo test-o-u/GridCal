@@ -5,13 +5,16 @@
 
 
 from __future__ import annotations
-from typing import Tuple, Sequence
+from typing import Tuple
 import numpy as np
+import numba as nb
+import math
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
-from typing import Dict, List, Literal
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, compile_numba_functions, get_jacobian, BinOp
+from typing import Dict, List, Literal, Any, Callable, Sequence
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit
 from GridCalEngine.Utils.Symbolic.block import Block
+from GridCalEngine.Utils.Sparse.csc import pack_4_by_4
 
 
 def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
@@ -22,6 +25,93 @@ def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) 
             break
         cur = nxt
     return cur
+
+
+def _compile_equations(eqs: Sequence[Expr],
+                       uid2sym: Dict[int, str],
+                       add_doc_string: bool = True) -> Callable[[Any], Sequence[float]]:
+    """
+    Compile the array of expressions to a function that returns an array of values for those expressions
+    :param eqs: Iterable of expressions (Expr)
+    :param uid2sym: dictionary relating the uid of a var with its array name (i.e. var[0])
+    :param add_doc_string: add the docstring?
+    :return: Function pointer that returns an array
+    """
+
+    # Build source
+    src = f"def _f(vars):\n"
+    src += f"    out = np.zeros({len(eqs)})\n"
+    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym)}" for i, e in enumerate(eqs)]) + "\n"
+    src += f"    return out"
+    ns: Dict[str, Any] = {"math": math, "np": np}
+    exec(src, ns)
+    fn = nb.njit(ns["_f"], fastmath=True)
+
+    if add_doc_string:
+        fn.__doc__ = "def _f(vars)"
+    return fn
+
+
+def _get_jacobian(eqs: List[Expr],
+                  variables: List[Var],
+                  uid2sym: Dict[int, str]):
+    """
+    JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
+    :param eqs: Array of equations
+    :param variables: Array of variables to differentiate against
+    :param uid2sym: dictionary relating the uid of a var with its array name (i.e. var[0])
+    :return:
+            jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
+                Fast evaluator in which *values* is a 1‑D NumPy vector of length
+                ``len(variables)``.
+            sparsity_pattern : tuple(np.ndarray, np.ndarray)
+                Row/col indices of structurally non‑zero entries.
+    """
+
+    # Ensure deterministic variable order
+    check_set = set()
+    for v in variables:
+        if v in check_set:
+            raise ValueError(f"Repeated var {v.name} in the variables' list :(")
+        else:
+            check_set.add(v)
+
+    # Cache compiled partials by UID so duplicates are reused
+    fn_cache: Dict[str, Callable] = {}
+    triplets: List[Tuple[int, int, Callable]] = []  # (col, row, fn)
+
+    for row, eq in enumerate(eqs):
+        for col, var in enumerate(variables):
+            d_expression = eq.diff(var).simplify()
+            if isinstance(d_expression, Const) and d_expression.value == 0:
+                continue  # structural zero
+
+            function_ptr = _compile_equations(eqs=[d_expression], uid2sym=uid2sym)
+
+            fn = fn_cache.setdefault(d_expression.uid, function_ptr)
+
+            triplets.append((col, row, fn))
+
+    # Sort by column, then row for CSC layout
+    triplets.sort(key=lambda t: (t[0], t[1]))
+    cols_sorted, rows_sorted, fns_sorted = zip(*triplets) if triplets else ([], [], [])
+
+    nnz = len(fns_sorted)
+    indices = np.fromiter(rows_sorted, dtype=np.int32, count=nnz)
+    data = np.empty(nnz, dtype=np.float64)
+
+    indptr = np.zeros(len(variables) + 1, dtype=np.int32)
+    for c in cols_sorted:
+        indptr[c + 1] += 1
+    np.cumsum(indptr, out=indptr)
+
+    def jac_fn(values: np.ndarray) -> sp.csc_matrix:  # noqa: D401 – simple
+        assert len(values) >= len(variables)
+        for k, fn in enumerate(fns_sorted):
+            data[k] = fn(values)
+        return sp.csc_matrix((data, indices, indptr), shape=(len(eqs), len(variables)))
+
+    return jac_fn
 
 
 class BlockSolver:
@@ -39,29 +129,10 @@ class BlockSolver:
         # Flatten the block lists, preserving declaration order
         self._algebraic_vars: List[Var] = list()
         self._algebraic_eqs: List[Expr] = list()
-
         self._state_vars: List[Var] = list()
         self._state_eqs: List[Expr] = list()
-
         self._all_vars: List[Var] = list()
 
-        self._alg_subs: Dict[Var, Expr] = dict()
-        self._state_rhs: List[Expr] = list()
-        self._rhs_fn = None
-        self._jac_fn = None
-        self._n_state = 0
-
-        self._initialize()
-
-    def _initialize(self):
-        """
-        Initialize for simulation
-        """
-        # Flatten the block lists, preserving declaration order
-        self._algebraic_vars.clear()
-        self._algebraic_eqs.clear()
-        self._state_vars.clear()
-        self._state_eqs.clear()
         for b in self.block_system.get_all_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
             self._algebraic_eqs.extend(b.algebraic_eqs)
@@ -69,41 +140,76 @@ class BlockSolver:
             self._state_eqs.extend(b.state_eqs)
 
         # this is a list of all variables, that must be not repeated
-        self._all_vars = self._algebraic_vars + self._state_vars
+        self._all_vars = self._state_vars + self._algebraic_vars
 
-        # Substitute algebraic equations into state equations (fixed‑point)
-        subst_map = dict()
-        for v, eq in zip(self._algebraic_vars, self._algebraic_eqs):
-            # assume the algebraic eq is either (v - rhs) or (rhs - v)
-            if isinstance(eq, BinOp) and eq.op == "-":
-                if eq.left == v:
-                    subst_map[v] = eq.right  # v  – rhs = 0  → v = rhs
-                elif eq.right == v:
-                    subst_map[v] = eq.left  # rhs – v  = 0  → v = rhs
+        """
+          state Var   algeb var  
+        |J11        | J12       |    | ∆ state var|    | ∆ state eq |
+        |           |           |    |            |    |            |
+        ------------------------- x  |------------|  = |------------|
+        |J21        | J22       |    | ∆ algeb var|    | ∆ algeb eq |
+        |           |           |    |            |    |            |
+        """
 
-        self._state_eqs = [_fully_substitute(e, subst_map) for e in self._state_eqs]
+        # generate the in-code names for each variable
+        # inside the compiled functions the variables are
+        # going to be represented by an array called vars[]
+
+        uid2sym: Dict[int, str] = dict()
+        self.uid2idx: Dict[int, int] = dict()
+        for i, v in enumerate(self._all_vars):
+            uid2sym[v.uid] = f"vars[{i}]"
+            self.uid2idx[v.uid] = i
 
         # Compile RHS and Jacobian
         print("Compiling...", end="")
-        self._rhs_fn = compile_numba_functions(expressions=self._state_eqs,
-                                               sorting_vars=self._state_vars,
-                                               params=self._algebraic_vars)
+        self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym=uid2sym)
+        self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym=uid2sym)
 
-        self._jac_fn, _ = get_jacobian(equations=self._state_eqs,
-                                       variables=self._state_vars,
-                                       params=self._algebraic_vars)
+        self._j11_fn = _get_jacobian(eqs=self._state_eqs, variables=self._state_vars, uid2sym=uid2sym)
+        self._j12_fn = _get_jacobian(eqs=self._state_eqs, variables=self._algebraic_vars, uid2sym=uid2sym)
+        self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym=uid2sym)
+        self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym=uid2sym)
 
         self._n_state = len(self._state_vars)
+        self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
         print("done!")
 
-    def rhs(self, state: Sequence[float]) -> np.ndarray:
+    def build_init_vector(self, mapping: dict[Var, float]) -> np.ndarray:
+        """
+        Helper function to build the initial vector
+        :param mapping: var->initial value mapping
+        :return: array matching with the mapping, matching the solver ordering
+        """
+        x = np.zeros(len(self._state_vars) + len(self._algebraic_vars))
+
+        for key, val in mapping.items():
+            i = self.uid2idx[key.uid]
+            x[i] = val
+
+        return x
+
+    def rhs(self, x: Sequence[float]) -> np.ndarray:
         """
         Return 𝑑x/dt given the current *state* vector.
-        :param state: get the right-hand-side give a state vector
+        :param x: get the right-hand-side give a state vector
         """
-        if self._rhs_fn is None:
-            return np.array([])
-        return np.asarray(self._rhs_fn(*state))
+        f_state = self._rhs_state_fn(x)
+        f_algeb = self._rhs_algeb_fn(x)
+        return np.r_[f_state, f_algeb]
+
+    def jacobian(self, x: np.ndarray):
+        """
+
+        :param x:
+        :return:
+        """
+        j11: sp.csc_matrix = self._j11_fn(x)
+        j12: sp.csc_matrix = self._j12_fn(x)
+        j21: sp.csc_matrix = self._j21_fn(x)
+        j22: sp.csc_matrix = self._j22_fn(x)
+        J = pack_4_by_4(j11, j12, j21, j22)
+        return J
 
     def get_dummy_x0(self):
         return np.zeros(self._n_state)
@@ -158,7 +264,7 @@ class BlockSolver:
         """
         steps = int(np.ceil((t_end - t0) / h))
         t = np.empty(steps + 1)
-        y = np.empty((steps + 1, self._n_state))
+        y = np.empty((steps + 1, self._n_vars))
         t[0] = t0
         y[0, :] = x0.copy()
 
@@ -166,13 +272,13 @@ class BlockSolver:
             tn = t[i]
             xn = y[i]
             if stepper == "euler":
-                k1 = np.array(self._rhs_fn(*xn))
+                k1 = self.rhs(xn)
                 y[i + 1] = xn + h * k1
             elif stepper == "rk4":
-                k1 = np.array(self._rhs_fn(*xn))
-                k2 = np.array(self._rhs_fn(*(xn + 0.5 * h * k1)))
-                k3 = np.array(self._rhs_fn(*(xn + 0.5 * h * k2)))
-                k4 = np.array(self._rhs_fn(*(xn + h * k3)))
+                k1 = self.rhs(xn)
+                k2 = self.rhs(xn + 0.5 * h * k1)
+                k3 = self.rhs(xn + 0.5 * h * k2)
+                k4 = self.rhs(xn + h * k3)
                 y[i + 1] = xn + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
             else:
                 raise RuntimeError("unknown stepper")
@@ -192,42 +298,26 @@ class BlockSolver:
         """
         steps = int(np.ceil((t_end - t0) / h))
         t = np.empty(steps + 1)
-        y = np.empty((steps + 1, self._n_state))
+        y = np.empty((steps + 1, self._n_vars))
         t[0] = t0
         y[0] = x0.copy()
-        I = sp.eye(m=self._n_state, n=self._n_state)
+        I = sp.eye(m=self._n_vars, n=self._n_vars)
 
         for i in range(steps):
             xn = y[i]
             x_new = xn.copy()  # initial guess
-            for _ in range(max_iter):
-                f_val = np.array(self._rhs_fn(*x_new))
+            converged = False
+            n_iter = 0
+            while not converged and n_iter < max_iter:
+                f_val = np.array(self.rhs(x_new))
                 res = x_new - xn - h * f_val
-                if np.linalg.norm(res, np.inf) < tol:
-                    break
-                Jf = self._jac_fn(x_new)  # sparse matrix
+                converged = np.linalg.norm(res, np.inf) < tol
+                Jf = self.jacobian(x_new)  # sparse matrix
                 A = I - h * Jf
                 delta = sp.linalg.spsolve(A, -res)
                 x_new += delta
-            else:
-                raise RuntimeError("Newton failed in implicit Euler")
+                n_iter += 1
+
             y[i + 1] = x_new
             t[i + 1] = t[i] + h
         return t, y
-
-    # ------------------------------------------------------------------ jacobian accessor
-    def jacobian(self, x_vec: np.ndarray) -> sp.csc_matrix:
-        """
-
-        :param x_vec:
-        :return:
-        """
-        return self._jac_fn(*x_vec)
-
-    def build_init_vector(self, mapping: dict[Var, float]) -> np.ndarray:
-        """
-        Helper function to build the initial vector
-        :param mapping: var->initial value mapping
-        :return: array matching the mapping
-        """
-        return np.array([mapping.get(v, 0.0) for v in self._state_vars], dtype=float)
