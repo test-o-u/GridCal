@@ -327,6 +327,10 @@ class BlockSolver:
         t[0] = t0
         y[0] = x0.copy()
         I = sp.eye(m=self._n_vars, n=self._n_vars)
+        Ix = sp.eye(m=self._n_state, n=self._n_state)
+
+        idx_algeb_eqs = self.get_vars_idx(self._algebraic_vars)
+        idx_state_eqs = self.get_vars_idx(self._state_vars)
 
         for step_idx in range(steps):
             xn = y[step_idx]
@@ -334,12 +338,27 @@ class BlockSolver:
             converged = False
             n_iter = 0
             while not converged and n_iter < max_iter:
-                f_val = np.array(self.rhs(x_new))
-                res = x_new - xn - h * f_val
+                # f_val = np.array(self.rhs(x_new))
+                f_algeb = self._rhs_algeb_fn(x_new)
+                f_state = self._rhs_state_fn(x_new)
+
+                if self._n_state > 0:
+                    f_state_update = x_new[idx_state_eqs] - xn[idx_state_eqs] - h * f_state
+                    res = np.r_[f_state_update, f_algeb]
+                else:
+                    res = np.r_[f_algeb]
+
+                # res = np.r_[f_state, f_algeb] - xn - h * f_val
                 converged = np.linalg.norm(res, np.inf) < tol
                 Jf = self.jacobian(x_new)  # sparse matrix
-                A = I - h * Jf
-                delta = sp.linalg.spsolve(A, -res)
+                # A = I - h * Jf, but only for the state equations
+                # A = Jf, for algebraic equations
+                if self._n_state > 0:
+                    Jf[idx_state_eqs, :] *= -h
+                    Jf[idx_state_eqs, idx_state_eqs] += Ix
+                else:
+                    pass  # no change needed for algebraic equations only
+                delta = sp.linalg.spsolve(Jf, -res)
                 x_new += delta
                 n_iter += 1
 
