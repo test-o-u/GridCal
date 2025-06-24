@@ -331,6 +331,7 @@ class BlockSolver:
 
         idx_algeb_eqs = self.get_vars_idx(self._algebraic_vars)
         idx_state_eqs = self.get_vars_idx(self._state_vars)
+        ones_x_vec = np.ones(self._n_state, dtype=float)
 
         for step_idx in range(steps):
             xn = y[step_idx]
@@ -355,7 +356,7 @@ class BlockSolver:
                 # A = Jf, for algebraic equations
                 if self._n_state > 0:
                     Jf[idx_state_eqs, :] *= -h
-                    Jf[idx_state_eqs, idx_state_eqs] += Ix
+                    Jf[idx_state_eqs, idx_state_eqs] += ones_x_vec
                 else:
                     pass  # no change needed for algebraic equations only
                 delta = sp.linalg.spsolve(Jf, -res)
