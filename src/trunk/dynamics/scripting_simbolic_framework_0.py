@@ -80,10 +80,10 @@ pi = Const(math.pi)
 fn = Const(50.0)
 tm = Const(0.1)
 M = Const(1.0)
-D = Const(0.003)
+D = Const(10)
 ra = Const(0.3)
 xd = Const(0.86138701)
-vf = Const(3.81099313)
+vf = Const(1.081099313)
 
 
 
@@ -188,7 +188,7 @@ vars_in_order = slv.sort_vars(mapping)
 
 t, y = slv.simulate(
     t0=0,
-    t_end=1.0,
+    t_end=10.0,
     h=0.001,
     x0=x0,
     method="implicit_euler"
@@ -196,8 +196,9 @@ t, y = slv.simulate(
 
 fig = plt.figure(figsize=(12, 8))
 # plt.plot(t, y)
-plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
-plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
+# plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
+# plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
+plt.plot(t, y[:, slv.get_var_idx(t_e)], label="t_e (pu)")
 # plt.plot(t, y[:, slv.get_var_idx(Vline_from)], label="Vline_from (Vlf)")
 # plt.plot(t, y[:, slv.get_var_idx(Vline_to)], label="Vline_to (Vlt)")
 plt.legend()
