@@ -15,9 +15,9 @@ from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
 # ----------------------------------------------------------------------------------------------------------------------
 # Line
 # ----------------------------------------------------------------------------------------------------------------------
-g = Const(0.5)
-b = Const(1.2)
-bsh = Const(0.3)
+g = Const(5)
+b = Const(-12)
+bsh = Const(0.03)
 Qline_from = Var("Qline_from")
 Qline_to = Var("Qline_to")
 Pline_from = Var("Pline_from")
@@ -27,9 +27,7 @@ Vline_to = Var("Vline_to")
 dline_from = Var("dline_from")
 dline_to = Var("dline_to")
 
-Ql = Var("Ql")
-Pl = Var("Pl")
-Vl = Var("Vl")
+
 
 delta = Var("delta")
 omega = Var("omega")
@@ -59,15 +57,17 @@ line_block = Block(
 # Load
 # ----------------------------------------------------------------------------------------------------------------------
 coeff_alfa = Const(1.8)
-Pl0 = Const(10.0)
-Ql0 = Const(9.0)
+Pl0 = Const(0.1)
+Ql0 = Const(0.2)
 coeff_beta = Const(8.0)
 
+Ql = Var("Ql")
+Pl = Var("Pl")
 
 load_block = Block(
     algebraic_eqs=[
-        Pl - (Pl0 * Vl ** coeff_alfa),
-        Ql - (Ql0 * Vl ** coeff_beta)
+        Pl - (Pl0),
+        Ql - (Ql0)
     ],
     algebraic_vars=[Ql, Pl]
 )
@@ -78,7 +78,7 @@ load_block = Block(
 # Generator
 pi = Const(math.pi)
 fn = Const(50.0)
-tm = Const(10.0)
+tm = Const(0.1)
 M = Const(1.0)
 D = Const(0.003)
 ra = Const(0.3)
@@ -93,7 +93,7 @@ generator_block = Block(
         # delta - (2 * pi * fn) * (omega - 1),
         # omega - (-tm / M + t_e / M - D / M * (omega - 1))
         (2 * pi * fn) * (omega - 1),  # dδ/dt
-        (-tm + t_e - D * (omega - 1)) / M  # dω/dt
+        (tm - t_e - D * (omega - 1)) / M  # dω/dt
     ],
     state_vars=[delta, omega],
     algebraic_eqs=[
@@ -132,9 +132,8 @@ bus2_block = Block(
     algebraic_eqs=[
         Pl + Pline_to,
         Ql + Qline_to,
-        Vl - Vline_to
     ],
-    algebraic_vars=[Pline_to, Qline_to, Vl]
+    algebraic_vars=[Pline_to, Qline_to]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -158,7 +157,6 @@ mapping = {
     dline_to: 10 * (np.pi / 180),
     Vline_from: 1.0,
     Vline_to: 0.95,
-    Vl: 0.95,
     Vg: 1.0,
     dg: 15 * (np.pi / 180),
 
@@ -168,8 +166,8 @@ mapping = {
     Qline_to: 0.2,
 
 
-    Pl: -0.1,  # P2
-    Ql: -0.2,  # Q2
+    Pl: 0.1,  # P2
+    Ql: 0.2,  # Q2
 
 
     delta: 0.0,
