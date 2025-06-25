@@ -14,7 +14,7 @@ from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal, Any, Callable, Sequence
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit
 from GridCalEngine.Utils.Symbolic.block import Block
-from GridCalEngine.Utils.Sparse.csc import pack_4_by_4
+from GridCalEngine.Utils.Sparse.csc import pack_4_by_4_scipy
 
 
 def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) -> Expr:
@@ -141,14 +141,7 @@ class BlockSolver:
         self._n_state = len(self._state_vars)
         self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
 
-        """
-                   state Var   algeb var  
-        state eq |J11        | J12       |    | ∆ state var|    | ∆ state eq |
-                 |           |           |    |            |    |            |
-                 ------------------------- x  |------------|  = |------------|
-        algeb eq |J21        | J22       |    | ∆ algeb var|    | ∆ algeb eq |
-                 |           |           |    |            |    |            |
-        """
+
 
         # generate the in-code names for each variable
         # inside the compiled functions the variables are
@@ -168,6 +161,14 @@ class BlockSolver:
             i += 1
 
         # Compile RHS and Jacobian
+        """
+                   state Var   algeb var  
+        state eq |J11        | J12       |    | ∆ state var|    | ∆ state eq |
+                 |           |           |    |            |    |            |
+                 ------------------------- x  |------------|  = |------------|
+        algeb eq |J21        | J22       |    | ∆ algeb var|    | ∆ algeb eq |
+                 |           |           |    |            |    |            |
+        """
         print("Compiling...", end="")
         self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym=uid2sym)
         self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym=uid2sym)
@@ -214,26 +215,60 @@ class BlockSolver:
 
         return x
 
-    def rhs(self, x: Sequence[float]) -> np.ndarray:
+    def rhs_fixed(self, x: np.ndarray) -> np.ndarray:
         """
         Return 𝑑x/dt given the current *state* vector.
         :param x: get the right-hand-side give a state vector
+        :return [f_state_update, f_algeb]
         """
-        f_state = self._rhs_state_fn(x)
-        f_algeb = self._rhs_algeb_fn(x)
-        return np.r_[f_state, f_algeb]
+        f_algeb = np.array(self._rhs_algeb_fn(x))
 
-    def jacobian(self, x: np.ndarray):
+        if self._n_state > 0:
+            f_state = np.array(self._rhs_state_fn(x))
+            return np.r_[f_state, f_algeb]
+        else:
+            return f_algeb
+
+    def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, h: float) -> np.ndarray:
+        """
+        Return 𝑑x/dt given the current *state* vector.
+        :param x: get the right-hand-side give a state vector
+        :param xn:
+        :param h: simulation step
+        :return [f_state_update, f_algeb]
+        """
+        f_algeb = np.array(self._rhs_algeb_fn(x))
+
+        if self._n_state > 0:
+            f_state = np.array(self._rhs_state_fn(x))
+            f_state_update = x[:self._n_state] - xn[:self._n_state] - h * f_state
+            return np.r_[f_state_update, f_algeb]
+        else:
+            return f_algeb
+
+    def jacobian_implicit(self, x: np.ndarray, h: float) -> sp.csc_matrix:
         """
 
-        :param x:
+        :param x: vector or variables' values
+        :param h: step
         :return:
         """
-        j11: sp.csc_matrix = self._j11_fn(x)
-        j12: sp.csc_matrix = self._j12_fn(x)
+
+        """
+                  state Var    algeb var
+        state eq |I - h * J11 | - h* J12  |    | ∆ state var|    | ∆ state eq |
+                 |            |           |    |            |    |            |
+                 -------------------------- x  |------------|  = |------------|
+        algeb eq |J21         | J22       |    | ∆ algeb var|    | ∆ algeb eq |
+                 |            |           |    |            |    |            |
+        """
+
+        I = sp.eye(m=self._n_state, n=self._n_state)
+        j11: sp.csc_matrix = (I - h * self._j11_fn(x)).tocsc()
+        j12: sp.csc_matrix = - h * self._j12_fn(x)
         j21: sp.csc_matrix = self._j21_fn(x)
         j22: sp.csc_matrix = self._j22_fn(x)
-        J = pack_4_by_4(j11, j12, j21, j22)
+        J = pack_4_by_4_scipy(j11, j12, j21, j22)
         return J
 
     def get_dummy_x0(self):
@@ -297,13 +332,13 @@ class BlockSolver:
             tn = t[i]
             xn = y[i]
             if stepper == "euler":
-                k1 = self.rhs(xn)
+                k1 = self.rhs_fixed(xn)
                 y[i + 1] = xn + h * k1
             elif stepper == "rk4":
-                k1 = self.rhs(xn)
-                k2 = self.rhs(xn + 0.5 * h * k1)
-                k3 = self.rhs(xn + 0.5 * h * k2)
-                k4 = self.rhs(xn + h * k3)
+                k1 = self.rhs_fixed(xn)
+                k2 = self.rhs_fixed(xn + 0.5 * h * k1)
+                k3 = self.rhs_fixed(xn + 0.5 * h * k2)
+                k4 = self.rhs_fixed(xn + h * k3)
                 y[i + 1] = xn + (h / 6.0) * (k1 + 2 * k2 + 2 * k3 + k4)
             else:
                 raise RuntimeError("unknown stepper")
@@ -326,12 +361,6 @@ class BlockSolver:
         y = np.empty((steps + 1, self._n_vars))
         t[0] = t0
         y[0] = x0.copy()
-        I = sp.eye(m=self._n_vars, n=self._n_vars)
-        Ix = sp.eye(m=self._n_state, n=self._n_state)
-
-        idx_algeb_eqs = self.get_vars_idx(self._algebraic_vars)
-        idx_state_eqs = self.get_vars_idx(self._state_vars)
-        ones_x_vec = np.ones(self._n_state, dtype=float)
 
         for step_idx in range(steps):
             xn = y[step_idx]
@@ -339,27 +368,14 @@ class BlockSolver:
             converged = False
             n_iter = 0
             while not converged and n_iter < max_iter:
-                # f_val = np.array(self.rhs(x_new))
-                f_algeb = self._rhs_algeb_fn(x_new)
-                f_state = self._rhs_state_fn(x_new)
+                rhs = self.rhs_implicit(x_new, xn, h)
+                converged = np.linalg.norm(rhs, np.inf) < tol
 
-                if self._n_state > 0:
-                    f_state_update = x_new[idx_state_eqs] - xn[idx_state_eqs] - h * f_state
-                    res = np.r_[f_state_update, f_algeb]
-                else:
-                    res = np.r_[f_algeb]
+                if converged:
+                    break
 
-                # res = np.r_[f_state, f_algeb] - xn - h * f_val
-                converged = np.linalg.norm(res, np.inf) < tol
-                Jf = self.jacobian(x_new)  # sparse matrix
-                # A = I - h * Jf, but only for the state equations
-                # A = Jf, for algebraic equations
-                if self._n_state > 0:
-                    Jf[idx_state_eqs, :] *= -h
-                    Jf[idx_state_eqs, idx_state_eqs] += ones_x_vec
-                else:
-                    pass  # no change needed for algebraic equations only
-                delta = sp.linalg.spsolve(Jf, -res)
+                Jf = self.jacobian_implicit(x_new, h)  # sparse matrix
+                delta = sp.linalg.spsolve(Jf, -rhs)
                 x_new += delta
                 n_iter += 1
 
