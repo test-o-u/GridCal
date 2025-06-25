@@ -5,6 +5,8 @@
 
 
 from __future__ import annotations
+
+import pdb
 from typing import Tuple
 import numpy as np
 import numba as nb
@@ -210,6 +212,7 @@ class BlockSolver:
         x = np.zeros(len(self._state_vars) + len(self._algebraic_vars))
 
         for key, val in mapping.items():
+
             i = self.uid2idx[key.uid]
             x[i] = val
 
@@ -229,7 +232,7 @@ class BlockSolver:
         else:
             return f_algeb
 
-    def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, h: float) -> np.ndarray:
+    def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, sim_step, h: float) -> np.ndarray:
         """
         Return 𝑑x/dt given the current *state* vector.
         :param x: get the right-hand-side give a state vector
@@ -238,11 +241,12 @@ class BlockSolver:
         :return [f_state_update, f_algeb]
         """
         f_algeb = np.array(self._rhs_algeb_fn(x))
-
+        sim_step = sim_step
         if self._n_state > 0:
             f_state = np.array(self._rhs_state_fn(x))
             f_state_update = x[:self._n_state] - xn[:self._n_state] - h * f_state
             return np.r_[f_state_update, f_algeb]
+
         else:
             return f_algeb
 
@@ -288,7 +292,7 @@ class BlockSolver:
             x0: np.ndarray,
             method: Literal["rk4", "euler", "implicit_euler"] = "rk4",
             newton_tol: float = 1e-8,
-            newton_max_iter: int = 20,
+            newton_max_iter: int = 1000,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
 
@@ -345,7 +349,7 @@ class BlockSolver:
             t[i + 1] = tn + h
         return t, y
 
-    def _simulate_implicit_euler(self, t0, t_end, h, x0, tol=1e-8, max_iter=20):
+    def _simulate_implicit_euler(self, t0, t_end, h, x0, tol=1e-8, max_iter=1000):
         """
 
         :param t0:
@@ -368,12 +372,11 @@ class BlockSolver:
             converged = False
             n_iter = 0
             while not converged and n_iter < max_iter:
-                rhs = self.rhs_implicit(x_new, xn, h)
+                rhs = self.rhs_implicit(x_new, xn, step_idx, h)
                 converged = np.linalg.norm(rhs, np.inf) < tol
 
                 if converged:
                     break
-
                 Jf = self.jacobian_implicit(x_new, h)  # sparse matrix
                 delta = sp.linalg.spsolve(Jf, -rhs)
                 x_new += delta
