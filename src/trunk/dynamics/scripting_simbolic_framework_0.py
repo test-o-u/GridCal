@@ -42,6 +42,8 @@ p_g = Var("P_e")
 Q_g = Var("Q_e")
 Vg = Var("Vg")
 dg = Var("dg")
+tm = Var("tm")
+et = Var("et")
 
 line_block = Block(
     algebraic_eqs=[
@@ -78,13 +80,16 @@ load_block = Block(
 # Generator
 pi = Const(math.pi)
 fn = Const(50.0)
-tm = Const(0.1)
+# tm = Const(0.1)
 M = Const(1.0)
-D = Const(10)
+D = Const(100)
 ra = Const(0.3)
 xd = Const(0.86138701)
 vf = Const(1.081099313)
 
+Kp = Const(1.0)
+Ki = Const(10.0)
+Kw = Const(10.0)
 
 
 
@@ -93,10 +98,12 @@ generator_block = Block(
         # delta - (2 * pi * fn) * (omega - 1),
         # omega - (-tm / M + t_e / M - D / M * (omega - 1))
         (2 * pi * fn) * (omega - 1),  # dδ/dt
-        (tm - t_e - D * (omega - 1)) / M  # dω/dt
+        (tm - t_e - D * (omega - 1)) / M,  # dω/dt
+        -Kp * et - Ki * et - Kw * (omega - 1)  # det/dt
     ],
-    state_vars=[delta, omega],
+    state_vars=[delta, omega, et],
     algebraic_eqs=[
+        et - (tm - t_e),
         psid - (-ra * i_q + v_q),
         psiq - (-ra * i_d + v_d),
         i_d - (psid + xd * i_d - vf),
@@ -107,7 +114,7 @@ generator_block = Block(
         (v_d * i_d + v_q * i_q) - p_g,
         (v_q * i_d - v_d * i_q) - Q_g
     ],
-    algebraic_vars=[psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g]
+    algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -170,8 +177,8 @@ mapping = {
     Ql: 0.2,  # Q2
 
 
-    delta: 0.0,
-    omega: 1.0,
+    delta: 0.1,
+    omega: 1.001,
     psid: 3.825,  # d-axis flux linkage (pu)
     psiq: 0.0277,  # q-axis flux linkage (pu)
     i_d: 0.1,  # d-axis stator current (pu)
@@ -188,7 +195,7 @@ vars_in_order = slv.sort_vars(mapping)
 
 t, y = slv.simulate(
     t0=0,
-    t_end=10.0,
+    t_end=0.1,
     h=0.001,
     x0=x0,
     method="implicit_euler"
@@ -198,8 +205,8 @@ fig = plt.figure(figsize=(12, 8))
 # plt.plot(t, y)
 # plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
 # plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
-plt.plot(t, y[:, slv.get_var_idx(t_e)], label="t_e (pu)")
-# plt.plot(t, y[:, slv.get_var_idx(Vline_from)], label="Vline_from (Vlf)")
+# plt.plot(t, y[:, slv.get_var_idx(t_e)], label="t_e (pu)")
+plt.plot(t, y[:, slv.get_var_idx(Vline_from)], label="Vline_from (Vlf)")
 # plt.plot(t, y[:, slv.get_var_idx(Vline_to)], label="Vline_to (Vlt)")
 plt.legend()
 plt.show()
