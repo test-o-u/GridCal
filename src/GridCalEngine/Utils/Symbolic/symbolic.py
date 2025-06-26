@@ -46,6 +46,22 @@ def _var_name(sym: Var | str) -> str:
 def _var_uid(sym: Var | str) -> str:
     return sym.uid if isinstance(sym, Var) else sym
 
+# ----------------------------------------------------------------------------
+# Function helpers
+# ----------------------------------------------------------------------------
+
+def _stepwise(x: NUMBER) -> NUMBER:
+    return 1 if x >= 0 else 0
+
+def _heaviside(x: NUMBER) -> NUMBER:
+    if x > 0:
+        return 1
+    elif x < 0:
+        return 0
+    else:
+        return 0.5
+
+
 
 # -----------------------------------------------------------------------------
 # Base class
@@ -186,6 +202,40 @@ class Const(Expr):
 
     def __str__(self) -> str:
         return str(self.value)
+
+class EventParam(Expr):
+    """
+    Any EventParam
+    """
+    name: str
+    value: float
+    uid: int = field(default_factory=_new_uid, init=False)
+
+    def eval(self, **bindings: NUMBER) -> NUMBER:
+        return self.value
+
+    def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:
+        return self.value
+
+    def _diff1(self, var: Var | str) -> "Expr":
+        return Const(0)
+
+    # Useful to check new values?
+    def subs(self, mapping: Dict[Any, Expr]) -> Expr:
+        if self in mapping:
+            return mapping[self]
+        if self.name in mapping:
+            return mapping[self.name]
+        return self
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self)-> str:
+        return self.name
+
+    def __eq__(self, other: "Var"):
+        return self.uid == other.uid
 
 
 @dataclass(frozen=True)
@@ -399,6 +449,8 @@ class Func(Expr):
         "atan": math.atan,
         "sinh": math.sinh,
         "cosh": math.cosh,
+        "stepwise": _stepwise,
+        "heaviside": _heaviside
     })
 
     # --- evaluation ----------------------------------------------------------
@@ -436,6 +488,10 @@ class Func(Expr):
             return cosh(u) * du
         if self.name == "cosh":
             return sinh(u) * du
+        if self.name == "stepwise":
+            return Const(0)
+        if self.name == "heaviside":
+            return Const(0)
         raise ValueError(f"Unknown function '{self.name}'")
 
     # --- simplification ------------------------------------------------------
@@ -482,6 +538,8 @@ acos = _make_unary("acos")
 atan = _make_unary("atan")
 sinh = _make_unary("sinh")
 cosh = _make_unary("cosh")
+stepwise = _make_unary("stepwise")
+heaviside = _make_unary("heaviside")
 
 
 def _expr_to_dict(expr: Expr) -> Dict[str, Any]:
@@ -825,5 +883,7 @@ __all__ = [
     "compile_numba_function",
     "find_vars_order",
     "compile_numba_functions",
-    "get_jacobian"
+    "get_jacobian",
+    "stepwise",
+    "heaviside"
 ]

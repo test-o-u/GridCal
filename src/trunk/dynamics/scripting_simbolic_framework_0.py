@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from pygments.lexers.dsls import VGLLexer
 
-from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin
+from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin, EventParam
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
 
@@ -53,13 +53,14 @@ line_block = Block(
         Qline_to - (Vline_to ** 2 * (-bsh/2 - b) - g * Vline_to * Vline_from * sin(dline_to - dline_from) + b * Vline_to * Vline_from * sin(dline_to - dline_from + np.pi/2)),
     ],
     algebraic_vars=[dline_from, Vline_from, dline_to, Vline_to],
+    parameters=[g, b, bsh]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Load
 # ----------------------------------------------------------------------------------------------------------------------
 coeff_alfa = Const(1.8)
-Pl0 = Const(0.1)
+Pl0 = EventParam(0.1)
 Ql0 = Const(0.2)
 coeff_beta = Const(8.0)
 
@@ -71,7 +72,8 @@ load_block = Block(
         Pl - (Pl0),
         Ql - (Ql0)
     ],
-    algebraic_vars=[Ql, Pl]
+    algebraic_vars=[Ql, Pl],
+    parameters=[Pl0, Ql0]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -114,16 +116,13 @@ generator_block = Block(
         (v_d * i_d + v_q * i_q) - p_g,
         (v_q * i_d - v_d * i_q) - Q_g
     ],
-    algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g]
+    algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
+    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Buses
 # ----------------------------------------------------------------------------------------------------------------------
-# P1 = Var("P1")
-# Q1 = Var("Q1")
-# P2 = Var("P2")
-# Q2 = Var("Q2")
 
 bus1_block = Block(
     algebraic_eqs=[
@@ -169,15 +168,15 @@ mapping = {
 
     Pline_from: 0.1,
     Qline_from: 0.2,
-    Pline_to: 0.1,
-    Qline_to: 0.2,
+    Pline_to: -0.1,
+    Qline_to: -0.2,
 
 
     Pl: 0.1,  # P2
     Ql: 0.2,  # Q2
 
 
-    delta: 0.1,
+    delta: 0.5,
     omega: 1.001,
     psid: 3.825,  # d-axis flux linkage (pu)
     psiq: 0.0277,  # q-axis flux linkage (pu)
@@ -203,10 +202,10 @@ t, y = slv.simulate(
 
 fig = plt.figure(figsize=(12, 8))
 # plt.plot(t, y)
-# plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
-# plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
+plt.plot(t, y[:, slv.get_var_idx(omega)], label="ω (pu)")
+plt.plot(t, y[:, slv.get_var_idx(delta)], label="δ (rad)")
 # plt.plot(t, y[:, slv.get_var_idx(t_e)], label="t_e (pu)")
 plt.plot(t, y[:, slv.get_var_idx(Vline_from)], label="Vline_from (Vlf)")
-# plt.plot(t, y[:, slv.get_var_idx(Vline_to)], label="Vline_to (Vlt)")
+plt.plot(t, y[:, slv.get_var_idx(Vline_to)], label="Vline_to (Vlt)")
 plt.legend()
 plt.show()

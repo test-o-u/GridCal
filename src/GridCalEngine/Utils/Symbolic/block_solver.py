@@ -41,7 +41,7 @@ def _compile_equations(eqs: Sequence[Expr],
     """
 
     # Build source
-    src = f"def _f(vars):\n"
+    src = f"def _f(vars, params):\n"
     src += f"    out = np.zeros({len(eqs)})\n"
     src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym)}" for i, e in enumerate(eqs)]) + "\n"
     src += f"    return out"
@@ -133,12 +133,14 @@ class BlockSolver:
         self._algebraic_eqs: List[Expr] = list()
         self._state_vars: List[Var] = list()
         self._state_eqs: List[Expr] = list()
+        self._parameters: List[Const] = list()
 
         for b in self.block_system.get_all_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
             self._algebraic_eqs.extend(b.algebraic_eqs)
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
+            self._parameters.extend(b.parameters)
 
         self._n_state = len(self._state_vars)
         self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
@@ -290,12 +292,14 @@ class BlockSolver:
             t_end: float,
             h: float,
             x0: np.ndarray,
+            events: dict[int, Tuple[Const, float]] = None,
             method: Literal["rk4", "euler", "implicit_euler"] = "rk4",
             newton_tol: float = 1e-8,
             newton_max_iter: int = 1000,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
 
+        :param events:
         :param t0: start time
         :param t_end: end time
         :param h: step
@@ -306,17 +310,17 @@ class BlockSolver:
         :return: 1D time array, 2D array of simulated variables
         """
         if method == "euler":
-            return self._simulate_fixed(t0, t_end, h, x0, stepper="euler")
+            return self._simulate_fixed(t0, t_end, h, x0, events, stepper="euler")
         if method == "rk4":
-            return self._simulate_fixed(t0, t_end, h, x0, stepper="rk4")
+            return self._simulate_fixed(t0, t_end, h, x0, events, stepper="rk4")
         if method == "implicit_euler":
             return self._simulate_implicit_euler(
-                t0, t_end, h, x0,
+                t0, t_end, h, x0, events,
                 tol=newton_tol, max_iter=newton_max_iter,
             )
         raise ValueError(f"Unknown method '{method}'")
 
-    def _simulate_fixed(self, t0, t_end, h, x0, stepper="euler"):
+    def _simulate_fixed(self, t0, t_end, h, x0, events, stepper="euler"):
         """
         Fixed‑step helpers (Euler, RK‑4)
         :param t0:
@@ -349,7 +353,7 @@ class BlockSolver:
             t[i + 1] = tn + h
         return t, y
 
-    def _simulate_implicit_euler(self, t0, t_end, h, x0, tol=1e-8, max_iter=1000):
+    def _simulate_implicit_euler(self, t0, t_end, h, x0, events, tol=1e-8, max_iter=1000):
         """
 
         :param t0:
@@ -385,6 +389,10 @@ class BlockSolver:
             if converged:
                 y[step_idx + 1] = x_new
                 t[step_idx + 1] = t[step_idx] + h
+
+            # check events
+
+
             else:
                 print(f"Failed to converge at step {step_idx}")
                 break

@@ -23,10 +23,14 @@ class Block:
     uid: int = field(default_factory=_new_uid)
 
     # internal vars
-    algebraic_vars: List[Var] = field(default_factory=list)
-    algebraic_eqs: List[Expr] = field(default_factory=list)
     state_vars: List[Var] = field(default_factory=list)
     state_eqs: List[Expr] = field(default_factory=list)
+    algebraic_vars: List[Var] = field(default_factory=list)
+    algebraic_eqs: List[Expr] = field(default_factory=list)
+
+    # parameters
+    parameters: List[Const] = field(default_factory=list)
+
 
     name: str = ""
 
