@@ -14,7 +14,7 @@ import math
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal, Any, Callable, Sequence
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, EventParam, _emit
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Sparse.csc import pack_4_by_4_scipy
 
@@ -30,7 +30,8 @@ def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) 
 
 
 def _compile_equations(eqs: Sequence[Expr],
-                       uid2sym: Dict[int, str],
+                       uid2sym_vars: Dict[int, str],
+                       uid2sym_events: Dict[int, str],
                        add_doc_string: bool = True) -> Callable[[Any], Sequence[float]]:
     """
     Compile the array of expressions to a function that returns an array of values for those expressions
@@ -41,9 +42,9 @@ def _compile_equations(eqs: Sequence[Expr],
     """
 
     # Build source
-    src = f"def _f(vars, params):\n"
+    src = f"def _f(vars, events):\n"
     src += f"    out = np.zeros({len(eqs)})\n"
-    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym)}" for i, e in enumerate(eqs)]) + "\n"
+    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym_vars, uid2sym_events)}" for i, e in enumerate(eqs)]) + "\n"
     src += f"    return out"
     ns: Dict[str, Any] = {"math": math, "np": np}
     exec(src, ns)
@@ -56,7 +57,8 @@ def _compile_equations(eqs: Sequence[Expr],
 
 def _get_jacobian(eqs: List[Expr],
                   variables: List[Var],
-                  uid2sym: Dict[int, str]):
+                  uid2sym_vars: Dict[int, str],
+                  uid2sym_events: Dict[int, str],):
     """
     JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
     :param eqs: Array of equations
@@ -88,7 +90,7 @@ def _get_jacobian(eqs: List[Expr],
             if isinstance(d_expression, Const) and d_expression.value == 0:
                 continue  # structural zero
 
-            function_ptr = _compile_equations(eqs=[d_expression], uid2sym=uid2sym)
+            function_ptr = _compile_equations(eqs=[d_expression], uid2sym_vars=uid2sym_vars, uid2sym_events=uid2sym_events)
 
             fn = fn_cache.setdefault(d_expression.uid, function_ptr)
 
@@ -134,6 +136,7 @@ class BlockSolver:
         self._state_vars: List[Var] = list()
         self._state_eqs: List[Expr] = list()
         self._parameters: List[Const] = list()
+        self._events: List[EventParam] = list()
 
         for b in self.block_system.get_all_blocks():
             self._algebraic_vars.extend(b.algebraic_vars)
@@ -141,27 +144,33 @@ class BlockSolver:
             self._state_vars.extend(b.state_vars)
             self._state_eqs.extend(b.state_eqs)
             self._parameters.extend(b.parameters)
+            self._events.extend(b.events)
 
         self._n_state = len(self._state_vars)
         self._n_vars = len(self._state_vars) + len(self._algebraic_vars)
-
-
 
         # generate the in-code names for each variable
         # inside the compiled functions the variables are
         # going to be represented by an array called vars[]
 
-        uid2sym: Dict[int, str] = dict()
-        self.uid2idx: Dict[int, int] = dict()
+        uid2sym_vars: Dict[int, str] = dict()
+        uid2sym_events: Dict[int, str] = dict()
+        self.uid2idx_vars: Dict[int, int] = dict()
+        self.uid2idx_events:Dict[int, int] = dict()
         i = 0
         for v in self._state_vars:
-            uid2sym[v.uid] = f"vars[{i}]"
-            self.uid2idx[v.uid] = i
+            uid2sym_vars[v.uid] = f"vars[{i}]"
+            self.uid2idx_vars[v.uid] = i
             i += 1
 
         for v in self._algebraic_vars:
-            uid2sym[v.uid] = f"vars[{i}]"
-            self.uid2idx[v.uid] = i
+            uid2sym_vars[v.uid] = f"vars[{i}]"
+            self.uid2idx_vars[v.uid] = i
+            i += 1
+
+        for i, ep in enumerate(self._events):
+            uid2sym_events[ep.uid] = f"vars[{i}]"
+            self.uid2idx_events[ep.uid] = i
             i += 1
 
         # Compile RHS and Jacobian
@@ -174,22 +183,21 @@ class BlockSolver:
                  |           |           |    |            |    |            |
         """
         print("Compiling...", end="")
-        self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym=uid2sym)
-        self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym=uid2sym)
+        self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
 
-        self._j11_fn = _get_jacobian(eqs=self._state_eqs, variables=self._state_vars, uid2sym=uid2sym)
-        self._j12_fn = _get_jacobian(eqs=self._state_eqs, variables=self._algebraic_vars, uid2sym=uid2sym)
-        self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym=uid2sym)
-        self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym=uid2sym)
-
+        self._j11_fn = _get_jacobian(eqs=self._state_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._j12_fn = _get_jacobian(eqs=self._state_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
 
         print("done!")
 
     def get_var_idx(self, v: Var) -> int:
-        return self.uid2idx[v.uid]
+        return self.uid2idx_vars[v.uid]
 
     def get_vars_idx(self, variables: Sequence[Var]) -> np.ndarray:
-        return np.array([self.uid2idx[v.uid] for v in variables])
+        return np.array([self.uid2idx_vars[v.uid] for v in variables])
 
     def sort_vars(self, mapping: dict[Var, float]) -> np.ndarray:
         """
@@ -200,7 +208,7 @@ class BlockSolver:
         x = np.zeros(len(self._state_vars) + len(self._algebraic_vars), dtype=object)
 
         for key, val in mapping.items():
-            i = self.uid2idx[key.uid]
+            i = self.uid2idx_vars[key.uid]
             x[i] = key
 
         return x
@@ -214,11 +222,21 @@ class BlockSolver:
         x = np.zeros(len(self._state_vars) + len(self._algebraic_vars))
 
         for key, val in mapping.items():
-
-            i = self.uid2idx[key.uid]
+            i = self.uid2idx_vars[key.uid]
             x[i] = val
 
         return x
+
+    def build_init_events_vector(self, mapping: dict[Var, float]):
+
+        x = np.zeros(len(self._events))
+
+        for event in self._events:
+            i = self.uid2idx_events[event.uid]
+            x[i] = event.value
+
+        return x
+
 
     def rhs_fixed(self, x: np.ndarray) -> np.ndarray:
         """
@@ -234,18 +252,20 @@ class BlockSolver:
         else:
             return f_algeb
 
-    def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, sim_step, h: float) -> np.ndarray:
+    def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, events: np.ndarray, sim_step, h: float) -> np.ndarray:
         """
         Return 𝑑x/dt given the current *state* vector.
         :param x: get the right-hand-side give a state vector
         :param xn:
+        :param events: events array
+        :param sim_step: simulation step
         :param h: simulation step
         :return [f_state_update, f_algeb]
         """
-        f_algeb = np.array(self._rhs_algeb_fn(x))
+        f_algeb = np.array(self._rhs_algeb_fn(x, events))
         sim_step = sim_step
         if self._n_state > 0:
-            f_state = np.array(self._rhs_state_fn(x))
+            f_state = np.array(self._rhs_state_fn(x, events))
             f_state_update = x[:self._n_state] - xn[:self._n_state] - h * f_state
             return np.r_[f_state_update, f_algeb]
 
@@ -286,33 +306,41 @@ class BlockSolver:
         """
         return self._algebraic_eqs, self._state_eqs
 
+    def check_events(self, t):
+        new_values = list()
+        for event in self._events:
+            new_value = event.check_value(t)
+            if new_value is not None:
+                idx = self.uid2idx_events[event.uid]
+                new_values.append([idx, new_value])
+        return new_values
+
     def simulate(
             self,
             t0: float,
             t_end: float,
             h: float,
             x0: np.ndarray,
-            events: dict[int, Tuple[Const, float]] = None,
+            events: np.ndarray,
             method: Literal["rk4", "euler", "implicit_euler"] = "rk4",
             newton_tol: float = 1e-8,
             newton_max_iter: int = 1000,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-
-        :param events:
         :param t0: start time
         :param t_end: end time
         :param h: step
         :param x0: initial values
+        :param events: initial values for events parameters
         :param method: method
         :param newton_tol:
         :param newton_max_iter:
         :return: 1D time array, 2D array of simulated variables
         """
         if method == "euler":
-            return self._simulate_fixed(t0, t_end, h, x0, events, stepper="euler")
+            return self._simulate_fixed(t0, t_end, h, x0, stepper="euler")
         if method == "rk4":
-            return self._simulate_fixed(t0, t_end, h, x0, events, stepper="rk4")
+            return self._simulate_fixed(t0, t_end, h, x0, stepper="rk4")
         if method == "implicit_euler":
             return self._simulate_implicit_euler(
                 t0, t_end, h, x0, events,
@@ -320,7 +348,7 @@ class BlockSolver:
             )
         raise ValueError(f"Unknown method '{method}'")
 
-    def _simulate_fixed(self, t0, t_end, h, x0, events, stepper="euler"):
+    def _simulate_fixed(self, t0, t_end, h, x0, stepper="euler"):
         """
         Fixed‑step helpers (Euler, RK‑4)
         :param t0:
@@ -353,9 +381,8 @@ class BlockSolver:
             t[i + 1] = tn + h
         return t, y
 
-    def _simulate_implicit_euler(self, t0, t_end, h, x0, events, tol=1e-8, max_iter=1000):
+    def _simulate_implicit_euler(self, t0, t_end, h, x0, events0, tol=1e-8, max_iter=1000):
         """
-
         :param t0:
         :param t_end:
         :param h:
@@ -367,16 +394,20 @@ class BlockSolver:
         steps = int(np.ceil((t_end - t0) / h))
         t = np.empty(steps + 1)
         y = np.empty((steps + 1, self._n_vars))
+        events = np.empty((steps + 1, len(self._events)))
+        events[0] = events0
         t[0] = t0
         y[0] = x0.copy()
 
+
         for step_idx in range(steps):
+            events = events[step_idx]
             xn = y[step_idx]
             x_new = xn.copy()  # initial guess
             converged = False
             n_iter = 0
             while not converged and n_iter < max_iter:
-                rhs = self.rhs_implicit(x_new, xn, step_idx, h)
+                rhs = self.rhs_implicit(x_new, xn, events, step_idx, h)
                 converged = np.linalg.norm(rhs, np.inf) < tol
 
                 if converged:
@@ -387,10 +418,19 @@ class BlockSolver:
                 n_iter += 1
 
             if converged:
+
+                # check events
+                events_next_step = events[step_idx]
+                new_values = self.check_events(step_idx)
+                if new_values:
+                    for index, new_value in new_values:
+                        events_next_step[index] = new_value
+
+                events[step_idx + 1] = events_next_step
                 y[step_idx + 1] = x_new
                 t[step_idx + 1] = t[step_idx] + h
 
-            # check events
+
 
 
             else:

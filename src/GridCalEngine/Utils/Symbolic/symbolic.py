@@ -203,13 +203,31 @@ class Const(Expr):
     def __str__(self) -> str:
         return str(self.value)
 
+@dataclass
 class EventParam(Expr):
-    """
-    Any EventParam
-    """
-    name: str
     value: float
+    new_value: float
+    time_step: int
+    name: str
     uid: int = field(default_factory=_new_uid, init=False)
+
+    def __post_init__(self):
+        # "Freeze" name and uid after initialization by setting private flags
+        object.__setattr__(self, "_frozen_name", self.name)
+        object.__setattr__(self, "_frozen_uid", self.uid)
+
+    def __setattr__(self, key, value):
+        if hasattr(self, "_frozen_name") and key == "name":
+            raise AttributeError("Cannot modify 'name' after initialization.")
+        if hasattr(self, "_frozen_uid") and key == "uid":
+            raise AttributeError("Cannot modify 'uid' after initialization.")
+        super().__setattr__(key, value)
+
+    def check_value(self, t):
+        if t == self.time_step:
+            return self.new_value
+        else:
+            return None
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
         return self.value
@@ -220,7 +238,6 @@ class EventParam(Expr):
     def _diff1(self, var: Var | str) -> "Expr":
         return Const(0)
 
-    # Useful to check new values?
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
         if self in mapping:
             return mapping[self]
@@ -231,12 +248,11 @@ class EventParam(Expr):
     def __str__(self) -> str:
         return str(self.value)
 
-    def __repr__(self)-> str:
+    def __repr__(self) -> str:
         return self.name
 
     def __eq__(self, other: "Var"):
         return self.uid == other.uid
-
 
 @dataclass(frozen=True)
 class Var(Expr):
@@ -677,7 +693,7 @@ def _all_vars(expressions: Sequence[Expr]) -> List[Var]:
     return list(res)
 
 
-def _emit(expr: Expr, uid_map: Dict[int, str]) -> str:
+def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_events: Dict[int, str]) -> str:
     """
     Emit a pure-Python (Numba-friendly) expression string
     :param expr: Expr (expression)
@@ -686,14 +702,18 @@ def _emit(expr: Expr, uid_map: Dict[int, str]) -> str:
     """
     if isinstance(expr, Const):
         return repr(expr.value)
+    if isinstance(expr, EventParam):
+        return repr(expr.value)
+    if isinstance(expr, EventParam):
+        return uid_map_events[expr.uid]
     if isinstance(expr, Var):
-        return uid_map[expr.uid]  # positional variable
+        return uid_map_vars[expr.uid]  # positional variable
     if isinstance(expr, UnOp):
-        return f"-({_emit(expr.operand, uid_map)})"
+        return f"-({_emit(expr.operand, uid_map_vars, uid_map_events)})"
     if isinstance(expr, BinOp):
-        return f"({_emit(expr.left, uid_map)} {expr.op} {_emit(expr.right, uid_map)})"
+        return f"({_emit(expr.left, uid_map_vars, uid_map_events)} {expr.op} {_emit(expr.right, uid_map_vars, uid_map_events)})"
     if isinstance(expr, Func):
-        return f"math.{expr.name}({_emit(expr.arg, uid_map)})"
+        return f"math.{expr.name}({_emit(expr.arg, uid_map_vars, uid_map_events)})"
     raise TypeError(type(expr))
 
 

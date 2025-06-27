@@ -53,14 +53,15 @@ line_block = Block(
         Qline_to - (Vline_to ** 2 * (-bsh/2 - b) - g * Vline_to * Vline_from * sin(dline_to - dline_from) + b * Vline_to * Vline_from * sin(dline_to - dline_from + np.pi/2)),
     ],
     algebraic_vars=[dline_from, Vline_from, dline_to, Vline_to],
-    parameters=[g, b, bsh]
+    parameters=[g, b, bsh],
+    events=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Load
 # ----------------------------------------------------------------------------------------------------------------------
 coeff_alfa = Const(1.8)
-Pl0 = EventParam(0.1)
+Pl0 = EventParam(0.12, 0.3, 50, 'Pl0')
 Ql0 = Const(0.2)
 coeff_beta = Const(8.0)
 
@@ -73,7 +74,8 @@ load_block = Block(
         Ql - (Ql0)
     ],
     algebraic_vars=[Ql, Pl],
-    parameters=[Pl0, Ql0]
+    parameters=[Ql0],
+    events=[Pl0]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -117,7 +119,8 @@ generator_block = Block(
         (v_q * i_d - v_d * i_q) - Q_g
     ],
     algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
-    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw]
+    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw],
+    events=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -131,7 +134,8 @@ bus1_block = Block(
         Vg - Vline_from,
         dg - dline_from
     ],
-    algebraic_vars=[Pline_from, Qline_from, Vg, dg]
+    algebraic_vars=[Pline_from, Qline_from, Vg, dg],
+    events=[]
 )
 
 bus2_block = Block(
@@ -139,7 +143,8 @@ bus2_block = Block(
         Pl + Pline_to,
         Ql + Qline_to,
     ],
-    algebraic_vars=[Pline_to, Qline_to]
+    algebraic_vars=[Pline_to, Qline_to],
+    events=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -190,6 +195,7 @@ mapping = {
 }
 
 x0 = slv.build_init_vector(mapping)
+events = slv.build_init_events_vector(mapping)
 vars_in_order = slv.sort_vars(mapping)
 
 t, y = slv.simulate(
@@ -197,6 +203,7 @@ t, y = slv.simulate(
     t_end=0.1,
     h=0.001,
     x0=x0,
+    events=events,
     method="implicit_euler"
 )
 

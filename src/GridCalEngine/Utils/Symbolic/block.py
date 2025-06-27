@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Tuple, Sequence, List
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr, EventParam
 
 
 def _new_uid() -> int:
@@ -31,6 +31,8 @@ class Block:
     # parameters
     parameters: List[Const] = field(default_factory=list)
 
+    # events
+    events: List[EventParam] = field(default_factory=list)
 
     name: str = ""
 
