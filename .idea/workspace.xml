@@ -28,7 +28,22 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Fixed bug when computing reactive power limits&#10;Added reactive power limit test (not passing for the slack)" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Added the controllable attribute to the Qlimits calculation">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/generator_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/generator_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/hvdc_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/hvdc_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/numerical_circuit.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/numerical_circuit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/shunt_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/DataStructures/shunt_data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_advanced_formulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_advanced_formulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_basic_formulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_basic_formulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_generalized_formulation.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/Formulations/pf_generalized_formulation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/discrete_controls.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/discrete_controls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/fast_decoupled.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/fast_decoupled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/gauss_power_flow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/gauss_power_flow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/iwamoto_newton_raphson.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/iwamoto_newton_raphson.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/power_flow_worker.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/power_flow_worker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tests/test_power_flow.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/tests/test_power_flow.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -164,6 +179,7 @@
     "Python tests.pytest for src.tests.test_load_save_load.test_load_save_load_xlsx.executor": "Debug",
     "Python tests.pytest for src.tests.test_ntc.test_activs_2000_acdc.executor": "Run",
     "Python tests.pytest for src.tests.test_power_flow.executor": "Run",
+    "Python tests.pytest for src.tests.test_power_flow.test_reactive_power_splitting.executor": "Run",
     "Python tests.pytest for src.tests.test_power_flow.test_voltage_control_with_ltc.executor": "Debug",
     "Python tests.pytest for src.tests.test_power_flow_acdc_generalized.test_ieee_grids.executor": "Run",
     "Python tests.pytest for src.tests.test_power_flow_acdc_generalized.test_voltage_control_with_ltc.executor": "Run",
@@ -187,7 +203,7 @@
     "Python tests.pytest for test_opf.test_opf_load_shedding.executor": "Debug",
     "Python tests.pytest for test_opf.test_opf_load_shedding_because_of_line.executor": "Run",
     "Python tests.pytest for test_opf.test_opf_load_shedding_copper_plate.executor": "Debug",
-    "Python tests.pytest for test_power_flow.test_reactive_power_splitting.executor": "Debug",
+    "Python tests.pytest for test_power_flow.test_reactive_power_splitting.executor": "Run",
     "Python tests.pytest for test_ptdf.test_ptdf_generation_contingencies.executor": "Debug",
     "Python tests.pytest for test_tower_composition.test_acha.executor": "Run",
     "Python tests.pytest for test_tower_composition.test_rating.executor": "Debug",
@@ -1073,7 +1089,7 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="pytest for test_ntc.test_activs_2000" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
+    <configuration name="pytest for src.tests.test_power_flow.test_reactive_power_splitting" type="tests" factoryName="py.test" temporary="true" nameIsGenerated="true">
       <module name="GridCal" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -1087,7 +1103,7 @@
       <option name="_new_keywords" value="&quot;&quot;" />
       <option name="_new_parameters" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;test_ntc.test_activs_2000&quot;" />
+      <option name="_new_target" value="&quot;src.tests.test_power_flow.test_reactive_power_splitting&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
@@ -1153,18 +1169,18 @@
       <item itemvalue="Python.test_raw_cgmes_cross_roundtrip" />
       <item itemvalue="Python.test_gslv_conversion" />
       <item itemvalue="Python.ExecuteGridCal" />
+      <item itemvalue="Python tests.pytest for src.tests.test_power_flow.test_reactive_power_splitting" />
       <item itemvalue="Python tests.pytest for test_power_flow.test_reactive_power_splitting" />
-      <item itemvalue="Python tests.pytest for test_ntc.test_activs_2000" />
       <item itemvalue="Python tests.pytest in test_ntc.py" />
       <item itemvalue="Python tests.pytest in tests" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python tests.pytest for test_power_flow.test_reactive_power_splitting" />
+        <item itemvalue="Python tests.pytest for src.tests.test_power_flow.test_reactive_power_splitting" />
+        <item itemvalue="Python tests.pytest in tests" />
         <item itemvalue="Python.ExecuteGridCal" />
         <item itemvalue="Python tests.pytest in test_ntc.py" />
-        <item itemvalue="Python tests.pytest for test_ntc.test_activs_2000" />
-        <item itemvalue="Python tests.pytest in tests" />
       </list>
     </recent_temporary>
   </component>
@@ -2377,7 +2393,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="717" />
+    <option name="localTasksCounter" value="718" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2423,7 +2439,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="wip" />
     <MESSAGE value="implemented fast admittance in the generalized formulation" />
     <MESSAGE value="Implemented csc comparison" />
     <MESSAGE value="Implemented fast admittance matrix update" />
@@ -2448,7 +2463,8 @@
     <MESSAGE value="Improved filtering" />
     <MESSAGE value="5.3.54" />
     <MESSAGE value="Fixed bug when computing reactive power limits&#10;Added reactive power limit test (not passing for the slack)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed bug when computing reactive power limits&#10;Added reactive power limit test (not passing for the slack)" />
+    <MESSAGE value="Added the controllable attribute to the Qlimits calculation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added the controllable attribute to the Qlimits calculation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2855,23 +2871,45 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/power_flow_worker.py</url>
-          <line>65</line>
-          <option name="timeStamp" value="2859" />
+          <line>88</line>
+          <option name="timeStamp" value="2872" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="not Qmin_gen[i] &lt;= q" language="Python" />
           <url>file://$PROJECT_DIR$/src/tests/test_power_flow.py</url>
-          <line>646</line>
-          <option name="timeStamp" value="2862" />
+          <line>657</line>
+          <option name="timeStamp" value="2899" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/DataStructures/generator_data.py</url>
-          <line>325</line>
-          <option name="timeStamp" value="2863" />
+          <condition expression="not q &lt;= Qmax_gen[i]" language="Python" />
+          <url>file://$PROJECT_DIR$/src/tests/test_power_flow.py</url>
+          <line>658</line>
+          <option name="timeStamp" value="2900" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/DataStructures/generator_data.py</url>
-          <line>318</line>
-          <option name="timeStamp" value="2864" />
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/discrete_controls.py</url>
+          <line>201</line>
+          <option name="timeStamp" value="2901" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/discrete_controls.py</url>
+          <line>205</line>
+          <option name="timeStamp" value="2902" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/NumericalMethods/discrete_controls.py</url>
+          <line>214</line>
+          <option name="timeStamp" value="2903" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/power_flow_worker.py</url>
+          <line>59</line>
+          <option name="timeStamp" value="2904" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/PowerFlow/power_flow_worker.py</url>
+          <line>62</line>
+          <option name="timeStamp" value="2905" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

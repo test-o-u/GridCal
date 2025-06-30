@@ -154,7 +154,13 @@ def FDPF(nc: NumericalCircuit,
                 # check and adjust the reactive power
                 # this function passes pv buses to pq when the limits are violated,
                 # but not pq to pv because that is unstable
-                changed, pv, pq, pqv, p = control_q_inside_method(Scalc, S0, pv, pq, pqv, p, Qmin, Qmax)
+
+                # the remaining Q to share is the total Q computed (Qbus) minus the part that we know is fixed
+                Qfix = (-nc.bus_data.q_fixed
+                        - (nc.bus_data.ii_fixed + nc.bus_data.b_fixed * Vm) * Vm)
+                Qvar = Scalc.imag + Qfix  # Qfix has sign
+
+                changed, pv, pq, pqv, p = control_q_inside_method(Qvar, S0, pv, pq, pqv, p, Qmin, Qmax)
 
                 if len(changed) > 0:
                     # adjust internal variables to the new pq|pv values

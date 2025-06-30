@@ -133,7 +133,7 @@ class PfBasicFormulation(PfFormulationTemplate):
             dS[self.idx_dP].real,
             dS[self.idx_dQ].imag
         ]
-        
+
         # compute the error
         return compute_fx_error(_f), x
 
@@ -177,7 +177,14 @@ class PfBasicFormulation(PfFormulationTemplate):
                 # check and adjust the reactive power
                 # this function passes pv buses to pq when the limits are violated,
                 # but not pq to pv because that is unstable
-                changed, pv, pq, pqv, p = control_q_inside_method(self.Scalc, self.S0,
+
+                # the remaining Q to share is the total Q computed (Qbus) minus the part that we know is fixed
+                Qfix = (-self.nc.bus_data.q_fixed
+                        - (self.nc.bus_data.ii_fixed + self.nc.bus_data.b_fixed * self.Vm) * self.Vm) / self.nc.Sbase
+                Qvar = self.Scalc.imag + Qfix  # Qfix has sign
+
+                changed, pv, pq, pqv, p = control_q_inside_method(Qvar,
+                                                                  self.S0,  # may change inside
                                                                   self.pv, self.pq,
                                                                   self.pqv, self.p,
                                                                   self.Qmin,
@@ -290,7 +297,7 @@ class PfBasicFormulation(PfFormulationTemplate):
         )
 
         return NumericPowerFlowResults(V=self.V,
-                                       Scalc=Sbus * self.nc.Sbase,
+                                       Scalc=self.Scalc * self.nc.Sbase,
                                        m=self.nc.active_branch_data.tap_module,
                                        tau=self.nc.active_branch_data.tap_angle,
                                        Sf=Sf,

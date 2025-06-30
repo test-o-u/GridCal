@@ -176,13 +176,13 @@ def control_q_direct(V, Vm, Vset, Q, Qmax, Qmin, types, original_types, verbose=
     return Vnew, Qnew, types_new, any_control_issue
 
 
-@nb.njit(cache=True)
-def control_q_inside_method(Scalc: CxVec, S0: CxVec,
+# @nb.njit(cache=True)
+def control_q_inside_method(Qvar: Vec, S0: CxVec,
                             pv: IntVec, pq: IntVec, pqv: IntVec, p: IntVec,
                             Qmin: Vec, Qmax: Vec):
     """
     Control of reactive power within the numerical method
-    :param Scalc: Calculated power array (changed inside)
+    :param Qvar: Calculated reactive power to split
     :param S0: Specified power array (changed inside)
     :param pv: array of pv bus indices (changed inside)
     :param pq: array of pq bus indices (changed inside)
@@ -195,7 +195,7 @@ def control_q_inside_method(Scalc: CxVec, S0: CxVec,
     pv_indices = list()
     changed = list()
     for k, i in enumerate(pv):
-        Q = Scalc[i].imag
+        Q = Qvar[i]
         if Q > Qmax[i]:
             S0[i] = np.complex128(complex(S0[i].real, Qmax[i]))
             changed.append(i)

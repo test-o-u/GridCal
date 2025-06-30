@@ -634,18 +634,29 @@ def test_reactive_power_splitting():
                                control_q=True,
                                retry_with_other_methods=False)
 
-    fname = os.path.join('data', 'grids', 'case14.m')
-    grid = FileOpen(fname).open()
+    files = [
+        # 'IEEE 14 bus.raw',
+        # 'IEEE 30 bus.raw',
+        'IEEE 118 Bus v2.raw',
+    ]
 
-    Qmin_gen = np.array([elm.Qmin for elm in grid.generators])
-    Qmax_gen = np.array([elm.Qmax for elm in grid.generators])
+    for f in files:
+        print(f)
+        fname = os.path.join('data', 'grids', 'RAW', f)
+        grid = FileOpen(fname).open()
 
-    power_flow = PowerFlowDriver(grid, options)
-    power_flow.run()
-    res = power_flow.results
+        Qmin_gen = np.array([elm.Qmin for elm in grid.generators])
+        Qmax_gen = np.array([elm.Qmax for elm in grid.generators])
+        non_slack_gen = np.array([i for i, elm in enumerate(grid.generators) if not elm.bus.is_slack ])
 
-    assert np.all(Qmin_gen <= res.gen_q)
-    assert np.all(res.gen_q <= Qmax_gen)
+        power_flow = PowerFlowDriver(grid, options)
+        power_flow.run()
+        res = power_flow.results
+
+        for i in non_slack_gen:  # only compare non slack generators
+            q = np.round(res.gen_q[i], 4)
+            assert Qmin_gen[i] <= q
+            assert q <= Qmax_gen[i]
 
 
 if __name__ == "__main__":

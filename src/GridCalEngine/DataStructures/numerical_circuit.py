@@ -278,21 +278,24 @@ def build_q_limits(nbus: int, Sbase: float,
                    sh_idx, q_min_sh, q_max_sh, active_sh, controllable_sh,
                    hvdc_f, hvdc_t, q_min_hvdc_f, q_max_hvdc_f, q_min_hvdc_t, q_max_hvdc_t, active_hvdc):
     """
-
+    Compute reactive power limits
     :param nbus:
     :param Sbase:
     :param gen_idx:
     :param q_min_gen:
     :param q_max_gen:
     :param active_gen:
+    :param controllable_gen:
     :param batt_idx:
     :param q_min_batt:
     :param q_max_batt:
     :param active_batt:
+    :param controllable_batt:
     :param sh_idx:
     :param q_min_sh:
     :param q_max_sh:
     :param active_sh:
+    :param controllable_sh:
     :param hvdc_f:
     :param hvdc_t:
     :param q_min_hvdc_f:
@@ -303,10 +306,10 @@ def build_q_limits(nbus: int, Sbase: float,
     :return:
     """
     max_mask = np.zeros(nbus, dtype=nb.int32)
-    Qmax_bus = np.full(nbus, 1e-20)
+    Qmax_bus = np.full(nbus, 1e20)
 
     min_mask = np.zeros(nbus, dtype=nb.int32)
-    Qmin_bus = np.full(nbus, 1e20)
+    Qmin_bus = np.full(nbus, -1e20)
 
     for i, qmin, qmax, active, controllable in zip(gen_idx, q_min_gen, q_max_gen, active_gen, controllable_gen):
 

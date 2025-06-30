@@ -175,20 +175,6 @@ class ShuntData:
         return tp.sum_per_bus_cx(nbus=self.nbus, bus_indices=self.bus_idx,
                                  magnitude=self.Y * self.active * (1 - self.controllable))
 
-    def get_qmax_per_bus(self) -> Vec:
-        """
-        Get generator Qmax per bus
-        :return:
-        """
-        return tp.sum_per_bus(nbus=self.nbus, bus_indices=self.bus_idx, magnitude=self.qmax * self.active)
-
-    def get_qmin_per_bus(self) -> Vec:
-        """
-        Get generator Qmin per bus
-        :return:
-        """
-        return tp.sum_per_bus(nbus=self.nbus, bus_indices=self.bus_idx, magnitude=self.qmin * self.active)
-
     def __len__(self) -> int:
         return self.nelm
 

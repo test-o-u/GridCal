@@ -30,7 +30,11 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from GridCalEngine.Compilers.circuit_to_data import VALID_OPF_RESULTS
 
 
-def __split_reactive_power_into_devices(nc: NumericalCircuit, Qbus: Vec, results: PowerFlowResults) -> None:
+def __split_reactive_power_into_devices(nc: NumericalCircuit,
+                                        Qbus: Vec,
+                                        Qmax_bus: Vec,
+                                        Qmin_bus: Vec,
+                                        results: PowerFlowResults) -> None:
     """
     This function splits the reactive power of the power flow solution (nbus) into reactive power per device that
     is able to control reactive power as an injection (generators, batteries, shunts)
@@ -39,31 +43,50 @@ def __split_reactive_power_into_devices(nc: NumericalCircuit, Qbus: Vec, results
     :param results: PowerFlowResults (values are written to it)
     :return: Nothing, the results are set in the results object
     """
-
-    # generation
-    bus_idx_gen = nc.generator_data.get_bus_indices()
-    gen_q_share = nc.generator_data.q_share / (nc.bus_data.q_shared_total[bus_idx_gen] + 1e-20)
-
-    # batteries
-    bus_idx_bat = nc.battery_data.get_bus_indices()
-    batt_q_share = nc.battery_data.q_share / (nc.bus_data.q_shared_total[bus_idx_bat] + 1e-20)
-
-    # shunts
-    bus_idx_sh = nc.shunt_data.get_bus_indices()
-    sh_q_share = nc.shunt_data.q_share / (nc.bus_data.q_shared_total[bus_idx_sh] + 1e-20)
-
     # Fixed injection of reactive power
     # Zip formula: S0 + np.conj(I0 + Y0 * Vm) * Vm
     Vm = np.abs(results.voltage)
-    Qfix = nc.bus_data.q_fixed - (nc.bus_data.ii_fixed + nc.bus_data.b_fixed * Vm) * Vm
+    Qfix = -nc.bus_data.q_fixed - (nc.bus_data.ii_fixed + nc.bus_data.b_fixed * Vm) * Vm
+    #
+    # # the remaining Q to share is the total Q computed (Qbus) minus the part that we know is fixed
+    Qvar = Qbus + Qfix  # Qfix has sign
+    # Qvar = Qbus
 
-    # the remaining Q to share is the total Q computed (Qbus) minus the part that we know is fixed
-    Qvar = Qbus - Qfix
+    # generation
+    for k in range(nc.generator_data.nelm):
+        i = nc.generator_data.bus_idx[k]
+        if Qvar[i] >= 0:
+            if Qmax_bus[i] > 0.0:
+                results.gen_q[k] = Qvar[i] * (nc.generator_data.qmax[k] / nc.Sbase) / Qmax_bus[i]
+        else:
+            if Qmin_bus[i] < 0.0:
+                results.gen_q[k] = Qvar[i] * (nc.generator_data.qmin[k] / nc.Sbase) / Qmin_bus[i]
+
+    # batteries
+    for k in range(nc.battery_data.nelm):
+        i = nc.battery_data.bus_idx[k]
+        if Qvar[i] >= 0:
+            if Qmax_bus[i] > 0.0:
+                results.battery_q[k] = Qvar[i] * (nc.battery_data.qmax[k] / nc.Sbase) / Qmax_bus[i]
+        else:
+            if Qmin_bus[i] < 0.0:
+                results.battery_q[k] = Qvar[i] * (nc.battery_data.qmin[k] / nc.Sbase) / Qmin_bus[i]
+
+    # shunts
+    for k in range(nc.shunt_data.nelm):
+        i = nc.shunt_data.bus_idx[k]
+        if Qvar[i] >= 0:
+            if Qmax_bus[i] > 0.0:
+                results.shunt_q[k] = Qvar[i] * (nc.shunt_data.qmax[k] / nc.Sbase) / Qmax_bus[i]
+        else:
+            if Qmin_bus[i] < 0.0:
+                results.shunt_q[k] = Qvar[i] * (nc.shunt_data.qmin[k] / nc.Sbase) / Qmin_bus[i]
 
     # set the results
-    results.gen_q = Qvar[bus_idx_gen] * gen_q_share
-    results.battery_q = Qvar[bus_idx_bat] * batt_q_share
-    results.shunt_q = Qvar[bus_idx_sh] * sh_q_share
+    # results.gen_q = Qvar[bus_idx_gen] * gen_q_share
+    # results.battery_q = Qvar[bus_idx_bat] * batt_q_share
+    # results.shunt_q = Qvar[bus_idx_sh] * sh_q_share
+    print()
 
 
 def __solve_island_complete_support(nc: NumericalCircuit,
@@ -71,6 +94,8 @@ def __solve_island_complete_support(nc: NumericalCircuit,
                                     options: PowerFlowOptions,
                                     V0: CxVec,
                                     S0: CxVec,
+                                    Qmax_bus: Vec,
+                                    Qmin_bus: Vec,
                                     logger=Logger()) -> Tuple[NumericPowerFlowResults, ConvergenceReport]:
     """
     Run a power flow simulation using the selected method (no outer loop controls).
@@ -105,7 +130,7 @@ def __solve_island_complete_support(nc: NumericalCircuit,
     solver_idx = 0
 
     # set the initial value
-    Qmax, Qmin = nc.get_reactive_power_limits()
+    # Qmax, Qmin = nc.get_reactive_power_limits()
     I0 = nc.get_current_injections_pu()
     Y0 = nc.get_admittance_injections_pu()
 
@@ -177,8 +202,8 @@ def __solve_island_complete_support(nc: NumericalCircuit,
                                                    S0=S0,
                                                    I0=I0,
                                                    Y0=Y0,
-                                                   Qmin=Qmin,
-                                                   Qmax=Qmax,
+                                                   Qmin=Qmin_bus,
+                                                   Qmax=Qmax_bus,
                                                    nc=nc,
                                                    options=options,
                                                    logger=logger)
@@ -195,8 +220,8 @@ def __solve_island_complete_support(nc: NumericalCircuit,
                                                    S0=S0,
                                                    I0=I0,
                                                    Y0=Y0,
-                                                   Qmin=Qmin,
-                                                   Qmax=Qmax,
+                                                   Qmin=Qmin_bus,
+                                                   Qmax=Qmax_bus,
                                                    nc=nc,
                                                    options=options,
                                                    logger=logger)
@@ -214,8 +239,8 @@ def __solve_island_complete_support(nc: NumericalCircuit,
                                                    S0=S0,
                                                    I0=I0,
                                                    Y0=Y0,
-                                                   Qmin=Qmin,
-                                                   Qmax=Qmax,
+                                                   Qmin=Qmin_bus,
+                                                   Qmax=Qmax_bus,
                                                    nc=nc,
                                                    options=options,
                                                    logger=logger)
@@ -306,6 +331,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                    V0: CxVec,
                                    S_base: CxVec,
                                    Shvdc: Vec,
+                                   Qmax_bus: Vec,
+                                   Qmin_bus: Vec,
                                    logger=Logger()) -> Tuple[NumericPowerFlowResults, ConvergenceReport]:
     """
     Run a power flow simulation using the selected method (no outer loop controls).
@@ -344,7 +371,6 @@ def __solve_island_limited_support(island: NumericalCircuit,
     solver_idx = 0
 
     # set the initial value
-    Qmax, Qmin = island.get_reactive_power_limits()
     I0 = island.get_current_injections_pu()
     Y0 = island.get_admittance_injections_pu()
 
@@ -551,8 +577,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                         pqv=indices.pqv,
                                         vd=indices.vd,
                                         bus_installed_power=island.bus_data.installed_power,
-                                        Qmin=Qmin,
-                                        Qmax=Qmax,
+                                        Qmin=Qmin_bus,
+                                        Qmax=Qmax_bus,
                                         tol=options.tolerance,
                                         max_it=options.max_iter,
                                         control_q=options.control_Q,
@@ -566,8 +592,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                              S0=Sbase_plus_hvdc,
                                              I0=I0,
                                              Y0=Y0,
-                                             Qmin=Qmin,
-                                             Qmax=Qmax,
+                                             Qmin=Qmin_bus,
+                                             Qmax=Qmax_bus,
                                              nc=island,
                                              options=options)
 
@@ -597,8 +623,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                      pqv_=indices.pqv,
                                      p_=indices.p,
                                      vd_=indices.vd,
-                                     Qmin=Qmin,
-                                     Qmax=Qmax,
+                                     Qmin=Qmin_bus,
+                                     Qmax=Qmax_bus,
                                      bus_installed_power=island.bus_data.installed_power,
                                      tol=options.tolerance,
                                      max_it=options.max_iter,
@@ -611,8 +637,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                              S0=Sbase_plus_hvdc,
                                              I0=I0,
                                              Y0=Y0,
-                                             Qmin=Qmin,
-                                             Qmax=Qmax,
+                                             Qmin=Qmin_bus,
+                                             Qmax=Qmax_bus,
                                              nc=island,
                                              options=options)
 
@@ -629,8 +655,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                              S0=S_base,
                                              I0=I0,
                                              Y0=Y0,
-                                             Qmin=Qmin,
-                                             Qmax=Qmax,
+                                             Qmin=Qmin_bus,
+                                             Qmax=Qmax_bus,
                                              nc=island,
                                              options=options)
 
@@ -657,8 +683,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
                                           pqv_=indices.pqv,
                                           p_=indices.p,
                                           vd_=indices.vd,
-                                          Qmin=Qmin,
-                                          Qmax=Qmax,
+                                          Qmin=Qmin_bus,
+                                          Qmax=Qmax_bus,
                                           tol=options.tolerance,
                                           max_it=options.max_iter,
                                           control_q=options.control_Q,
@@ -718,6 +744,8 @@ def __solve_island_limited_support(island: NumericalCircuit,
 
 def __multi_island_pf_nc_complete_support(nc: NumericalCircuit,
                                           options: PowerFlowOptions,
+                                          Qmax_bus: Vec,
+                                          Qmin_bus: Vec,
                                           logger: Logger | None = None,
                                           V_guess: Union[CxVec, None] = None,
                                           Sbus_input: Union[CxVec, None] = None) -> PowerFlowResults:
@@ -779,6 +807,8 @@ def __multi_island_pf_nc_complete_support(nc: NumericalCircuit,
                 options=options,
                 V0=island.bus_data.Vbus if V_guess is None else V_guess[island.bus_data.original_idx],
                 S0=Sbus_base if Sbus_input is None else Sbus_input[island.bus_data.original_idx],
+                Qmin_bus=Qmin_bus[island.bus_data.original_idx],
+                Qmax_bus=Qmax_bus[island.bus_data.original_idx],
                 logger=logger
             )
 
@@ -800,6 +830,8 @@ def __multi_island_pf_nc_complete_support(nc: NumericalCircuit,
 
 def __multi_island_pf_nc_limited_support(nc: NumericalCircuit,
                                          options: PowerFlowOptions,
+                                         Qmax_bus: Vec,
+                                         Qmin_bus: Vec,
                                          logger: Logger | None = None,
                                          V_guess: Union[CxVec, None] = None,
                                          Sbus_input: Union[CxVec, None] = None) -> PowerFlowResults:
@@ -866,6 +898,8 @@ def __multi_island_pf_nc_limited_support(nc: NumericalCircuit,
                 island=island,
                 indices=indices,
                 options=options,
+                Qmax_bus=Qmax_bus[island.bus_data.original_idx],
+                Qmin_bus=Qmin_bus[island.bus_data.original_idx],
                 V0=island.bus_data.Vbus if V_guess is None else V_guess[island.bus_data.original_idx],
                 S_base=Sbus_base if Sbus_input is None else Sbus_input[island.bus_data.original_idx],
                 Shvdc=Shvdc[island.bus_data.original_idx],
@@ -913,6 +947,8 @@ def multi_island_pf_nc(nc: NumericalCircuit,
     if logger is None:
         logger = Logger()
 
+    Qmax_bus, Qmin_bus = nc.get_reactive_power_limits()
+
     if options.initialize_angles and options.solver_type not in [SolverType.DC, SolverType.LACPF, SolverType.HELM]:
         # NOTE: This is to initialize power flows with very different angles
         # that may happen if the transformer phase shifts are applied in te power flow
@@ -922,6 +958,8 @@ def multi_island_pf_nc(nc: NumericalCircuit,
             logger=logger,
             V_guess=V_guess,
             Sbus_input=Sbus_input,
+            Qmax_bus=Qmax_bus,
+            Qmin_bus=Qmin_bus
         )
         V_guess = results_0.voltage
 
@@ -933,6 +971,8 @@ def multi_island_pf_nc(nc: NumericalCircuit,
             logger=logger,
             V_guess=V_guess,
             Sbus_input=Sbus_input,
+            Qmax_bus=Qmax_bus,
+            Qmin_bus=Qmin_bus
         )
 
         if not results.converged:
@@ -942,6 +982,8 @@ def multi_island_pf_nc(nc: NumericalCircuit,
                 logger=logger,
                 V_guess=V_guess,
                 Sbus_input=Sbus_input,
+                Qmax_bus=Qmax_bus,
+                Qmin_bus=Qmin_bus
             )
 
         # expand voltages if there was a bus topology reduction
@@ -949,7 +991,10 @@ def multi_island_pf_nc(nc: NumericalCircuit,
             results.voltage = nc.propagate_bus_result(results.voltage)
 
         # do the reactive power partition and store the values
-        __split_reactive_power_into_devices(nc=nc, Qbus=results.Sbus.imag, results=results)
+        __split_reactive_power_into_devices(nc=nc, Qbus=results.Sbus.imag,
+                                            Qmax_bus=Qmax_bus,
+                                            Qmin_bus=Qmin_bus,
+                                            results=results)
 
         return results
 
@@ -960,6 +1005,8 @@ def multi_island_pf_nc(nc: NumericalCircuit,
             logger=logger,
             V_guess=V_guess,
             Sbus_input=Sbus_input,
+            Qmax_bus=Qmax_bus,
+            Qmin_bus=Qmin_bus
         )
 
         # expand voltages if there was a bus topology reduction
@@ -967,7 +1014,11 @@ def multi_island_pf_nc(nc: NumericalCircuit,
             results.voltage = nc.propagate_bus_result(results.voltage)
 
         # do the reactive power partition and store the values
-        __split_reactive_power_into_devices(nc=nc, Qbus=results.Sbus.imag, results=results)
+        __split_reactive_power_into_devices(nc=nc,
+                                            Qbus=results.Sbus.imag,
+                                            Qmax_bus=Qmax_bus,
+                                            Qmin_bus=Qmin_bus,
+                                            results=results)
 
         return results
 

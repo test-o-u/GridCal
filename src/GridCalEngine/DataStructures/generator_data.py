@@ -311,20 +311,6 @@ class GeneratorData:
         """
         return tp.sum_per_bus(nbus=self.nbus, bus_indices=self.bus_idx, magnitude=self.installed_p)
 
-    def get_qmax_per_bus(self) -> Vec:
-        """
-        Get generator Qmax per bus
-        :return:
-        """
-        return tp.sum_per_bus(nbus=self.nbus, bus_indices=self.bus_idx, magnitude=self.qmax * self.active)
-
-    def get_qmin_per_bus(self) -> Vec:
-        """
-        Get generator Qmin per bus
-        :return:
-        """
-        return tp.sum_per_bus(nbus=self.nbus, bus_indices=self.bus_idx, magnitude=self.qmin * self.active)
-
     def get_pmax_per_bus(self) -> Vec:
         """
         Get generator Pmax per bus

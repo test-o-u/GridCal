@@ -146,50 +146,6 @@ class HvdcData(BranchParentData):
         """
         return self.T
 
-    def get_qmax_from_per_bus(self) -> Vec:
-        """
-        Max reactive power in the From Bus
-        :return: (nbus, nt) Qmax From
-        """
-        val = np.zeros(self.nbus)
-        for k in range(self.nelm):
-            i = self.F[k]
-            val[i] += self.Qmax_f[k] * self.active[k]
-        return val
-
-    def get_qmin_from_per_bus(self) -> Vec:
-        """
-        Min reactive power in the From Bus
-        :return: (nbus, nt) Qmin From
-        """
-        val = np.zeros(self.nbus)
-        for k in range(self.nelm):
-            i = self.F[k]
-            val[i] += self.Qmin_f[k] * self.active[k]
-        return val
-
-    def get_qmax_to_per_bus(self) -> Vec:
-        """
-        Max reactive power in the To Bus
-        :return: (nbus, nt) Qmax To
-        """
-        val = np.zeros(self.nbus)
-        for k in range(self.nelm):
-            i = self.T[k]
-            val[i] += self.Qmax_t[k] * self.active[k]
-        return val
-
-    def get_qmin_to_per_bus(self) -> Vec:
-        """
-        Min reactive power in the To Bus
-        :return: (nbus, nt) Qmin To
-        """
-        val = np.zeros(self.nbus)
-        for k in range(self.nelm):
-            i = self.T[k]
-            val[i] += self.Qmin_t[k] * self.active[k]
-        return val
-
     def get_angle_droop_in_pu_rad(self, Sbase: float):
         """
         Get the angle droop in pu/rad
