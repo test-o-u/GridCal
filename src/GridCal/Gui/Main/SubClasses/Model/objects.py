@@ -160,7 +160,7 @@ class ObjectsTableMain(DiagramsMain):
             DeviceType.UnderGroundLineDevice.value: ":/Icons/icons/ac_line.svg",
             DeviceType.SequenceLineDevice.value: ":/Icons/icons/ac_line.svg",
             DeviceType.TransformerTypeDevice.value: ":/Icons/icons/to_transformer.svg",
-            DeviceType.DynModel.value: ":/Icons/icons/dyn_gray.svg",
+            DeviceType.RmsModelTemplateDevice.value: ":/Icons/icons/dyn_gray.svg",
         }
 
         db_tree_model = gf.get_tree_model(d=self.circuit.get_template_objects_str_dict(),
@@ -871,10 +871,10 @@ class ObjectsTableMain(DiagramsMain):
                 obj = dev.Facility(name=name)
                 self.circuit.add_facility(obj)
 
-            elif elm_type == DeviceType.DynModel.value:
+            elif elm_type == DeviceType.RmsModelTemplateDevice.value:
 
                 name = f'RMS model {self.circuit.get_rms_models_number()}'
-                obj = dev.DynamicModel(name=name)
+                obj = dev.RmsModelTemplate(name=name)
                 self.circuit.add_rms_model(obj)
 
             else:
@@ -909,9 +909,9 @@ class ObjectsTableMain(DiagramsMain):
                     self.tower_builder_window.resize(int(1.81 * 700.0), 700)
                     self.tower_builder_window.exec()
 
-                elif elm_type == DeviceType.DynModel.value:
+                elif elm_type == DeviceType.RmsModelTemplateDevice.value:
 
-                    self.rms_model_Editor_window = RmsModelEditorGUI(model=self.circuit.rms_models[idx],)
+                    self.rms_model_Editor_window = RmsModelEditorGUI(model=self.circuit.rms_models[idx].block,)
                     self.rms_model_Editor_window.resize(int(1.81 * 700.0), 700)
                     self.rms_model_Editor_window.show()
 

@@ -8,9 +8,8 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, Union
-
-from GridCalEngine.Simulations.Dynamic_old.utils import json
-from GridCalEngine.Utils.Symbolic.symbolic import Expr, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
+import json
+from GridCalEngine.Utils.Symbolic.symbolic import Expr, Var, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
 
 NUMBER = Union[int, float]
 

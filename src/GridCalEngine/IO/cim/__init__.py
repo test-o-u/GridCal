@@ -2,5 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
-from GridCalEngine.IO.cim.cgmes import *
-from GridCalEngine.IO.cim.cim16 import *
+from GridCalEngine.IO.cim.cgmes import CgmesCircuit, CgmesDataParser, cgmesProfile
+from GridCalEngine.IO.cim.cim16 import CIMImport, CIMExport
