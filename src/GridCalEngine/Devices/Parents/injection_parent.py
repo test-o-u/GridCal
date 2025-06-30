@@ -60,6 +60,7 @@ class InjectionParent(PhysicalDevice):
         'shift_key',
         '_shift_key_prof',
         '_use_kw',
+        '_rms_model',
     )
 
     def __init__(self,

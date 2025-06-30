@@ -72,6 +72,7 @@ class BranchParent(PhysicalDevice):
         '_protection_rating_factor_prof',
         'color',
         'group',
+        '_rms_model',
     )
 
     def __init__(self,

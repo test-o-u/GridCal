@@ -99,6 +99,7 @@ class Assets:
         '_pumps',
         '_p2xs',
         '_diagrams',
+        '_rms_models',
         'template_objects_dict',
         'profile_magnitudes',
         'device_type_name_dict',

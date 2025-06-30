@@ -56,6 +56,7 @@ class Bus(PhysicalDevice):
         'ph_c',
         'ph_n',
         'is_grounded',
+        '_rms_model',
     )
 
     def __init__(self, name="Bus",
