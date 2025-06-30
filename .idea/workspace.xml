@@ -28,14 +28,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Starting events implementation 2">
-      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/events.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
-    </list>
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Some minor changes" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -75,7 +68,7 @@
     </favorite-branches>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="devel" />
+        <entry key="$PROJECT_DIR$" value="#343_3phase" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -300,7 +293,7 @@
       <recent name="D:\SIROCO\GridCal\src\GridCal\Gui\Diagrams\MapWidget\Substation" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.scripting_simbolic_framework_0">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -1177,11 +1170,11 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.scripting_simbolic_framework_0" />
         <item itemvalue="Python.blocks_example" />
-        <item itemvalue="Python.ExecuteGridCal" />
-        <item itemvalue="Python.block_editor" />
         <item itemvalue="Python.block_editor2" />
+        <item itemvalue="Python.block_editor" />
+        <item itemvalue="Python.scripting_simbolic_framework_0" />
+        <item itemvalue="Python.ExecuteGridCal" />
       </list>
     </recent_temporary>
   </component>
@@ -2394,7 +2387,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="714" />
+    <option name="localTasksCounter" value="711" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2440,6 +2433,8 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <MESSAGE value="added x, y to the connectivity node&#10;refactored code" />
+    <MESSAGE value="Improved README.md" />
     <MESSAGE value="deleted newton related tests" />
     <MESSAGE value="Minimal refactorings" />
     <MESSAGE value="Removed &quot;kconv&quot;" />
@@ -2463,9 +2458,7 @@
     <MESSAGE value="some changes (broken)" />
     <MESSAGE value="broken, but kind of working" />
     <MESSAGE value="Some minor changes" />
-    <MESSAGE value="Starting events implementation" />
-    <MESSAGE value="Starting events implementation 2" />
-    <option name="LAST_COMMIT_MESSAGE" value="Starting events implementation 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="Some minor changes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3004,26 +2997,6 @@
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Simulations/LinearFactors/linear_analysis.py</url>
           <line>833</line>
           <option name="timeStamp" value="2789" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
-          <line>290</line>
-          <option name="timeStamp" value="2840" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
-          <line>354</line>
-          <option name="timeStamp" value="2841" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
-          <line>237</line>
-          <option name="timeStamp" value="2842" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py</url>
-          <line>258</line>
-          <option name="timeStamp" value="2843" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

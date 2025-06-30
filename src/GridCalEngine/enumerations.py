@@ -868,19 +868,7 @@ class DeviceType(Enum):
 
     BusOrBranch = "BusOrBranch"
 
-    DynSynchronousModel = "DynSynchronousModel"
-
-    DynBusModel = "DynBusModel"
-
-    DynExpLoadModel = "DynExpLoadModel"
-
-    DynACLineModel = "DynACLineModel"
-
-    UnlockModel = "UnlockModel"
-
-    DynSlackModel = "DynSynchronousModel"
-
-    DynModel = "DynModel"
+    RmsModelTemplateDevice = "RMS template"
 
     def __str__(self) -> str:
         return str(self.value)

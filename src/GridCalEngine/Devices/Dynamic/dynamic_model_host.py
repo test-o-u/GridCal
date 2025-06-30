@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MPL-2.0
 from typing import List, Dict, Any
 from GridCalEngine.Utils.Symbolic.block import Block
+from GridCalEngine.Devices.Dynamic.rms_template import RmsModelTemplate
 
 
 class DynamicModelHost:
@@ -22,8 +23,16 @@ class DynamicModelHost:
         return self._template
 
     @template.setter
-    def template(self, val: Block):
-        self._template = val
+    def template(self, val: Block | RmsModelTemplate):
+
+        if isinstance(val, RmsModelTemplate):
+            self._template = val.block
+
+        elif isinstance(val, Block):
+            self._template = val
+
+        else:
+            raise ValueError(f"Cannot set template with {val}")
 
     @property
     def custom_model(self):
