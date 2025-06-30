@@ -57,12 +57,12 @@ class OptimalNetTransferCapacityDriver(DriverTemplate):
             zonal_grouping=self.options.opf_options.zonal_grouping,
             skip_generation_limits=self.options.skip_generation_limits,
             consider_contingencies=self.options.consider_contingencies,
-            contingency_groups_used=self.options.opf_options.contingency_groups_used,
+            contingency_groups_used=self.grid.contingency_groups,
             lodf_threshold=self.options.lin_options.lodf_threshold,
             bus_a1_idx=self.options.sending_bus_idx,
             bus_a2_idx=self.options.receiving_bus_idx,
             transfer_method=self.options.transfer_method,
-            monitor_only_ntc_load_rule_branches=self.options.use_branch_rating_contribution,
+            monitor_only_ntc_load_rule_branches=self.options.monitor_only_ntc_load_rule_branches,
             alpha_threshold=self.options.branch_exchange_sensitivity,
             monitor_only_sensitive_branches=self.options.use_branch_exchange_sensitivity,
             ntc_load_rule=self.options.branch_rating_contribution,
@@ -88,6 +88,7 @@ class OptimalNetTransferCapacityDriver(DriverTemplate):
         self.results.dSbus = opf_vars.bus_vars.delta_p[0, :]
         self.results.bus_shadow_prices = opf_vars.bus_vars.shadow_prices[0, :]
         self.results.load_shedding = opf_vars.bus_vars.load_shedding[0, :]
+        self.results.nodal_balance = opf_vars.bus_vars.Pbalance[0, :]
 
         self.results.Sf = opf_vars.branch_vars.flows[0, :]
         self.results.St = -opf_vars.branch_vars.flows[0, :]
@@ -110,6 +111,10 @@ class OptimalNetTransferCapacityDriver(DriverTemplate):
         self.results.receiving_bus_idx = self.options.receiving_bus_idx
         self.results.inter_space_branches = opf_vars.branch_vars.inter_space_branches
         self.results.inter_space_hvdc = opf_vars.hvdc_vars.inter_space_hvdc
+        self.results.inter_space_vsc = opf_vars.vsc_vars.inter_space_vsc
+
+        self.results.inter_area_flows = opf_vars.inter_area_flows[0]
+        self.results.structural_inter_area_flows = opf_vars.structural_ntc[0]
 
         self.results.converged = opf_vars.acceptable_solution
 

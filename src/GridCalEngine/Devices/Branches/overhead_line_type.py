@@ -40,6 +40,16 @@ class WireInTower:
     """
     Wire -> Tower association
     """
+    __slots__ = (
+        'wire',
+        'name',
+        'xpos',
+        'ypos',
+        '_phase',
+        'circuit_index',
+        'phase_type',
+        'device_type',
+    )
 
     def __init__(self, wire: Wire, xpos: float = 0.0, ypos: float = 0.0, phase: int = 1):
         """
@@ -156,6 +166,7 @@ class WireInTower:
 
 
 class ListOfWires:
+    __slots__ = ("data")
 
     def __init__(self):
         self.data: List[WireInTower] = list()
@@ -225,6 +236,25 @@ class ListOfWires:
 
 
 class OverheadLineType(EditableDevice):
+    __slots__ = (
+        'wires_in_tower',
+        '_Vnom',
+        'earth_resistivity',
+        'frequency',
+        '_Imax',
+        '_z_abcn',
+        '_z_phases_abcn',
+        '_z_abc',
+        '_z_phases_abc',
+        '_z_seq',
+        '_z_0123',
+        '_y_abcn',
+        '_y_phases_abcn',
+        '_y_abc',
+        '_y_phases_abc',
+        '_y_seq',
+        '_y_0123',
+    )
 
     def __init__(self, name='Tower', idtag: str | None = None,
                  Vnom: float = 1.0,
@@ -419,8 +449,8 @@ class OverheadLineType(EditableDevice):
             ax.set_ylabel('m', fontsize=8)
             ax.tick_params(axis='x', labelsize=8)
             ax.tick_params(axis='y', labelsize=8)
-            ax.set_xlim([min(0, np.min(x) - 1), np.max(x) + 1])
-            ax.set_ylim([0, np.max(y) + 1])
+            ax.set_xlim((min(0, np.min(x) - 1), np.max(x) + 1))
+            ax.set_ylim((0, np.max(y) + 1))
             ax.patch.set_facecolor('white')
             ax.grid(False)
             ax.grid(which='major', axis='y', linestyle='--')
@@ -429,11 +459,9 @@ class OverheadLineType(EditableDevice):
             pass
 
     def is_computed(self) -> bool:
-
         """
-
-        return: Boolean that tells if the template has already been computed or not
-
+        Boolean that tells if the template has already been computed or not
+        :return: if computed or not
         """
 
         ok = True

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1182</width>
-    <height>785</height>
+    <width>1198</width>
+    <height>738</height>
    </rect>
   </property>
   <property name="baseSize">
@@ -1521,7 +1521,7 @@
                           </size>
                          </property>
                          <property name="toolTip">
-                          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Subjects:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;col, idx, val, colobj, idxobj&lt;/p&gt;&lt;p&gt;colobj and idxobj allow accessing the objects that may be represented at the index or the columns. With these you can access their internal properties for filtering.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Operators:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;gt;, &amp;lt;, &amp;gt;=, &amp;lt;=, !=, =, like, notlike, starts, ends&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Examples:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Filter all object names that are similar to 'alba' and their Vnom property &amp;gt; 200&lt;/p&gt;&lt;p&gt;-&amp;gt; idx&lt;span style=&quot; font-style:italic;&quot;&gt;obj.name like alba and idxobj.Vnom &amp;gt; 200&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type anything to search on the name property. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;For more advanced searches you can compose a filter expression:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Subjects:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;col, idx, val, colobj, idxobj&lt;/p&gt;&lt;p&gt;colobj and idxobj allow accessing the objects that may be represented at the index or the columns. With these you can access their internal properties for filtering.&lt;/p&gt;&lt;p&gt;If none is specified idxobj is taken&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Operators:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&amp;gt;, &amp;lt;, &amp;gt;=, &amp;lt;=, !=, =, like, notlike, starts, ends&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Examples:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Filter all object names that are similar to 'alba' and their Vnom property &amp;gt; 200&lt;/p&gt;&lt;p&gt;-&amp;gt; idx&lt;span style=&quot; font-style:italic;&quot;&gt;obj.name like alba and idxobj.Vnom &amp;gt; 200&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Equivalently:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;-&amp;gt; name like alba and Vnom &amp;gt; 200&lt;/span&gt;&lt;/p&gt;&lt;p&gt;[Enter] to search &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                          </property>
                         </widget>
                        </item>
@@ -10425,8 +10425,8 @@ QProgressBar::chunk{
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1182</width>
-     <height>20</height>
+     <width>1198</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
@@ -10491,7 +10491,7 @@ QProgressBar::chunk{
     <addaction name="separator"/>
     <addaction name="actionShort_Circuit"/>
     <addaction name="actionVoltage_stability"/>
-    <addaction name="actionRMS_simulation"/>
+    <addaction name="actionContingency_analysis"/>
     <addaction name="separator"/>
     <addaction name="actionOPF"/>
     <addaction name="actionOpf_to_Power_flow"/>
@@ -10508,11 +10508,6 @@ QProgressBar::chunk{
     <addaction name="actionAdd_selected_as_new_investment"/>
     <addaction name="actionReliability"/>
     <addaction name="actionBlackout_cascade"/>
-    <addaction name="separator"/>
-    <addaction name="actionContingency_analysis"/>
-    <addaction name="actionInitialize_contingencies"/>
-    <addaction name="actionAdd_selected_to_contingency"/>
-    <addaction name="actionAdd_selected_as_remedial_action"/>
     <addaction name="separator"/>
     <addaction name="actionInputs_analysis"/>
     <addaction name="actionStorage_location_suggestion"/>
@@ -10536,6 +10531,9 @@ QProgressBar::chunk{
     <addaction name="actionScale"/>
     <addaction name="separator"/>
     <addaction name="actionLaunch_data_analysis_tool"/>
+    <addaction name="actionInitialize_contingencies"/>
+    <addaction name="actionAdd_selected_to_contingency"/>
+    <addaction name="actionAdd_selected_as_remedial_action"/>
     <addaction name="actionFix_generators_active_based_on_the_power"/>
     <addaction name="actionFix_loads_active_based_on_the_power"/>
     <addaction name="actionDelete_inconsistencies"/>
@@ -10544,26 +10542,12 @@ QProgressBar::chunk{
     <addaction name="actionSetSelectedBusCountry"/>
     <addaction name="actionSetSelectedBusArea"/>
     <addaction name="actionSetSelectedBusZone"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuDiagrams">
     <property name="title">
      <string>Diagram</string>
     </property>
-    <widget class="QMenu" name="menuBus_Branch_options">
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="title">
-      <string>Select buses by</string>
-     </property>
-     <addaction name="separator"/>
-     <addaction name="actionSelect_buses_by_area"/>
-     <addaction name="actionSelect_buses_by_zone"/>
-     <addaction name="actionSelect_buses_by_country"/>
-     <addaction name="separator"/>
-    </widget>
     <addaction name="actionAdd_general_bus_branch_diagram"/>
     <addaction name="actionNew_bus_branch_diagram_from_selection"/>
     <addaction name="actionBigger_nodes"/>
@@ -10574,11 +10558,13 @@ QProgressBar::chunk{
     <addaction name="actionDisable_all_results_tags"/>
     <addaction name="actionEnable_all_results_tags"/>
     <addaction name="actionSet_schematic_positions_from_GPS_coordinates"/>
-    <addaction name="menuBus_Branch_options"/>
+    <addaction name="actionColor_buses_by"/>
+    <addaction name="actionSelect_buses_by"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_map"/>
     <addaction name="actionConsolidate_diagram_coordinates"/>
     <addaction name="actionReset_coordinates"/>
+    <addaction name="actionColor_substations_by"/>
     <addaction name="separator"/>
     <addaction name="actionZoom_in"/>
     <addaction name="actionZoom_out"/>
@@ -10644,7 +10630,6 @@ QProgressBar::chunk{
    <addaction name="actionShort_Circuit"/>
    <addaction name="actionVoltage_stability"/>
    <addaction name="actionContingency_analysis"/>
-   <addaction name="actionRMS_simulation"/>
    <addaction name="separator"/>
    <addaction name="actionOptimal_Net_Transfer_Capacity"/>
    <addaction name="actionNodal_capacity"/>
@@ -12005,48 +11990,6 @@ QProgressBar::chunk{
     <string>Ctrl+C, Ctrl+D</string>
    </property>
   </action>
-  <action name="actionSelect_buses_by_area">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/grid_icon.svg</normaloff>:/Icons/icons/grid_icon.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Select buses by area</string>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-  </action>
-  <action name="actionSelect_buses_by_zone">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/grid_icon.svg</normaloff>:/Icons/icons/grid_icon.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Select buses by zone</string>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-  </action>
-  <action name="actionSelect_buses_by_country">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/map.svg</normaloff>:/Icons/icons/map.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Select buses by country</string>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-  </action>
   <action name="actionScale">
    <property name="icon">
     <iconset resource="icons.qrc">
@@ -12227,6 +12170,9 @@ QProgressBar::chunk{
    <property name="toolTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Add remedial action&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Create a new remedial action from the schematic selection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+A, Ctrl+R</string>
+   </property>
   </action>
   <action name="actionDetect_facilities">
    <property name="icon">
@@ -12276,20 +12222,58 @@ QProgressBar::chunk{
    <property name="toolTip">
     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Reliability study&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Run the reliability calculation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actionRMS_simulation">
+  <action name="actionColor_buses_by">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/Icons/icons/dyn.svg</normaloff>:/Icons/icons/dyn.svg</iconset>
+     <normaloff>:/Icons/icons/grid_icon.svg</normaloff>:/Icons/icons/grid_icon.svg</iconset>
    </property>
    <property name="text">
-    <string>RMS simulation</string>
+    <string>Color buses by...</string>
    </property>
-   <property name="toolTip">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;RMS study&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Run the RMS dynamic simulation&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+  </action>
+  <action name="actionColor_substations_by">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Icons/icons/grid_icon.svg</normaloff>:/Icons/icons/grid_icon.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Color substations by...</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSelect_buses_by">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/Icons/icons/grid_icon.svg</normaloff>:/Icons/icons/grid_icon.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Select buses by...</string>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
