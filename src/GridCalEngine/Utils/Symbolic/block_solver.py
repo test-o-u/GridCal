@@ -154,8 +154,10 @@ class BlockSolver:
 
         uid2sym_vars: Dict[int, str] = dict()
         uid2sym_events: Dict[int, str] = dict()
+        uid2sym_params: Dict[int, str] = dict()
         self.uid2idx_vars: Dict[int, int] = dict()
         self.uid2idx_events:Dict[int, int] = dict()
+        self.uid2idx_params: Dict[int, int] = dict()
         i = 0
         for v in self._state_vars:
             uid2sym_vars[v.uid] = f"vars[{i}]"
@@ -170,6 +172,11 @@ class BlockSolver:
         for i, ep in enumerate(self._events):
             uid2sym_events[ep.uid] = f"events[{i}]"
             self.uid2idx_events[ep.uid] = i
+            i += 1
+
+        for i, ep in enumerate(self._parameters):
+            uid2sym_params[ep.uid] = f"events[{i}]"
+            self.uid2idx_params[ep.uid] = i
             i += 1
 
         # Compile RHS and Jacobian

@@ -17,6 +17,7 @@ from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence
 #from GridCalEngine.Utils.Symbolic.events import EventParam
 
 NUMBER = Union[int, float]
+NAME = 'name'
 
 
 # -----------------------------------------------------------------------------
@@ -72,7 +73,6 @@ class Expr:
     """
     Abstract base class for all expression nodes.
     """
-
     uid: str  # real dataclass field lives in subclasses
 
     def eval(self, **bindings: float | int) -> float | int:  # pragma: no cover – abstract
@@ -190,6 +190,7 @@ class Const(Expr):
     Constant expression (i.e a number)
     """
     value: NUMBER
+    name: str = 'name'
     uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
@@ -200,6 +201,13 @@ class Const(Expr):
 
     def _diff1(self, var: Var | str) -> "Expr":
         return Const(0)
+
+    def subs(self, mapping: Dict[Any, Expr]) -> Expr:
+        if self in mapping:
+            return mapping[self]
+        if self.name in mapping:
+            return mapping[self.name]
+        return self
 
     def __str__(self) -> str:
         return str(self.value)
@@ -241,7 +249,7 @@ class EventParam(Expr):
         return self.value
 
     def _diff1(self, Var: Var | str):
-        return 0
+        return Const(0)
 
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
         if self in mapping:

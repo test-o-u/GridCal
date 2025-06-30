@@ -9,181 +9,108 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, Union
 
+from GridCalEngine.Devices.Parents.editable_device import EditableDevice
 from GridCalEngine.Simulations.Dynamic_old.utils import json
-from GridCalEngine.Utils.Symbolic.symbolic import Expr, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
+from GridCalEngine.Utils.Symbolic.symbolic import Expr, Const, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
 
-NUMBER = Union[int, float]
+class Event:
+    uid: str
 
-
-def _new_uid() -> int:
-    """Generate a fresh UUID‑v4 string."""
-    return uuid.uuid4().int
-
-
-
-class Expr:
-    """
-    Abstract base class for all expression nodes.
-    """
-
-    uid: str  # real dataclass field lives in subclasses
-
-    def eval(self, **bindings: float | int) -> float | int:  # pragma: no cover – abstract
+class ConstEvent(Event):
+    def __init__(self,
+                 constant: Const | None = None,
+                 idtag: Union[str, None] = None,
+                 name="event",
+                 code='',
+                 prop: ContingencyOperationTypes = ContingencyOperationTypes.Active,
+                 value=0.0,
+                 group: Union[None, ContingencyGroup] = None,
+                 comment: str = ""):
         """
-        Numeric evaluation
-        :param bindings:
-        :return:
-        """
-        raise NotImplementedError
-
-    def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:  # pragma: no cover – abstract
+        Contingency
+        :param device: Some device to point at
+        :param idtag: String. Element unique identifier
+        :param name: String. Contingency name
+        :param code: String. Contingency code name
+        :param prop: String. Property to modify when contingency is triggered out
+        :param value: Float. Property value to apply when contingency happens
+        :param group: ContingencyGroup. Contingency group
         """
 
-        :param uid_bindings:
-        :return:
+        PointerDeviceParent.__init__(self,
+                                     idtag=idtag,
+                                     device=device,
+                                     code=code,
+                                     name=name,
+                                     device_type=DeviceType.ContingencyDevice,
+                                     comment=comment)
+
+        # Contingency type
+        self._prop: ContingencyOperationTypes = prop
+        self._value = value
+        self._group: ContingencyGroup = group
+
+        self.register(key='prop', units='', tpe=ContingencyOperationTypes,
+                      definition=f'Object property to change')
+        self.register(key='value', units='', tpe=float, definition='Property value')
+        self.register(key='group', units='', tpe=DeviceType.ContingencyGroupDevice, definition='Contingency group')
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, val: str):
+        self._name = val
+
+    @property
+    def prop(self) -> ContingencyOperationTypes:
         """
-        raise NotImplementedError
-
-    __call__ = eval  # allow f(x=…)
-
-    def diff(self, var: Var | str, order: int = 1) -> "Expr":
+        Property to modify when contingency is triggered out
+        :return: ContingencyOperationsTypes
         """
-        Differentiation (higher‑order)
-        :param var:
-        :param order:
-        :return:
-        """
-        if order < 0:
-            raise ValueError("order must be >= 0")
-        expr: Expr = self
-        for _ in range(order):
-            expr = expr._diff1(var).simplify()
-        return expr
+        return self._prop
 
-    def _diff1(self, var: Var | str) -> "Expr":  # pragma: no cover
-        raise NotImplementedError
-
-    def simplify(self) -> "Expr":
-        """
-        Simplification & substitution (no‑ops by default)
-        :return:
-        """
-        return self
-
-    def subs(self, mapping: Dict[Any, "Expr"]) -> "Expr":
-        return mapping.get(self, self)
-
-    def to_dict(self) -> Dict[str, Any]:
-        return _expr_to_dict(self)
-
-    def to_json(self, **json_kwargs: Any) -> str:
-        return json.dumps(self.to_dict(), **json_kwargs)
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> "Expr":
-        return _dict_to_expr(data)
-
-    @staticmethod
-    def from_json(blob: str) -> "Expr":
-        return _dict_to_expr(json.loads(blob))
-
-    # ------------------------------------------------------------------
-    # Operator helpers
-    # ------------------------------------------------------------------
-    def __add__(self, other: Any) -> "Expr":
-        return BinOp("+", self, _to_expr(other))
-
-    def __radd__(self, other: Any) -> "Expr":
-        return BinOp("+", _to_expr(other), self)
-
-    def __sub__(self, other: Any) -> "Expr":
-        return BinOp("-", self, _to_expr(other))
-
-    def __rsub__(self, other: Any) -> "Expr":
-        return BinOp("-", _to_expr(other), self)
-
-    def __mul__(self, other: Any) -> "Expr":
-        return BinOp("*", self, _to_expr(other))
-
-    def __rmul__(self, other: Any) -> "Expr":
-        return BinOp("*", _to_expr(other), self)
-
-    def __truediv__(self, other: Any) -> "Expr":
-        return BinOp("/", self, _to_expr(other))
-
-    def __rtruediv__(self, other: Any) -> "Expr":
-        return BinOp("/", _to_expr(other), self)
-
-    def __pow__(self, other: Any) -> "Expr":
-        return BinOp("**", self, _to_expr(other))
-
-    def __rpow__(self, other: Any) -> "Expr":
-        return BinOp("**", _to_expr(other), self)
-
-    def __neg__(self) -> "Expr":
-        return UnOp("-", self)
-
-    def __str__(self) -> str:  # pragma: no cover – abstract
-        """
-        Display helper
-        :return:
-        """
-        raise NotImplementedError
-
-    __repr__ = __str__
-
-
-
-@dataclass
-class EventParam(Expr):
-    value: float
-    new_value: float
-    time_step: int
-    name: str
-    uid: int = field(default_factory=_new_uid, init=False)
-
-    def __post_init__(self):
-        # "Freeze" name and uid after initialization by setting private flags
-        object.__setattr__(self, "_frozen_name", self.name)
-        object.__setattr__(self, "_frozen_uid", self.uid)
-
-    def __setattr__(self, key, value):
-        if hasattr(self, "_frozen_name") and key == "name":
-            raise AttributeError("Cannot modify 'name' after initialization.")
-        if hasattr(self, "_frozen_uid") and key == "uid":
-            raise AttributeError("Cannot modify 'uid' after initialization.")
-        super().__setattr__(key, value)
-
-    def check_value(self, t):
-        if t == self.time_step:
-            return self.new_value
+    @prop.setter
+    def prop(self, val: ContingencyOperationTypes):
+        if isinstance(val, ContingencyOperationTypes):
+            self._prop = val
         else:
-            return None
+            print(f"Not allowed property {val}")
 
-    def eval(self, **bindings: NUMBER) -> NUMBER:
-        try:
-            return bindings[self.name]
-        except KeyError as exc:
-            raise ValueError(f"No value for variable '{self.name}'.") from exc
+    @property
+    def value(self) -> float:
+        """
+        Property value to apply when contingency happens
+        :return:
+        """
+        return self._value
 
-    def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:
-        return self.value
+    @value.setter
+    def value(self, val: float):
+        self._value = val
 
-    def _diff1(self, EventParam: EventParam | str):
-        return 0
+    @property
+    def group(self) -> ContingencyGroup:
+        """
+        Contingency group
+        :return:
+        """
+        return self._group
 
-    def subs(self, mapping: Dict[Any, Expr]) -> Expr:
-        if self in mapping:
-            return mapping[self]
-        if self.name in mapping:
-            return mapping[self.name]
-        return self
+    @group.setter
+    def group(self, val: ContingencyGroup):
+        self._group = val
 
-    def __str__(self) -> str:
-        return str(self.value)
+    @property
+    def category(self):
+        """
 
-    def __repr__(self) -> str:
-        return self.name
+        :return:
+        """
+        return self.group.category
 
-    def __eq__(self, other: "Var"):
-        return self.uid == other.uid
+    @category.setter
+    def category(self, val):
+        # self.group.category = val
+        pass
