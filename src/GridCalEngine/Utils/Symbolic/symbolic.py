@@ -805,7 +805,7 @@ def compile_numba_function(expr: Expr,
     :return:
     """
     expanded_sorting_vars = find_vars_order(expr, sorting_vars)
-    return _compile(expressions=[expr], sorting_vars=expanded_sorting_vars, uid2sym=None)
+    return _compile(expressions=[expr], sorting_vars=expanded_sorting_vars, params=[], uid2sym=None)
 
 
 # -----------------------------------------------------------------------------

@@ -11,6 +11,7 @@ class DynamicModelHost:
     """
     This class serves to give flexible access to either a template or a custom model
     """
+
     def __init__(self):
 
         self._template: Block | None = None
@@ -49,6 +50,18 @@ class DynamicModelHost:
         else:
             return self.template
 
+    @model.setter
+    def model(self, val: Block | RmsModelTemplate):
+
+        if isinstance(val, RmsModelTemplate):
+            self.template = val.block
+
+        elif isinstance(val, Block):
+            self._custom_model = val
+
+        else:
+            raise ValueError(f"Cannot set model with {val}")
+
     def to_dict(self) -> Dict[str, int | Dict[str, List[Dict[str, Any]]]]:
         """
         Generate a dictionary to save
@@ -73,5 +86,3 @@ class DynamicModelHost:
 
         custom_data = data.get("custom_model", None)
         self.custom_model.parse(data=custom_data)
-
-
