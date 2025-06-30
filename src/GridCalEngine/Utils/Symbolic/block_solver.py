@@ -15,7 +15,7 @@ from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal, Any, Callable, Sequence
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit, EventParam
 from GridCalEngine.Utils.Symbolic.block import Block
-from GridCalEngine.Utils.Symbolic.events import EventParam
+from GridCalEngine.Utils.Symbolic.symbolic import EventParam
 from GridCalEngine.Utils.Sparse.csc import pack_4_by_4_scipy
 
 

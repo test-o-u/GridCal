@@ -111,7 +111,7 @@ ALL_DEV_TYPES = Union[
     Technology,
     UndergroundLineType,
     SequenceLineType,
-    DynamicModelHost
+    RmsModelTemplate
 ]
 
 CONNECTION_TYPE = Union[ConnectivityNode, Bus, None]

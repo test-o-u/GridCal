@@ -10,8 +10,10 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Union
 
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice
-from GridCalEngine.Simulations.Dynamic_old.utils import json
 from GridCalEngine.Utils.Symbolic.symbolic import Expr, Const, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
+from GridCalEngine.Devices.Aggregation.contingency_group import ContingencyGroup
+from GridCalEngine.Devices.Parents.pointer_device_parent import PointerDeviceParent
+from GridCalEngine.enumerations import ContingencyOperationTypes, DeviceType
 
 class Event:
     uid: str
