@@ -26,8 +26,8 @@ X0 = {
 }
 
 Y0 = {
-    'a1': 15 * (np.pi / 180),  # rotor angle (rad)
-    'a2': 10 * (np.pi / 180),  # angle of second bus
+    'a1': 0 * (np.pi / 180),  # rotor angle (rad)
+    'a2': 0 * (np.pi / 180),  # angle of second bus
     'v1': 1.0,                 # generator terminal voltage magnitude (pu)
     'v2': 0.95,                # remote bus voltage (pu)
     'psid': 1.0,  # d-axis flux linkage (pu)
@@ -37,9 +37,9 @@ Y0 = {
     'vd': 0.0,  # d-axis voltage (pu)
     'vq': 1.0,  # q-axis voltage (pu)
     'te': 0.1,  # electromagnetic torque (pu)
-    'Pe': 0.2,  # real power (pu)
+    'Pe': 0.1,  # real power (pu)
     'Qe': 0.2,  # reactive power (pu)
-    'tm': 0.2  # mechanical torque (pu)
+    'tm': 0.1  # mechanical torque (pu)
 }
 
 DAE_X0 = np.array(list(X0.values()))
@@ -58,4 +58,4 @@ INTEGRATION_METHOD="trapezoid"
 # Performance boolean
 PERFORMANCE = False 
 STEP_PLOT = False  
-TDS_PLOT = False   
+TDS_PLOT = True   

@@ -73,26 +73,24 @@ class TDS():
         Performs the numerical integration using the chosen method.
         """
         if self.tds_plot:
-            fig, axs = plt.subplots(3, 1, figsize=(8, 6), sharex=True)
+            fig, axs = plt.subplots(4, 1, figsize=(8, 6), sharex=True)
 
-            # Setup x[1] plot
-            line_x, = axs[0].plot([], [], label='x[1]')
-            axs[0].set_ylabel(r"$\omega$")
+            # Setup plots
+            line_omega, = axs[0].plot([], [], label=r'$\omega$')
+            axs[0].set_ylabel(r'$\omega$')
             axs[0].legend()
             axs[0].grid(True)
-            axs[0].set_ylim(0.9, 1.1)  # fixed y-axis range
+            axs[0].set_ylim(0.95, 1.05)  # fixed y-axis range
             axs[0].set_xlim(0, self.t_final) 
 
-            # Setup y[0] plot
-            line_y, = axs[1].plot([], [], label='y[0]', color='orange')
+            line_gen, = axs[1].plot([], [], label=r'$P_{Gen}$', color='red')
             axs[1].set_ylabel(r'$P_{Gen}$')	
             axs[1].legend()
             axs[1].grid(True)
             axs[1].set_ylim(-0.1, 2.0)
             axs[1].set_xlim(0, self.t_final) 
 
-            # Setup y[2] plot
-            line_param, = axs[2].plot([], [], label='y[2]', color='green')
+            line_load, = axs[2].plot([], [], label=r'$P_{Load}$', color='green')
             axs[2].set_ylabel(r'$P_{Load}$')
             axs[2].set_xlabel(r'Time [s]')
             axs[2].legend()
@@ -100,12 +98,20 @@ class TDS():
             axs[2].set_ylim(-0.1, 2.0)
             axs[2].set_xlim(0, self.t_final)  
 
+            line_tm, = axs[3].plot([], [], label=r'$T_{m}$', color='orange')
+            axs[3].set_ylabel(r'$T_{m}$')
+            axs[3].set_xlabel(r'Time [s]')
+            axs[3].legend()
+            axs[3].grid(True)
+            axs[3].set_ylim(-0.1, 2.0)
+            axs[3].set_xlim(0, self.t_final)  
+
             plt.ion()
             plt.tight_layout()
             plt.show()
 
-            time_data, x_data = [], []
-            y_data, param_data = [], []
+            time_data, omega_data = [], []
+            gen_data, load_data, tm_data = [], [], []
 
         try:
             while self.t < self.t_final:
@@ -126,14 +132,16 @@ class TDS():
 
                 if self.tds_plot:
                     time_data.append(self.t)
-                    x_data.append(self.system.dae.x[1])
-                    y_data.append(self.system.dae.y[11])
-                    param_data.append(self.system.models['ExpLoad'].Pl0.value[0])
+                    omega_data.append(self.system.dae.x[1])
+                    gen_data.append(self.system.dae.y[11])
+                    load_data.append(self.system.models['ExpLoad'].Pl0.value[0])
+                    tm_data.append(self.system.dae.y[13])
 
                     # Update plots
-                    line_x.set_data(time_data, x_data)
-                    line_y.set_data(time_data, y_data)
-                    line_param.set_data(time_data, param_data)
+                    line_omega.set_data(time_data, omega_data)
+                    line_gen.set_data(time_data, gen_data)
+                    line_load.set_data(time_data, load_data)
+                    line_tm.set_data(time_data, tm_data)
 
                     plt.pause(0.01)
 

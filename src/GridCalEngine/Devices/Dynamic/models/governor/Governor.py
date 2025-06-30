@@ -48,6 +48,6 @@ class Governor(DynamicModelTemplate):
         # algebraic
         self.tm = AlgebVar(name='tm',
                            symbol='tm',
-                           eq='Kp * (omega - omega_ref) - tm')
+                           eq='- Kp * (omega - omega_ref) - tm')
         
         

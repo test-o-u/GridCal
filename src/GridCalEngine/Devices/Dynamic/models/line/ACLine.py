@@ -51,7 +51,7 @@ class ACLine(DynamicModelTemplate):
                               symbol = 'a_origin',
                               src='a',
                               indexer=self.bus1_idx,
-                              eq='(v_origin ** 2 * g  - \
+                              eq='- (v_origin ** 2 * g  - \
                                     v_origin * v_end * (g * cos(a_origin - a_end) + \
                                         b * sin(a_origin - a_end)))')
 
@@ -59,7 +59,7 @@ class ACLine(DynamicModelTemplate):
                               symbol='v_origin',
                               src='v',
                               indexer=self.bus1_idx,
-                              eq='(- v_origin ** 2 * (b + bsh / 2) - \
+                              eq='- (- v_origin ** 2 * (b + bsh / 2) - \
                                             v_origin * v_end * (g * sin(a_origin - a_end) - \
                                                 b * cos(a_origin - a_end)))')
         
@@ -67,7 +67,7 @@ class ACLine(DynamicModelTemplate):
                               symbol = 'a_end',
                               src='a',
                               indexer=self.bus2_idx,
-                              eq='(v_end ** 2 * g  - \
+                              eq='- (v_end ** 2 * g  - \
                                     v_end * v_origin * (g * cos(a_end - a_origin) + \
                                         b * sin(a_end - a_origin)))')
         
@@ -75,6 +75,6 @@ class ACLine(DynamicModelTemplate):
                               symbol = 'v_end',
                               src='v',
                               indexer=self.bus2_idx,
-                              eq='(- v_end ** 2 * (b + bsh / 2) - \
+                              eq='- (- v_end ** 2 * (b + bsh / 2) - \
                                     v_end * v_origin * (g * sin(a_end - a_origin) - \
                                         b * cos(a_end - a_origin)))')

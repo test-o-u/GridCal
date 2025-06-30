@@ -62,6 +62,12 @@ class Integration:
             for iteration in range(max_iter):
                 jac = method.calc_jac(dae, dt)
 
+                # if iteration == 0:
+                #     pdb.set_trace()
+                
+                # elif iteration == 60:
+                #     pdb.set_trace()
+
                 # Jacobian singularity insight
                 try:
                     cond = np.linalg.cond(jac.toarray())

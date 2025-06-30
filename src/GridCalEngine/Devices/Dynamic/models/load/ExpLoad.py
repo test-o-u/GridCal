@@ -52,10 +52,10 @@ class ExpLoad(DynamicModelTemplate):
                              symbol = 'a',
                              src='a',
                              indexer=self.bus_idx,
-                             eq='Pl0 * v ** coeff_alfa')  
+                             eq='- Pl0 * v ** coeff_alfa')  
         
         self.v = ExternAlgeb(name='v',
                              symbol = 'v',
                              src='v',
                              indexer=self.bus_idx,
-                             eq='Ql0 * v ** coeff_beta')
+                             eq='- Ql0 * v ** coeff_beta')

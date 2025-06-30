@@ -49,8 +49,8 @@ class GENCLS(DynamicModelTemplate):
                               info='armature resistance',
                               value=[])
         
-        self.xd = NumDynParam(symbol='xd',
-                              info='d-axis transient reactance',
+        self.xq = NumDynParam(symbol='xq',
+                              info='q-axis transient reactance',
                               value=[])
         
         # self.tm = NumDynParam(symbol='tm',
@@ -68,7 +68,7 @@ class GENCLS(DynamicModelTemplate):
                               
         self.omega = StatVar(name='omega', 
                              symbol='omega', 
-                             eq='(-tm  + te  - D * (omega - 1))',
+                             eq='(tm - te  - D * (omega - 1))',
                              t_const=self.M)
         
         # self.vf = ExternState(name='vf',
@@ -79,21 +79,19 @@ class GENCLS(DynamicModelTemplate):
         # algebraic variables
         self.psid = AlgebVar(name='psid',
                              symbol='psid',
-                            #  eq='(ra * i_q + vq) - psid')
-                             eq='(-ra * i_q + vq) - psid')
+                             eq='(ra * i_q + vq) - psid') 
         
         self.psiq = AlgebVar(name='psiq',
                              symbol='psiq',
-                            #  eq='(ra * i_d + vd) - psiq')
-                             eq='(-ra * i_d + vd) - psiq')
+                             eq='(ra * i_d + vd) + psiq') # Note: sign needs to be discussed.
         
         self.i_d = AlgebVar(name='i_d', 
                            symbol='i_d', 
-                           eq='psid + xd * i_d - vf') # vd
+                           eq='psid + xq * i_d - vf')
                                                          
         self.i_q = AlgebVar(name='i_q', 
                            symbol='i_q',
-                           eq='psiq + xd * i_q') # vd
+                           eq='psiq + xq * i_q')
                                                      
         self.vd = AlgebVar(name='vd', 
                            symbol='vd',
@@ -131,7 +129,3 @@ class GENCLS(DynamicModelTemplate):
                              symbol='tm',
                              src='tm',
                              indexer=self.governor_idx)
-
-        # network algebraic variables 
-        # TODO: 
-        # -check naming

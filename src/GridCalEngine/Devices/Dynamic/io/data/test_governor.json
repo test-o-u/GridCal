@@ -26,10 +26,10 @@
       "governor_idx": 0,
       "name": "GENCLS 1",
       "fn": 50.0,
-      "D": 10,
-      "M": 2.0,
+      "D": 0.0,
+      "M": 6.0,
       "ra": 0.003,
-      "xd": 0.3,
+      "xq": 0.3,
       "vf": 1.0
     }
   ],
@@ -48,7 +48,7 @@
       "bus_idx": 0,
       "device_idx": 0,
       "name": "Governor 1",
-      "Kp": 4.0,
+      "Kp": 50.0,
       "omega_ref": 1.0
     }
   ]
