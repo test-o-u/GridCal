@@ -268,7 +268,7 @@ class Assets:
                 dev.UndergroundLineType(),
                 dev.SequenceLineType(),
                 dev.TransformerType(),
-                dev.DynamicModelHost()
+                # dev.DynamicModelHost()
             ]
         }
 
