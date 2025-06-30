@@ -8,9 +8,9 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, Union
-
+from GridCalEngine.enumerations import ContingencyOperationTypes, DeviceType
+from GridCalEngine.Devices.Aggregation.contingency_group import ContingencyGroup
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice
-from GridCalEngine.Simulations.Dynamic_old.utils import json
 from GridCalEngine.Utils.Symbolic.symbolic import Expr, Const, _to_expr, BinOp, UnOp, _dict_to_expr, _expr_to_dict
 
 class Event:
@@ -37,13 +37,6 @@ class ConstEvent(Event):
         :param group: ContingencyGroup. Contingency group
         """
 
-        PointerDeviceParent.__init__(self,
-                                     idtag=idtag,
-                                     device=device,
-                                     code=code,
-                                     name=name,
-                                     device_type=DeviceType.ContingencyDevice,
-                                     comment=comment)
 
         # Contingency type
         self._prop: ContingencyOperationTypes = prop
