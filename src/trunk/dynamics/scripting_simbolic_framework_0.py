@@ -6,8 +6,9 @@ import math
 
 import numpy as np
 from matplotlib import pyplot as plt
-from pygments.lexers.dsls import VGLLexer
+#from pygments.lexers.dsls import VGLLexer
 
+#from GridCalEngine.Utils.Symbolic.events import EventParam
 from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin, EventParam
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
@@ -61,8 +62,8 @@ line_block = Block(
 # Load
 # ----------------------------------------------------------------------------------------------------------------------
 coeff_alfa = Const(1.8)
-Pl0 = EventParam(0.12, 0.3, 50, 'Pl0')
-Ql0 = Const(0.2)
+Pl0 = EventParam(0.1, 2, 50, 'Pl0')
+Ql0 = EventParam(0.1, 2, 50, 'Ql0')
 coeff_beta = Const(8.0)
 
 Ql = Var("Ql")
@@ -74,8 +75,8 @@ load_block = Block(
         Ql - (Ql0)
     ],
     algebraic_vars=[Ql, Pl],
-    parameters=[Ql0],
-    events=[Pl0]
+    parameters=[],
+    events=[Pl0, Ql0]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -83,10 +84,11 @@ load_block = Block(
 # ----------------------------------------------------------------------------------------------------------------------
 # Generator
 pi = Const(math.pi)
-fn = Const(50.0)
+fn =  Const(50)
 # tm = Const(0.1)
 M = Const(1.0)
-D = Const(100)
+D = EventParam(100, 50, 50, 'D')
+#D = Const(100)
 ra = Const(0.3)
 xd = Const(0.86138701)
 vf = Const(1.081099313)
@@ -119,8 +121,8 @@ generator_block = Block(
         (v_q * i_d - v_d * i_q) - Q_g
     ],
     algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
-    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw],
-    events=[]
+    parameters=[fn, M, ra, xd, vf, Kp, Ki, Kw],
+    events=[D]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------

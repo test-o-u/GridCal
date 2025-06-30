@@ -14,6 +14,7 @@ import numba as nb
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple, Set
+#from GridCalEngine.Utils.Symbolic.events import EventParam
 
 NUMBER = Union[int, float]
 
@@ -203,6 +204,7 @@ class Const(Expr):
     def __str__(self) -> str:
         return str(self.value)
 
+
 @dataclass
 class EventParam(Expr):
     value: float
@@ -230,13 +232,16 @@ class EventParam(Expr):
             return None
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
-        return self.value
+        try:
+            return bindings[self.name]
+        except KeyError as exc:
+            raise ValueError(f"No value for variable '{self.name}'.") from exc
 
     def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:
         return self.value
 
-    def _diff1(self, var: Var | str) -> "Expr":
-        return Const(0)
+    def _diff1(self, Var: Var | str):
+        return 0
 
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
         if self in mapping:
@@ -253,6 +258,7 @@ class EventParam(Expr):
 
     def __eq__(self, other: "Var"):
         return self.uid == other.uid
+
 
 @dataclass(frozen=True)
 class Var(Expr):
@@ -701,8 +707,6 @@ def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_events: Dict[int, st
     :return:
     """
     if isinstance(expr, Const):
-        return repr(expr.value)
-    if isinstance(expr, EventParam):
         return repr(expr.value)
     if isinstance(expr, EventParam):
         return uid_map_events[expr.uid]

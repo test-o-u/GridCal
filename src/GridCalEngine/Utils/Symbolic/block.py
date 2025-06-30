@@ -7,6 +7,8 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from typing import Tuple, Sequence, List
+
+#from GridCalEngine.Utils.Symbolic.events import EventParam
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr, EventParam
 
 

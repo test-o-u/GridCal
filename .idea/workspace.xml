@@ -28,7 +28,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Starting events implementation" />
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="Starting events implementation 2">
+      <change afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/events.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -293,7 +300,7 @@
       <recent name="D:\SIROCO\GridCal\src\GridCal\Gui\Diagrams\MapWidget\Substation" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.admittance_matrices">
+  <component name="RunManager">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
@@ -2387,7 +2394,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="713" />
+    <option name="localTasksCounter" value="714" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2433,7 +2440,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Improved README.md" />
     <MESSAGE value="deleted newton related tests" />
     <MESSAGE value="Minimal refactorings" />
     <MESSAGE value="Removed &quot;kconv&quot;" />
@@ -2458,7 +2464,8 @@
     <MESSAGE value="broken, but kind of working" />
     <MESSAGE value="Some minor changes" />
     <MESSAGE value="Starting events implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Starting events implementation" />
+    <MESSAGE value="Starting events implementation 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="Starting events implementation 2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3000,12 +3007,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
-          <line>289</line>
+          <line>290</line>
           <option name="timeStamp" value="2840" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py</url>
-          <line>356</line>
+          <line>354</line>
           <option name="timeStamp" value="2841" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -3015,7 +3022,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py</url>
-          <line>241</line>
+          <line>258</line>
           <option name="timeStamp" value="2843" />
         </line-breakpoint>
       </breakpoints>

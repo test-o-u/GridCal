@@ -14,7 +14,7 @@ import math
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal, Any, Callable, Sequence
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, EventParam, _emit
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Sparse.csc import pack_4_by_4_scipy
 
@@ -32,7 +32,7 @@ def _fully_substitute(expr: Expr, mapping: Dict[Var, Expr], max_iter: int = 10) 
 def _compile_equations(eqs: Sequence[Expr],
                        uid2sym_vars: Dict[int, str],
                        uid2sym_events: Dict[int, str],
-                       add_doc_string: bool = True) -> Callable[[Any], Sequence[float]]:
+                       add_doc_string: bool = True) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """
     Compile the array of expressions to a function that returns an array of values for those expressions
     :param eqs: Iterable of expressions (Expr)
@@ -40,7 +40,6 @@ def _compile_equations(eqs: Sequence[Expr],
     :param add_doc_string: add the docstring?
     :return: Function pointer that returns an array
     """
-
     # Build source
     src = f"def _f(vars, events):\n"
     src += f"    out = np.zeros({len(eqs)})\n"
@@ -109,10 +108,10 @@ def _get_jacobian(eqs: List[Expr],
         indptr[c + 1] += 1
     np.cumsum(indptr, out=indptr)
 
-    def jac_fn(values: np.ndarray) -> sp.csc_matrix:  # noqa: D401 – simple
+    def jac_fn(values: np.ndarray, events) -> sp.csc_matrix:  # noqa: D401 – simple
         assert len(values) >= len(variables)
         for k, fn in enumerate(fns_sorted):
-            data[k] = fn(values)
+            data[k] = fn(values, events)
         return sp.csc_matrix((data, indices, indptr), shape=(len(eqs), len(variables)))
 
     return jac_fn
@@ -169,7 +168,7 @@ class BlockSolver:
             i += 1
 
         for i, ep in enumerate(self._events):
-            uid2sym_events[ep.uid] = f"vars[{i}]"
+            uid2sym_events[ep.uid] = f"events[{i}]"
             self.uid2idx_events[ep.uid] = i
             i += 1
 
@@ -255,6 +254,7 @@ class BlockSolver:
     def rhs_implicit(self, x: np.ndarray, xn: np.ndarray, events: np.ndarray, sim_step, h: float) -> np.ndarray:
         """
         Return 𝑑x/dt given the current *state* vector.
+        :type events: np.ndarray
         :param x: get the right-hand-side give a state vector
         :param xn:
         :param events: events array
@@ -272,10 +272,11 @@ class BlockSolver:
         else:
             return f_algeb
 
-    def jacobian_implicit(self, x: np.ndarray, h: float) -> sp.csc_matrix:
+    def jacobian_implicit(self, x: np.ndarray, events: np.ndarray, h: float) -> sp.csc_matrix:
         """
 
         :param x: vector or variables' values
+        :param events: events array
         :param h: step
         :return:
         """
@@ -290,10 +291,10 @@ class BlockSolver:
         """
 
         I = sp.eye(m=self._n_state, n=self._n_state)
-        j11: sp.csc_matrix = (I - h * self._j11_fn(x)).tocsc()
-        j12: sp.csc_matrix = - h * self._j12_fn(x)
-        j21: sp.csc_matrix = self._j21_fn(x)
-        j22: sp.csc_matrix = self._j22_fn(x)
+        j11: sp.csc_matrix = (I - h * self._j11_fn(x, events)).tocsc()
+        j12: sp.csc_matrix = - h * self._j12_fn(x, events)
+        j21: sp.csc_matrix = self._j21_fn(x, events)
+        j22: sp.csc_matrix = self._j22_fn(x, events)
         J = pack_4_by_4_scipy(j11, j12, j21, j22)
         return J
 
@@ -394,25 +395,25 @@ class BlockSolver:
         steps = int(np.ceil((t_end - t0) / h))
         t = np.empty(steps + 1)
         y = np.empty((steps + 1, self._n_vars))
-        events = np.empty((steps + 1, len(self._events)))
+        events = np.zeros((steps + 1, len(self._events)))
         events[0] = events0
         t[0] = t0
         y[0] = x0.copy()
 
 
         for step_idx in range(steps):
-            events = events[step_idx]
+            events_current = events[step_idx]
             xn = y[step_idx]
             x_new = xn.copy()  # initial guess
             converged = False
             n_iter = 0
             while not converged and n_iter < max_iter:
-                rhs = self.rhs_implicit(x_new, xn, events, step_idx, h)
+                rhs = self.rhs_implicit(x_new, xn, events_current, step_idx, h)
                 converged = np.linalg.norm(rhs, np.inf) < tol
 
                 if converged:
                     break
-                Jf = self.jacobian_implicit(x_new, h)  # sparse matrix
+                Jf = self.jacobian_implicit(x_new,events_current, h)  # sparse matrix
                 delta = sp.linalg.spsolve(Jf, -rhs)
                 x_new += delta
                 n_iter += 1
@@ -420,13 +421,13 @@ class BlockSolver:
             if converged:
 
                 # check events
-                events_next_step = events[step_idx]
                 new_values = self.check_events(step_idx)
                 if new_values:
                     for index, new_value in new_values:
-                        events_next_step[index] = new_value
+                        events[step_idx + 1][index] = new_value
+                else:
+                    events[step_idx + 1] = events_current
 
-                events[step_idx + 1] = events_next_step
                 y[step_idx + 1] = x_new
                 t[step_idx + 1] = t[step_idx] + h
 
