@@ -1159,7 +1159,7 @@ def parse_object_type_from_json(template_elm: ALL_DEV_TYPES,
                                     dyn_module: DynamicModelHost = elm.get_snapshot_value(prop=gc_prop)
                                     dyn_module.parse(
                                         data=property_value,
-                                        models_dict=elements_dict_by_type.get(DeviceType.DynModel, {})
+                                        models_dict=elements_dict_by_type.get(DeviceType.RmsModelTemplateDevice, {})
                                     )
 
                                 elif gc_prop.tpe == SubObjectType.Associations:
