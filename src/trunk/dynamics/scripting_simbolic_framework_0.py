@@ -14,10 +14,13 @@ from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
 import GridCalEngine.api as gce
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Intialization
+# ----------------------------------------------------------------------------------------------------------------------
 grid = gce.MultiCircuit()
+
 bus1 = gce.Bus(name="Bus1", Vnom=10)
 bus2 = gce.Bus(name="Bus2", Vnom=10)
-
 grid.add_bus(bus1)
 grid.add_bus(bus2)
 
@@ -25,22 +28,25 @@ line = gce.Line(name="line 1-2", bus_from=bus1, bus_to=bus2,
                 r=0.029585798816568046, x=0.07100591715976332, b=0.03, rate=100.0)
 grid.add_line(line)
 
-gen = gce.Generator(name="Gen1", P=10, vset=1.0)
+gen = gce.Generator(name="Gen1", P=10, vset=1.0) # PV
 grid.add_generator(bus=bus1, api_obj=gen)
 
-load = gce.Load(name="Load1", P=10, Q=10)
+load = gce.Load(name="Load1", P=10, Q=10)        # PQ
 grid.add_load(bus=bus2, api_obj=load)
-
 
 res = gce.power_flow(grid)
 
-res.voltage  # voltage in p.u.
-res.Sf / grid.Sbase  # from power of the branches
-res.St / grid.Sbase  # to power of the branches
+print(f"Converged: {res.converged}")
+
+vf_0 = res.voltage[0]
+vt_0 = res.voltage[1]
+
+Sf_0 = res.Sf / grid.Sbase
+St_0 = res.St / grid.Sbase
 
 print(res.get_bus_df())
 print(res.get_branch_df())
-print(f"Converged: {res.converged}")
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Line
