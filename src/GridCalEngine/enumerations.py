@@ -870,6 +870,8 @@ class DeviceType(Enum):
 
     RmsModelTemplateDevice = "RMS template"
 
+    EventsGroupDevice = 'Events Group'
+
     def __str__(self) -> str:
         return str(self.value)
 

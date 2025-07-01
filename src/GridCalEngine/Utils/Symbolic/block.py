@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import Tuple, Sequence, List
 
 #from GridCalEngine.Utils.Symbolic.events import EventParam
-from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr, EventParam
+from GridCalEngine.Utils.Symbolic.symbolic import Var, Const, Expr
 
 
 def _new_uid() -> int:

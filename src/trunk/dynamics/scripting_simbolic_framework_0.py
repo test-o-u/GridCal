@@ -3,51 +3,49 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 import math
+import pdb
 
 import numpy as np
 from matplotlib import pyplot as plt
-#from pygments.lexers.dsls import VGLLexer
 
-#from GridCalEngine.Utils.Symbolic.events import EventParam
-from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin, EventParam
+from GridCalEngine.Simulations.Rms.events import Events, Event
+#from pygments.lexers.dsls import VGLLexer
+from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
 import GridCalEngine.api as gce
-
-grid = gce.MultiCircuit()
-bus1 = gce.Bus(name="Bus1", Vnom=10)
-bus2 = gce.Bus(name="Bus2", Vnom=10)
-
-grid.add_bus(bus1)
-grid.add_bus(bus2)
-
-line = gce.Line(name="line 1-2", bus_from=bus1, bus_to=bus2,
-                r=0.029585798816568046, x=0.07100591715976332, b=0.03, rate=100.0)
-grid.add_line(line)
-
-gen = gce.Generator(name="Gen1", P=10, vset=1.0)
-grid.add_generator(bus=bus1, api_obj=gen)
-
-load = gce.Load(name="Load1", P=10, Q=10)
-grid.add_load(bus=bus2, api_obj=load)
-
-
-res = gce.power_flow(grid)
-
-res.voltage  # voltage in p.u.
-res.Sf / grid.Sbase  # from power of the branches
-res.St / grid.Sbase  # to power of the branches
-
-print(res.get_bus_df())
-print(res.get_branch_df())
-print(f"Converged: {res.converged}")
+#
+# grid = gce.MultiCircuit()
+# bus1 = gce.Bus(name="Bus1", Vnom=10)
+# bus2 = gce.Bus(name="Bus2", Vnom=10)
+#
+# grid.add_bus(bus1)
+# grid.add_bus(bus2)
+#
+# line = gce.Line(name="line 1-2", bus_from=bus1, bus_to=bus2,
+#                 r=0.029585798816568046, x=0.07100591715976332, b=0.03, rate=100.0)
+# grid.add_line(line)
+#
+# gen = gce.Generator(name="Gen1", P=10, vset=1.0)
+# grid.add_generator(bus=bus1, api_obj=gen)
+#
+# load = gce.Load(name="Load1", P=10, Q=10)
+# grid.add_load(bus=bus2, api_obj=load)
+#
+#
+# res = gce.power_flow(grid)
+#
+# res.voltage  # voltage in p.u.
+# res.Sf / grid.Sbase  # from power of the branches
+# res.St / grid.Sbase  # to power of the branches
+#
+# print(res.get_bus_df())
+# print(res.get_branch_df())
+# print(f"Converged: {res.converged}")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Line
 # ----------------------------------------------------------------------------------------------------------------------
-g = Const(5)
-b = Const(-12)
-bsh = Const(0.03)
 Qline_from = Var("Qline_from")
 Qline_to = Var("Qline_to")
 Pline_from = Var("Pline_from")
@@ -57,7 +55,50 @@ Vline_to = Var("Vline_to")
 dline_from = Var("dline_from")
 dline_to = Var("dline_to")
 
+g = Const(5)
+b = Const(-12)
+bsh = Const(0.03)
 
+
+
+line_block = Block(
+    algebraic_eqs=[
+        Pline_from - ((Vline_from ** 2 * g) - g * Vline_from * Vline_to * cos(dline_from - dline_to) + b * Vline_from * Vline_to * cos(dline_from - dline_to + np.pi/2)),
+        Qline_from - (Vline_from ** 2 * (-bsh/2 - b) - g * Vline_from * Vline_to * sin(dline_from - dline_to) + b * Vline_from * Vline_to * sin(dline_from - dline_to + np.pi/2)),
+        Pline_to - ((Vline_to ** 2 * g) - g * Vline_to * Vline_from * cos(dline_to - dline_from) + b * Vline_to * Vline_from * cos(dline_to - dline_from + np.pi/2)),
+        Qline_to - (Vline_to ** 2 * (-bsh/2 - b) - g * Vline_to * Vline_from * sin(dline_to - dline_from) + b * Vline_to * Vline_from * sin(dline_to - dline_from + np.pi/2)),
+    ],
+    algebraic_vars=[dline_from, Vline_from, dline_to, Vline_to],
+    parameters=[g, b, bsh],
+    events=[]
+)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Load
+# ----------------------------------------------------------------------------------------------------------------------
+
+Ql = Var("Ql")
+Pl = Var("Pl")
+
+coeff_alfa = Const(1.8)
+Pl0 = Const(0.1,'Pl0')
+Ql0 = Const(0.1)
+#Ql0 = EventParam(0.1, 2, 50, 'Ql0')
+coeff_beta = Const(8.0)
+
+load_block = Block(
+    algebraic_eqs=[
+        Pl - (Pl0),
+        Ql - (Ql0)
+    ],
+    algebraic_vars=[Ql, Pl],
+    parameters=[Pl0, Ql0],
+    events=[]
+)
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Generator
+# ----------------------------------------------------------------------------------------------------------------------
 
 delta = Var("delta")
 omega = Var("omega")
@@ -75,49 +116,12 @@ dg = Var("dg")
 tm = Var("tm")
 et = Var("et")
 
-line_block = Block(
-    algebraic_eqs=[
-        Pline_from - ((Vline_from ** 2 * g) - g * Vline_from * Vline_to * cos(dline_from - dline_to) + b * Vline_from * Vline_to * cos(dline_from - dline_to + np.pi/2)),
-        Qline_from - (Vline_from ** 2 * (-bsh/2 - b) - g * Vline_from * Vline_to * sin(dline_from - dline_to) + b * Vline_from * Vline_to * sin(dline_from - dline_to + np.pi/2)),
-        Pline_to - ((Vline_to ** 2 * g) - g * Vline_to * Vline_from * cos(dline_to - dline_from) + b * Vline_to * Vline_from * cos(dline_to - dline_from + np.pi/2)),
-        Qline_to - (Vline_to ** 2 * (-bsh/2 - b) - g * Vline_to * Vline_from * sin(dline_to - dline_from) + b * Vline_to * Vline_from * sin(dline_to - dline_from + np.pi/2)),
-    ],
-    algebraic_vars=[dline_from, Vline_from, dline_to, Vline_to],
-    parameters=[g, b, bsh],
-    events=[]
-)
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Load
-# ----------------------------------------------------------------------------------------------------------------------
-coeff_alfa = Const(1.8)
-Pl0 = EventParam(0.1, 2, 50, 'Pl0')
-Ql0 = EventParam(0.1, 2, 50, 'Ql0')
-coeff_beta = Const(8.0)
-
-Ql = Var("Ql")
-Pl = Var("Pl")
-
-load_block = Block(
-    algebraic_eqs=[
-        Pl - (Pl0),
-        Ql - (Ql0)
-    ],
-    algebraic_vars=[Ql, Pl],
-    parameters=[],
-    events=[Pl0, Ql0]
-)
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Generator
-# ----------------------------------------------------------------------------------------------------------------------
-# Generator
 pi = Const(math.pi)
 fn =  Const(50)
 # tm = Const(0.1)
 M = Const(1.0)
-D = EventParam(100, 100, 50, 'D')
-#D = Const(100)
+D = Const(100)
 ra = Const(0.3)
 xd = Const(0.86138701)
 vf = Const(1.081099313)
@@ -125,7 +129,6 @@ vf = Const(1.081099313)
 Kp = Const(1.0)
 Ki = Const(10.0)
 Kw = Const(10.0)
-
 
 
 generator_block = Block(
@@ -150,8 +153,8 @@ generator_block = Block(
         (v_q * i_d - v_d * i_q) - Q_g
     ],
     algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
-    parameters=[fn, M, ra, xd, vf, Kp, Ki, Kw],
-    events=[D]
+    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw],
+    events=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -193,7 +196,28 @@ sys = Block(
 # ----------------------------------------------------------------------------------------------------------------------
 slv = BlockSolver(sys)
 
-mapping = {
+
+params_mapping = {
+
+    coeff_alfa: 1.8,
+    Pl0: 0.1,
+    #Ql0: 0.1,
+    coeff_beta: 8.0,
+    g: 5.0,
+    b: -12,
+    bsh: 0.03,
+    pi: math.pi,
+    fn: 50,
+    M: 1.0,
+    D: 100,
+    ra: 0.3,
+    xd: 0.86138701,
+    vf: 1.081099313,
+    Kp: 1.0,
+    Ki: 10.0,
+    Kw: 10.0
+}
+vars_mapping = {
 
     dline_from: 15 * (np.pi / 180),
     dline_to: 10 * (np.pi / 180),
@@ -201,17 +225,12 @@ mapping = {
     Vline_to: 0.95,
     Vg: 1.0,
     dg: 15 * (np.pi / 180),
-
     Pline_from: 0.1,
     Qline_from: 0.2,
     Pline_to: -0.1,
     Qline_to: -0.2,
-
-
     Pl: 0.1,  # P2
     Ql: 0.2,  # Q2
-
-
     delta: 0.5,
     omega: 1.001,
     psid: 3.825,  # d-axis flux linkage (pu)
@@ -225,16 +244,27 @@ mapping = {
     Q_g: 0.1484
 }
 
-x0 = slv.build_init_vector(mapping)
-events = slv.build_init_events_vector(mapping)
-vars_in_order = slv.sort_vars(mapping)
+# ---------------------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------------------
+
+event1 = Event(Pl0, 30, 1.5)
+event2 = Event(Pl0, 50, 2.0)
+
+my_events = Events([event1, event2])
+
+x0 = slv.build_init_vars_vector(vars_mapping)
+params0 = slv.build_init_params_vector(params_mapping)
+#events = slv.build_init_events_vector(vars_mapping)
+vars_in_order = slv.sort_vars(vars_mapping)
 
 t, y = slv.simulate(
     t0=0,
     t_end=0.1,
     h=0.001,
     x0=x0,
-    events=events,
+    params0=params0,
+    events_list = my_events,
     method="implicit_euler"
 )
 
