@@ -3,7 +3,6 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 
-
 from __future__ import annotations
 
 from typing import Tuple
@@ -57,7 +56,7 @@ def _compile_equations(eqs: Sequence[Expr],
 def _get_jacobian(eqs: List[Expr],
                   variables: List[Var],
                   uid2sym_vars: Dict[int, str],
-                  uid2sym_events: Dict[int, str],):
+                  uid2sym_events: Dict[int, str], ):
     """
     JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
     :param eqs: Array of equations
@@ -89,7 +88,8 @@ def _get_jacobian(eqs: List[Expr],
             if isinstance(d_expression, Const) and d_expression.value == 0:
                 continue  # structural zero
 
-            function_ptr = _compile_equations(eqs=[d_expression], uid2sym_vars=uid2sym_vars, uid2sym_events=uid2sym_events)
+            function_ptr = _compile_equations(eqs=[d_expression], uid2sym_vars=uid2sym_vars,
+                                              uid2sym_events=uid2sym_events)
 
             fn = fn_cache.setdefault(d_expression.uid, function_ptr)
 
@@ -156,7 +156,7 @@ class BlockSolver:
         uid2sym_events: Dict[int, str] = dict()
         uid2sym_params: Dict[int, str] = dict()
         self.uid2idx_vars: Dict[int, int] = dict()
-        self.uid2idx_events:Dict[int, int] = dict()
+        self.uid2idx_events: Dict[int, int] = dict()
         self.uid2idx_params: Dict[int, int] = dict()
         i = 0
         for v in self._state_vars:
@@ -189,13 +189,19 @@ class BlockSolver:
                  |           |           |    |            |    |            |
         """
         print("Compiling...", end="")
-        self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
-        self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._rhs_state_fn = _compile_equations(eqs=self._state_eqs, uid2sym_vars=uid2sym_vars,
+                                                uid2sym_events=uid2sym_events)
+        self._rhs_algeb_fn = _compile_equations(eqs=self._algebraic_eqs, uid2sym_vars=uid2sym_vars,
+                                                uid2sym_events=uid2sym_events)
 
-        self._j11_fn = _get_jacobian(eqs=self._state_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
-        self._j12_fn = _get_jacobian(eqs=self._state_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
-        self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
-        self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,uid2sym_events=uid2sym_events)
+        self._j11_fn = _get_jacobian(eqs=self._state_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,
+                                     uid2sym_events=uid2sym_events)
+        self._j12_fn = _get_jacobian(eqs=self._state_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,
+                                     uid2sym_events=uid2sym_events)
+        self._j21_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._state_vars, uid2sym_vars=uid2sym_vars,
+                                     uid2sym_events=uid2sym_events)
+        self._j22_fn = _get_jacobian(eqs=self._algebraic_eqs, variables=self._algebraic_vars, uid2sym_vars=uid2sym_vars,
+                                     uid2sym_events=uid2sym_events)
 
         print("done!")
 
@@ -242,7 +248,6 @@ class BlockSolver:
             x[i] = event.value
 
         return x
-
 
     def rhs_fixed(self, x: np.ndarray) -> np.ndarray:
         """
@@ -407,7 +412,6 @@ class BlockSolver:
         t[0] = t0
         y[0] = x0.copy()
 
-
         for step_idx in range(steps):
             events_current = events[step_idx]
             xn = y[step_idx]
@@ -420,7 +424,7 @@ class BlockSolver:
 
                 if converged:
                     break
-                Jf = self.jacobian_implicit(x_new,events_current, h)  # sparse matrix
+                Jf = self.jacobian_implicit(x_new, events_current, h)  # sparse matrix
                 delta = sp.linalg.spsolve(Jf, -rhs)
                 x_new += delta
                 n_iter += 1

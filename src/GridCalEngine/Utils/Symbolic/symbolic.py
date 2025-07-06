@@ -6,15 +6,16 @@
 from __future__ import annotations
 import json
 import math
-import pdb
 import uuid
 import numpy as np
+from enum import Enum, auto
 from scipy.sparse import csc_matrix
 import numba as nb
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple, Set
-#from GridCalEngine.Utils.Symbolic.events import EventParam
+
+# from GridCalEngine.Utils.Symbolic.events import EventParam
 
 NUMBER = Union[int, float]
 NAME = 'name'
@@ -48,12 +49,14 @@ def _var_name(sym: Var | str) -> str:
 def _var_uid(sym: Var | str) -> str:
     return sym.uid if isinstance(sym, Var) else sym
 
+
 # ----------------------------------------------------------------------------
 # Function helpers
 # ----------------------------------------------------------------------------
 
 def _stepwise(x: NUMBER) -> NUMBER:
     return 1 if x >= 0 else 0
+
 
 def _heaviside(x: NUMBER) -> NUMBER:
     if x > 0:
@@ -64,10 +67,20 @@ def _heaviside(x: NUMBER) -> NUMBER:
         return 0.5
 
 
+class CmpOp(Enum):
+    LE = "≤"  # ≤
+    GE = "≥"  # ≥
+    LT = "<"
+    GT = ">"
+    EQ = "="  # =
 
-# -----------------------------------------------------------------------------
-# Base class
-# -----------------------------------------------------------------------------
+
+@dataclass(frozen=True, slots=True)
+class Comparison:
+    lhs: "Expr"
+    op: CmpOp  # "<=", ">=", "=="
+    rhs: Union["Expr", NUMBER]
+
 
 class Expr:
     """
@@ -170,6 +183,31 @@ class Expr:
     def __neg__(self) -> "Expr":
         return UnOp("-", self)
 
+    def __le__(self, other: "Expr" | NUMBER) -> Comparison:
+        return Comparison(self, CmpOp.LE, other)
+
+    def __ge__(self, other: "Expr" | NUMBER) -> Comparison:
+        return Comparison(self, CmpOp.GE, other)
+
+    def __eq__(self, other: "Expr" | NUMBER) -> Comparison:  # type: ignore[override]
+        return Comparison(self, CmpOp.EQ, other)
+
+    def __lt__(self, other: "Expr" | NUMBER) -> Comparison:
+        return Comparison(self, CmpOp.LT, other)
+
+    def __gt__(self, other: "Expr" | NUMBER) -> Comparison:
+        return Comparison(self, CmpOp.GT, other)
+
+    # reversed versions so 0 <= expr works
+    # def __rle__(self, other: "Expr" | NUMBER) -> Comparison:
+    #     return Comparison(other, CmpOp.LE, self)
+    #
+    # def __rge__(self, other: "Expr" | NUMBER) -> Comparison:
+    #     return Comparison(other, CmpOp.GE, self)
+    #
+    # def __req__(self, other: "Expr" | NUMBER) -> Comparison:
+    #     return Comparison(other, CmpOp.EQ, self)
+
     def __str__(self) -> str:  # pragma: no cover – abstract
         """
         Display helper
@@ -248,7 +286,7 @@ class EventParam(Expr):
     def eval_uid(self, uid_bindings: Dict[str, NUMBER]) -> NUMBER:
         return self.value
 
-    def _diff1(self, Var: Var | str):
+    def _diff1(self, var: Var | str):
         return Const(0)
 
     def subs(self, mapping: Dict[Any, Expr]) -> Expr:
@@ -264,8 +302,8 @@ class EventParam(Expr):
     def __repr__(self) -> str:
         return self.name
 
-    def __eq__(self, other: "Var"):
-        return self.uid == other.uid
+    # def __eq__(self, other: "Var"):
+    #     return self.uid == other.uid
 
 
 @dataclass(frozen=True)
@@ -301,11 +339,13 @@ class Var(Expr):
     def __str__(self) -> str:
         return self.name
 
-    def __repr__(self)-> str:
+    def __repr__(self) -> str:
         return self.name
 
-    def __eq__(self, other: "Var"):
-        return self.uid == other.uid
+    # def __eq__(self, other: "Var"):
+    #     return self.uid == other.uid
+    def __eq__(self, other: "Expr" | NUMBER) -> Comparison:  # type: ignore[override]
+        return Comparison(self, CmpOp.EQ, other)
 
 
 @dataclass(frozen=True)
@@ -908,7 +948,7 @@ def get_jacobian(equations: List[Expr], variables: List[Var], params: List[Var] 
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "Expr", "Const", "Var", "BinOp", "UnOp", "Func",
+    "Expr", "Const", "Var", "BinOp", "UnOp", "Func", "CmpOp", "Comparison",
     "sin", "cos", "tan", "exp", "log", "sqrt",
     "asin", "acos", "atan", "sinh", "cosh",
     "diff", "eval_uid",
