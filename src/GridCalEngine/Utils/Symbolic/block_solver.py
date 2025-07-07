@@ -35,7 +35,8 @@ def _compile_equations(eqs: Sequence[Expr],
     """
     Compile the array of expressions to a function that returns an array of values for those expressions
     :param eqs: Iterable of expressions (Expr)
-    :param uid2sym: dictionary relating the uid of a var with its array name (i.e. var[0])
+    :param uid2sym_vars: dictionary relating the uid of a var with its array name (i.e. var[0])
+    :param uid2sym_events: TODO: What is this?
     :param add_doc_string: add the docstring?
     :return: Function pointer that returns an array
     """

@@ -8,7 +8,7 @@ import json
 import math
 import uuid
 import numpy as np
-from enum import Enum, auto
+from enum import Enum
 from scipy.sparse import csc_matrix
 import numba as nb
 from dataclasses import dataclass, field
@@ -751,7 +751,8 @@ def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_events: Dict[int, st
     """
     Emit a pure-Python (Numba-friendly) expression string
     :param expr: Expr (expression)
-    :param uid_map:
+    :param uid_map_vars:
+    :param uid_map_events:
     :return:
     """
     if isinstance(expr, Const):
@@ -814,10 +815,12 @@ def _compile(expressions: Sequence[Expr],
             for i, v in enumerate(params):
                 uid2sym[v.uid] = f"param[{i + n_sorting_vars}]"
 
+    uid_map_events = dict()
+
     # Build source
     src = f"def _f(args, params):\n"
     src += f"    out = np.zeros({len(expressions)})\n"
-    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym)}" for i, e in enumerate(expressions)]) + "\n"
+    src += "\n".join([f"    out[{i}] = {_emit(e, uid2sym, uid_map_events)}" for i, e in enumerate(expressions)]) + "\n"
     src += f"    return out"
     ns: Dict[str, Any] = {"math": math}
     exec(src, ns)
@@ -831,119 +834,6 @@ def _compile(expressions: Sequence[Expr],
 
 
 # -----------------------------------------------------------------------------
-# Public – single expression
-# -----------------------------------------------------------------------------
-
-def compile_numba_function(expr: Expr,
-                           sorting_vars: Sequence[Var | str] | None = None) -> Callable[[Any], Sequence[float]]:
-    """
-    Return a Numba‑JIT scalar function for *expr*.
-    The function signature is positional floats; argument order is given by
-    `vars_order(expr, ordering)`.
-    :param expr:
-    :param sorting_vars:
-    :return:
-    """
-    expanded_sorting_vars = find_vars_order(expr, sorting_vars)
-    return _compile(expressions=[expr], sorting_vars=expanded_sorting_vars, params=[], uid2sym=None)
-
-
-# -----------------------------------------------------------------------------
-# Public – system of expressions
-# -----------------------------------------------------------------------------
-
-def compile_numba_functions(expressions: Sequence[Expr],
-                            sorting_vars: Sequence[Var | str] | None = None,
-                            params: Sequence[Var] | None = None) -> Callable[[Any], Sequence[float]]:
-    """
-    Return a Numba‑JIT function computing all *exprs* at once.
-
-    The positional argument order is the same as `vars_order(exprs, ordering)`.
-    The function returns a tuple of floats (one per expression).
-    :param expressions: Iterable of expressions (Expr)
-    :param sorting_vars: list of variables indicating the sorting order of the call
-    :return: List of function pointers
-    """
-    extended_sorting_vars = find_vars_order(expressions=expressions, ordering=sorting_vars)
-    return _compile(expressions=list(expressions),
-                    sorting_vars=extended_sorting_vars,
-                    params=params,
-                    uid2sym=None)
-
-
-def get_jacobian(equations: List[Expr], variables: List[Var], params: List[Var] | None = None):
-    """
-    JIT‑compile a sparse Jacobian evaluator for *equations* w.r.t *variables*.
-    :param equations: Array of equations
-    :param variables: Array of variables to differentiate against
-    :param params: Array of other variables required (i.e. parameters) (optional)
-    :return:
-            jac_fn : callable(values: np.ndarray) -> scipy.sparse.csc_matrix
-                Fast evaluator in which *values* is a 1‑D NumPy vector of length
-                ``len(variables)``.
-            sparsity_pattern : tuple(np.ndarray, np.ndarray)
-                Row/col indices of structurally non‑zero entries.
-    """
-
-    if params is None:
-        params = list()
-
-    # Ensure deterministic variable order
-    check_set = set()
-    for v in variables:
-        if v in check_set:
-            raise ValueError(f"Repeated var {v.name} in the variables' list :(")
-        else:
-            check_set.add(v)
-
-    uid2sym: Dict[int, str] = {v.uid: f"v{i}" for i, v in enumerate(variables + params)}
-
-    # Cache compiled partials by UID so duplicates are reused
-    fn_cache: Dict[str, Callable] = {}
-    triplets: List[Tuple[int, int, Callable]] = []  # (col, row, fn)
-
-    for row, eq in enumerate(equations):
-        for col, var in enumerate(variables):
-            d_expression = eq.diff(var).simplify()
-            if isinstance(d_expression, Const) and d_expression.value == 0:
-                continue  # structural zero
-
-            expanded_sorting_vars = find_vars_order(expressions=d_expression,
-                                                    ordering=variables + params)
-
-            function_ptr = _compile(expressions=[d_expression],
-                                    sorting_vars=expanded_sorting_vars,
-                                    params=params,
-                                    uid2sym=uid2sym)
-
-            fn = fn_cache.setdefault(d_expression.uid, function_ptr)
-
-            triplets.append((col, row, fn))
-
-    # Sort by column, then row for CSC layout
-    triplets.sort(key=lambda t: (t[0], t[1]))
-    cols_sorted, rows_sorted, fns_sorted = zip(*triplets) if triplets else ([], [], [])
-
-    nnz = len(fns_sorted)
-    indices = np.fromiter(rows_sorted, dtype=np.int32, count=nnz)
-    data = np.empty(nnz, dtype=np.float64)
-
-    indptr = np.zeros(len(variables) + 1, dtype=np.int32)
-    for c in cols_sorted:
-        indptr[c + 1] += 1
-    np.cumsum(indptr, out=indptr)
-
-    def jac_fn(values: np.ndarray) -> csc_matrix:  # noqa: D401 – simple
-        assert len(values) == len(variables) + len(params)
-        vals = [float(v) for v in values]
-        for k, fn in enumerate(fns_sorted):
-            data[k] = fn(*vals)
-        return csc_matrix((data, indices, indptr), shape=(len(equations), len(variables)))
-
-    return jac_fn, (indices, np.fromiter(cols_sorted, dtype=np.int32, count=nnz))
-
-
-# -----------------------------------------------------------------------------
 # Public interface
 # -----------------------------------------------------------------------------
 
@@ -952,10 +842,7 @@ __all__ = [
     "sin", "cos", "tan", "exp", "log", "sqrt",
     "asin", "acos", "atan", "sinh", "cosh",
     "diff", "eval_uid",
-    "compile_numba_function",
     "find_vars_order",
-    "compile_numba_functions",
-    "get_jacobian",
     "stepwise",
     "heaviside"
 ]

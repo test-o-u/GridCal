@@ -34,9 +34,9 @@ grid.add_load(bus=bus2, api_obj=load)
 
 res = gce.power_flow(grid)
 
-res.voltage  # voltage in p.u.
-res.Sf / grid.Sbase  # from power of the branches
-res.St / grid.Sbase  # to power of the branches
+# res.voltage  # voltage in p.u.
+# res.Sf / grid.Sbase  # from power of the branches
+# res.St / grid.Sbase  # to power of the branches
 
 print(res.get_bus_df())
 print(res.get_branch_df())
@@ -100,8 +100,8 @@ Pl = Var("Pl")
 
 load_block = Block(
     algebraic_eqs=[
-        Pl - (Pl0),
-        Ql - (Ql0)
+        Pl - Pl0,
+        Ql - Ql0
     ],
     algebraic_vars=[Ql, Pl],
     parameters=[],
