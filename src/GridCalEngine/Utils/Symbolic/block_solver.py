@@ -311,7 +311,7 @@ class BlockSolver:
 
     def build_params_matrix(self, n_steps: int, params0: np.ndarray, events_list: Events) -> np.ndarray:
         params_matrix = np.empty((n_steps, len(params0)))
-        events_dict = events_list.build_events_dict()
+        events_dict = events_list.fill_events_dict()
         params_matrix_current = params0
         for i in range(n_steps):
             if i in events_dict.keys():

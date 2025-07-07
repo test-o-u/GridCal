@@ -30,36 +30,17 @@ class Event:
         return self._time_step
 
 
-class ConstEvent(Event):
-    def __init__(self, prop: Const | None = None, time_step: int = 0.0, value=0.0):
-        """
-
-        :param constant:
-        :param idtag:
-        :param name:
-        :param code:
-        :param time_step:
-        :param value:
-        """
-
-        super().__init__(prop, time_step, value)
-        self._time_step: int = time_step
-        self._prop: Const = prop
-        self._value = value
 
 class Events:
     def __init__(self, events: List[Event]):
-        self.events_dict = None
-        self.events = events
+        self._events_dict = None
+        self._events = events
         
 
-    def build_events_dict(self):
-        self.events_dict: Dict[int, list[Any]] = {}
-        for event in self.events:
-            self.events_dict[event.time_step] = list([event.prop, event.value])
-            #events_dict[event.time_step] = list([event.prop, event.value])
-        return self.events_dict
-    #def get_events_dict(self) -> Dict[int, list[Any]]:
-        # return self._events_dict
+    def fill_events_dict(self)-> Dict[int, list[Any]]:
+        self._events_dict: Dict[int, list[Any]] = {}
+        for event in self._events:
+            self._events_dict[event.time_step] = list([event.prop, event.value])
+        return self._events_dict
 
 
