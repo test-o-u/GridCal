@@ -13,6 +13,7 @@ import numba as nb
 import math
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
+from scipy.sparse import csr_matrix
 from typing import Dict, List, Literal, Any, Callable, Sequence
 
 from GridCalEngine.Utils.Symbolic.events import Events, Event
@@ -309,8 +310,8 @@ class BlockSolver:
         """
         return self._algebraic_eqs, self._state_eqs
 
-    def build_params_matrix(self, n_steps: int, params0: np.ndarray, events_list: Events) -> np.ndarray:
-        params_matrix = np.empty((n_steps, len(params0)))
+    def build_params_matrix(self, n_steps: int, params0: np.ndarray, events_list: Events) -> csr_matrix:
+        diff_params_matrix = np.zeros((n_steps, len(params0)))
         events_dict = events_list.fill_events_dict()
         params_matrix_current = params0
         for i in range(n_steps):
@@ -318,10 +319,12 @@ class BlockSolver:
                 event = events_dict[i]
                 prop = event[0]
                 idx = self.uid2idx_params[prop.uid]
-                new_value = event[1]
-                params_matrix_current[idx] = new_value
-            params_matrix[i] = params_matrix_current
-        return params_matrix
+                diff_val = event[1] - params_matrix_current[idx]
+                diff_params_matrix[i][idx] += diff_val
+                params_matrix_current[idx] = event[1]
+        # make params matrix sparse
+        params_matrix_sp = csr_matrix(diff_params_matrix)
+        return params_matrix_sp
 
     def simulate(
             self,
@@ -354,7 +357,7 @@ class BlockSolver:
             return self._simulate_fixed(t0, t_end, h, x0, stepper="rk4")
         if method == "implicit_euler":
             return self._simulate_implicit_euler(
-                t0, t_end, h, x0, params_matrix,
+                t0, t_end, h, x0, params0, params_matrix,
                 tol=newton_tol, max_iter=newton_max_iter,
             )
         raise ValueError(f"Unknown method '{method}'")
@@ -392,7 +395,7 @@ class BlockSolver:
             t[i + 1] = tn + h
         return t, y
 
-    def _simulate_implicit_euler(self, t0, t_end, h, x0, params_matrix, tol=1e-8, max_iter=1000):
+    def _simulate_implicit_euler(self, t0, t_end, h, x0, params0: np.ndarray, diff_params_matrix, tol=1e-8, max_iter=1000):
         """
         :param t0:
         :param t_end:
@@ -406,13 +409,13 @@ class BlockSolver:
         steps = int(np.ceil((t_end - t0) / h))
         t = np.empty(steps + 1)
         y = np.empty((steps + 1, self._n_vars))
-        params_matrix = params_matrix
+        params_current = params0
+        diff_params_matrix = diff_params_matrix
         t[0] = t0
         y[0] = x0.copy()
 
-
         for step_idx in range(steps):
-            params_current = params_matrix[step_idx]
+            params_current += diff_params_matrix[step_idx, :].toarray().ravel()
             xn = y[step_idx]
             x_new = xn.copy()  # initial guess
             converged = False

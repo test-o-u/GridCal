@@ -28,12 +28,9 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="events as variables 1">
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="events as variables 2">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block_solver.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/events.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/events.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -2402,7 +2399,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="717" />
+    <option name="localTasksCounter" value="718" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2448,7 +2445,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="implemented fast admittance in the generalized formulation" />
     <MESSAGE value="Implemented csc comparison" />
     <MESSAGE value="Implemented fast admittance matrix update" />
     <MESSAGE value="Fixed fast update, removed prints from nr_fx" />
@@ -2473,7 +2469,8 @@
     <MESSAGE value="Fixed imports" />
     <MESSAGE value="no events in symbolic library" />
     <MESSAGE value="events as variables 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="events as variables 1" />
+    <MESSAGE value="events as variables 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="events as variables 2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
