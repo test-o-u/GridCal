@@ -653,7 +653,7 @@ def _all_vars(expressions: Sequence[Expr]) -> List[Var]:
     return list(res)
 
 
-def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_events: Dict[int, str]) -> str:
+def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_params: Dict[int, str]) -> str:
     """
     Emit a pure-Python (Numba-friendly) expression string
     :param expr: Expr (expression)
@@ -661,17 +661,15 @@ def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_events: Dict[int, st
     :return:
     """
     if isinstance(expr, Const):
-        return repr(expr.value)
-    if isinstance(expr, EventParam):
-        return uid_map_events[expr.uid]
+        return uid_map_params[expr.uid]
     if isinstance(expr, Var):
         return uid_map_vars[expr.uid]  # positional variable
     if isinstance(expr, UnOp):
-        return f"-({_emit(expr.operand, uid_map_vars, uid_map_events)})"
+        return f"-({_emit(expr.operand, uid_map_vars, uid_map_params)})"
     if isinstance(expr, BinOp):
-        return f"({_emit(expr.left, uid_map_vars, uid_map_events)} {expr.op} {_emit(expr.right, uid_map_vars, uid_map_events)})"
+        return f"({_emit(expr.left, uid_map_vars, uid_map_params)} {expr.op} {_emit(expr.right, uid_map_vars, uid_map_params)})"
     if isinstance(expr, Func):
-        return f"math.{expr.name}({_emit(expr.arg, uid_map_vars, uid_map_events)})"
+        return f"math.{expr.name}({_emit(expr.arg, uid_map_vars, uid_map_params)})"
     raise TypeError(type(expr))
 
 

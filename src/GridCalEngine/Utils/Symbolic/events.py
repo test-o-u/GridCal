@@ -49,16 +49,17 @@ class ConstEvent(Event):
 
 class Events:
     def __init__(self, events: List[Event]):
-        self._events = events
-        self._events_dict: Dict[int, list[Any]] = {}
-        self.build_events_dict()
+        self.events_dict = None
+        self.events = events
+        
 
     def build_events_dict(self):
-        for event in self._events:
-            events_dict = self.get_events_dict()
-            events_dict[event.time_step] = list([event.prop, event.value])
-
-    def get_events_dict(self) -> Dict[int, list[Any]]:
-        return self._events_dict
+        self.events_dict: Dict[int, list[Any]] = {}
+        for event in self.events:
+            self.events_dict[event.time_step] = list([event.prop, event.value])
+            #events_dict[event.time_step] = list([event.prop, event.value])
+        return self.events_dict
+    #def get_events_dict(self) -> Dict[int, list[Any]]:
+        # return self._events_dict
 
 

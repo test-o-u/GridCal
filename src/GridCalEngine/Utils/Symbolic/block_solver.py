@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import pdb
 from typing import Tuple
 import numpy as np
 import numba as nb
@@ -14,7 +15,7 @@ import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
 from typing import Dict, List, Literal, Any, Callable, Sequence
 
-from GridCalEngine.Simulations.Rms.events import Events
+from GridCalEngine.Utils.Symbolic.events import Events, Event
 from GridCalEngine.Utils.Symbolic.symbolic import Var, Expr, Const, _emit
 from GridCalEngine.Utils.Symbolic.block import Block
 from GridCalEngine.Utils.Sparse.csc import pack_4_by_4_scipy
@@ -153,10 +154,8 @@ class BlockSolver:
         # going to be represented by an array called vars[]
 
         uid2sym_vars: Dict[int, str] = dict()
-        uid2sym_events: Dict[int, str] = dict()
         uid2sym_params: Dict[int, str] = dict()
         self.uid2idx_vars: Dict[int, int] = dict()
-        self.uid2idx_events:Dict[int, int] = dict()
         self.uid2idx_params: Dict[int, int] = dict()
         i = 0
         for v in self._state_vars:
@@ -315,7 +314,7 @@ class BlockSolver:
         events_dict = events_list.build_events_dict()
         params_matrix_current = params0
         for i in range(n_steps):
-            if i in events_dict.keys:
+            if i in events_dict.keys():
                 event = events_dict[i]
                 prop = event[0]
                 idx = self.uid2idx_params[prop.uid]

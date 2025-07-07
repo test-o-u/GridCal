@@ -8,7 +8,7 @@ import pdb
 import numpy as np
 from matplotlib import pyplot as plt
 
-from GridCalEngine.Simulations.Rms.events import Events, Event
+from GridCalEngine.Utils.Symbolic.events import Events, Event
 #from pygments.lexers.dsls import VGLLexer
 from GridCalEngine.Utils.Symbolic.symbolic import Const, Var, cos, sin
 from GridCalEngine.Utils.Symbolic.block import Block
@@ -55,9 +55,9 @@ Vline_to = Var("Vline_to")
 dline_from = Var("dline_from")
 dline_to = Var("dline_to")
 
-g = Const(5)
-b = Const(-12)
-bsh = Const(0.03)
+g = Const(5,'g')
+b = Const(-12,'b')
+bsh = Const(0.03,'bsh')
 
 
 
@@ -80,11 +80,10 @@ line_block = Block(
 Ql = Var("Ql")
 Pl = Var("Pl")
 
-coeff_alfa = Const(1.8)
+coeff_alfa = Const(1.8,'coeff_alfa')
 Pl0 = Const(0.1,'Pl0')
-Ql0 = Const(0.1)
-#Ql0 = EventParam(0.1, 2, 50, 'Ql0')
-coeff_beta = Const(8.0)
+Ql0 = Const(0.1,'Ql0')
+coeff_beta = Const(8.0,'coeff_beta')
 
 load_block = Block(
     algebraic_eqs=[
@@ -92,7 +91,7 @@ load_block = Block(
         Ql - (Ql0)
     ],
     algebraic_vars=[Ql, Pl],
-    parameters=[Pl0, Ql0],
+    parameters=[Pl0, Ql0, coeff_alfa, coeff_beta],
     events=[]
 )
 
@@ -117,18 +116,18 @@ tm = Var("tm")
 et = Var("et")
 
 
-pi = Const(math.pi)
-fn =  Const(50)
+pi = Const(math.pi,'pi')
+fn =  Const(50,'fn')
 # tm = Const(0.1)
-M = Const(1.0)
-D = Const(100)
-ra = Const(0.3)
-xd = Const(0.86138701)
-vf = Const(1.081099313)
+M = Const(1.0,'M')
+D = Const(100,'D')
+ra = Const(0.3,'ra')
+xd = Const(0.86138701,'xd')
+vf = Const(1.081099313,'vf')
 
-Kp = Const(1.0)
-Ki = Const(10.0)
-Kw = Const(10.0)
+Kp = Const(1.0,'Kp')
+Ki = Const(10.0,'Ki')
+Kw = Const(10.0,'Kw')
 
 
 generator_block = Block(
@@ -153,7 +152,7 @@ generator_block = Block(
         (v_q * i_d - v_d * i_q) - Q_g
     ],
     algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
-    parameters=[fn, M, D, ra, xd, vf, Kp, Ki, Kw],
+    parameters=[pi, fn, M, D, ra, xd, vf, Kp, Ki, Kw],
     events=[]
 )
 
@@ -201,7 +200,7 @@ params_mapping = {
 
     coeff_alfa: 1.8,
     Pl0: 0.1,
-    #Ql0: 0.1,
+    Ql0: 0.1,
     coeff_beta: 8.0,
     g: 5.0,
     b: -12,
