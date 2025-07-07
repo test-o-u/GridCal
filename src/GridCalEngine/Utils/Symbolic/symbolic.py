@@ -189,8 +189,7 @@ class Const(Expr):
     """
     Constant expression (i.e a number)
     """
-    value: NUMBER
-    name: str = 'name'
+    value: float
     uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
@@ -661,6 +660,7 @@ def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_params: Dict[int, st
     :return:
     """
     if isinstance(expr, Const):
+        pdb.set_trace()
         return uid_map_params[expr.uid]
     if isinstance(expr, Var):
         return uid_map_vars[expr.uid]  # positional variable
