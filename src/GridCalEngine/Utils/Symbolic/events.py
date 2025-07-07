@@ -4,7 +4,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from __future__ import annotations
+
+import pdb
 from typing import List, Any, Dict
+
+import numpy as np
+
 from GridCalEngine.Utils.Symbolic.symbolic import Const
 
 
@@ -33,14 +38,24 @@ class Event:
 
 class Events:
     def __init__(self, events: List[Event]):
-        self._events_dict = None
         self._events = events
-        
+        self._n_events = len(events)
 
-    def fill_events_dict(self)-> Dict[int, list[Any]]:
-        self._events_dict: Dict[int, list[Any]] = {}
-        for event in self._events:
-            self._events_dict[event.time_step] = list([event.prop, event.value])
-        return self._events_dict
+    def sort_by_time_step(self):
+        self._events.sort(key=lambda e: e.time_step)
+
+    def build_triplets_list(self):
+        rows = np.ndarray(self._n_events)
+        cols = np.ndarray(self._n_events, dtype=object)
+        values = np.ndarray(self._n_events)
+        for i, event in enumerate(self._events):
+            rows[i] = event.time_step
+            cols[i] = event.prop
+            values[i] = event.value
+
+        return rows, cols, values
 
 
+    @property
+    def events(self):
+        return self._events

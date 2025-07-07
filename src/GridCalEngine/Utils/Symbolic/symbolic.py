@@ -14,7 +14,7 @@ import numba as nb
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, Callable, ClassVar, Dict, Mapping, Union, List, Sequence, Tuple, Set
-#from GridCalEngine.Utils.Symbolic.events import EventParam
+from collections import defaultdict, deque
 
 NUMBER = Union[int, float]
 NAME = 'name'
@@ -859,3 +859,70 @@ __all__ = [
     "stepwise",
     "heaviside"
 ]
+
+# ----------------------------------------------------------------------------
+# Equations sequence
+# ----------------------------------------------------------------------------
+def guess_solved_var(expr: Expr, vars_to_solve: List[Var]) -> Var:
+    """
+    Heuristically guess which variable is being solved for in the expression.
+    """
+    vars_in_expr = _all_vars([expr])
+    candidates = [v for v in vars_in_expr if v in vars_to_solve]
+
+    if len(candidates) == 1:
+        return candidates[0]
+
+    for v in reversed(vars_to_solve):
+        if v in candidates:
+            return v
+
+    raise ValueError(f"Cannot determine solved variable in: {expr}")
+
+
+def reorder_equations(equations: List[Expr], vars_to_solve: List[Var]) -> List[Expr]:
+    """
+    Reorders a system of equations so that each one can be solved sequentially.
+    Returns a list of equations ordered for sequential solving.
+    """
+    var_to_eq: Dict[Var, Expr] = {}
+    eq_deps: Dict[Expr, Set[Var]] = {}
+    eq_solves: Dict[Expr, Var] = {}
+
+    for eq in equations:
+        solved_var = guess_solved_var(eq, vars_to_solve)
+        deps = set(_all_vars([eq]))
+        deps.discard(solved_var)
+
+        var_to_eq[solved_var] = eq
+        eq_deps[eq] = deps
+        eq_solves[eq] = solved_var
+
+    # Build dependency graph
+    graph = defaultdict(list)
+    indegree = {eq: 0 for eq in equations}
+
+    for eq1 in equations:
+        for eq2 in equations:
+            if eq1 == eq2:
+                continue
+            if eq_solves[eq1] in eq_deps[eq2]:
+                graph[eq1].append(eq2)
+                indegree[eq2] += 1
+
+    # Topological sort
+    queue = deque([eq for eq in equations if indegree[eq] == 0])
+    ordered = []
+
+    while queue:
+        eq = queue.popleft()
+        ordered.append(eq)
+        for neighbor in graph[eq]:
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(ordered) != len(equations):
+        raise RuntimeError("Cycle detected in equations — system not explicitly solvable.")
+
+    return ordered

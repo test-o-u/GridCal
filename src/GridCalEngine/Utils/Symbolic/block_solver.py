@@ -13,7 +13,7 @@ import numba as nb
 import math
 import scipy.sparse as sp
 from scipy.sparse.linalg import spsolve
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, coo_matrix
 from typing import Dict, List, Literal, Any, Callable, Sequence
 
 from GridCalEngine.Utils.Symbolic.events import Events, Event
@@ -310,21 +310,30 @@ class BlockSolver:
         """
         return self._algebraic_eqs, self._state_eqs
 
+
     def build_params_matrix(self, n_steps: int, params0: np.ndarray, events_list: Events) -> csr_matrix:
+        events_matrix = np.zeros((n_steps, len(params0)))
         diff_params_matrix = np.zeros((n_steps, len(params0)))
-        events_dict = events_list.fill_events_dict()
         params_matrix_current = params0
-        for i in range(n_steps):
-            if i in events_dict.keys():
-                event = events_dict[i]
-                prop = event[0]
-                idx = self.uid2idx_params[prop.uid]
-                diff_val = event[1] - params_matrix_current[idx]
-                diff_params_matrix[i][idx] += diff_val
-                params_matrix_current[idx] = event[1]
+
+        # get events info
+        rows, cols, values = events_list.build_triplets_list()
+
+        # build diff sparse matrix
+        for i, row in enumerate(events_matrix):
+            if i in rows:
+                positions = np.where(rows == i)
+                for position in positions:
+                    time_step = i
+                    prop_idx = self.uid2idx_params[cols[position][0].uid]
+                    value = values[position]
+                    diff_val = value - params_matrix_current[prop_idx]
+                    diff_params_matrix[time_step][prop_idx] += diff_val
+                    params_matrix_current[prop_idx] = value
+
         # make params matrix sparse
-        params_matrix_sp = csr_matrix(diff_params_matrix)
-        return params_matrix_sp
+        diff_params_matrix_spa = csr_matrix(diff_params_matrix)
+        return diff_params_matrix_spa
 
     def simulate(
             self,
