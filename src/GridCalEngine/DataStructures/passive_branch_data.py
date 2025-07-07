@@ -48,6 +48,15 @@ class PassiveBranchData(BranchParentData):
         self.virtual_tap_t: Vec = np.ones(self.nelm, dtype=float)
         self.virtual_tap_f: Vec = np.ones(self.nelm, dtype=float)
 
+        self.Yff3 = np.zeros((self.nelm * 3, 3), dtype=complex)
+        self.Yft3 = np.zeros((self.nelm * 3, 3), dtype=complex)
+        self.Ytf3 = np.zeros((self.nelm * 3, 3), dtype=complex)
+        self.Ytt3 = np.zeros((self.nelm * 3, 3), dtype=complex)
+
+        self.phA: IntVec = np.zeros(self.nelm, dtype=int)
+        self.phB: IntVec = np.zeros(self.nelm, dtype=int)
+        self.phC: IntVec = np.zeros(self.nelm, dtype=int)
+
     def size(self) -> int:
         """
         Get size of the structure
@@ -93,6 +102,17 @@ class PassiveBranchData(BranchParentData):
         data.virtual_tap_f = self.virtual_tap_f[elm_idx]
         data.virtual_tap_t = self.virtual_tap_t[elm_idx]
 
+        elm_idx_3 = ((elm_idx * 3)[:, np.newaxis] + np.arange(3)).flatten()
+        
+        data.Yff3 = self.Yff3[elm_idx_3, :]
+        data.Yft3 = self.Yft3[elm_idx_3, :]
+        data.Ytt3 = self.Ytt3[elm_idx_3, :]
+        data.Ytf3 = self.Ytf3[elm_idx_3, :]
+
+        data.phA = self.phA[elm_idx]
+        data.phB = self.phB[elm_idx]
+        data.phC = self.phC[elm_idx]
+
         return data
 
     def copy(self) -> "PassiveBranchData":
@@ -124,6 +144,10 @@ class PassiveBranchData(BranchParentData):
 
         data.virtual_tap_f = self.virtual_tap_f.copy()
         data.virtual_tap_t = self.virtual_tap_t.copy()
+
+        data.phA = self.phA.copy()
+        data.phB = self.phB.copy()
+        data.phC = self.phC.copy()
 
         return data
 

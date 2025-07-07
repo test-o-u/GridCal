@@ -10,6 +10,7 @@ import numpy as np
 from numpy import pi, log, sqrt
 from matplotlib import pyplot as plt
 
+from GridCalEngine.Devices.admittance_matrix import AdmittanceMatrix
 from GridCalEngine.basic_structures import Logger, Mat, IntVec, Vec, CxMat
 from GridCalEngine.Devices.Parents.editable_device import EditableDevice, DeviceType
 from GridCalEngine.Devices.Branches.wire import Wire
@@ -341,8 +342,15 @@ class OverheadLineType(EditableDevice):
         return self._z_phases_abcn
 
     @property
-    def z_abc(self) -> CxMat | None:
+    def z_abc(self) -> CxMat:
         return self._z_abc
+
+    @z_abc.setter
+    def z_abc(self, val):
+        if isinstance(val, np.ndarray):
+            self._z_abc = val
+        else:
+            raise Exception("z_abc is not a numpy array")
 
     @property
     def z_phases_abc(self) -> CxMat | None:
@@ -368,6 +376,13 @@ class OverheadLineType(EditableDevice):
     def y_abc(self) -> CxMat | None:
         return self._y_abc
 
+    @y_abc.setter
+    def y_abc(self, val):
+        if isinstance(val, np.ndarray):
+            self._y_abc = val
+        else:
+            raise Exception("y_abc is not a numpy array")
+
     @property
     def y_phases_abc(self) -> CxMat | None:
         return self._y_phases_abc
@@ -380,36 +395,121 @@ class OverheadLineType(EditableDevice):
     def y_0123(self) -> CxMat | None:
         return self._y_0123
 
-    def get_ys(self, circuit_idx: int, Sbase: float, length: float, Vnom: float):
+    def get_phA(self):
+        phases = self.y_phases_abcn
+        phA = 0
+        if 1 in phases:
+            phA = 1
+        return phA
+
+    def get_phB(self):
+        phases = self.y_phases_abcn
+        phB = 0
+        if 2 in phases:
+            phB = 1
+        return phB
+
+    def get_phC(self):
+        phases = self.y_phases_abcn
+        phC = 0
+        if 3 in phases:
+            phC = 1
+        return phC
+
+    def get_ys(self, circuit_idx: int, Sbase: float, length: float, Vnom: float) -> AdmittanceMatrix:
         """
         get the series admittance matrix in p.u. (total)
         :param circuit_idx: Circuit index (starting by 1)
         :param Sbase: Base power (MVA)
         :param length: Line length (km)
         :param Vnom: Nominal voltage (kV)
-        :return: Series admittance in p.u.
+        :return: AdmittanceMatrix with series admittance in p.u.
         """
-        Zbase = (Vnom * Vnom) / Sbase
+        Zbase = (Vnom * Vnom) / (Sbase)
+        rows, columns = self.z_abc.shape
+        adm = AdmittanceMatrix(size=3)
 
-        k = (3 * (circuit_idx - 1)) + np.array([0, 1, 2])
-        z = self.z_abc[np.ix_(k, k)] * length / Zbase
-        y = np.linalg.inv(z)
-        return y
+        if rows % 3 == 0 and columns % 3 == 0:
+            k = (3 * (circuit_idx - 1)) + np.array([0, 1, 2])
+            z = self.z_abc[np.ix_(k, k)] * length / Zbase
+            adm.values = np.linalg.inv(z)
+            adm.phA = 1
+            adm.phB = 1
+            adm.phC = 1
 
-    def get_ysh(self, circuit_idx: int, Sbase: float, length: float, Vnom: float):
+            return adm
+
+        elif rows < 3 and columns < 3:
+            phases = self.z_phases_abc
+            phases = phases[phases > 3*(circuit_idx - 1)]
+            phases = phases[phases <= 3 * circuit_idx]
+            phases = phases - 3 * (circuit_idx - 1) - 1
+
+            z = self.z_abc * length / Zbase
+            y = np.linalg.inv(z)
+            y_3x3 = np.zeros((3,3), dtype=complex)
+            y_3x3[np.ix_(phases,phases)] = y
+
+            adm.values = y_3x3
+            if 1 in self.y_phases_abc:
+                adm.phA = 1
+            if 2 in self.y_phases_abc:
+                adm.phB = 1
+            if 3 in self.y_phases_abc:
+                adm.phC = 1
+
+            return adm
+
+        else:
+            raise Exception("Invalid overhead line type configuration")
+
+    def get_ysh(self, circuit_idx: int, Sbase: float, length: float, Vnom: float) -> AdmittanceMatrix:
         """
         get the shunt admittance matrix in p.u. (total)
         :param circuit_idx: Circuit index (starting by 1)
         :param Sbase: Base power (MVA)
         :param length: Line length (km)
         :param Vnom: Nominal voltage (kV)
-        :return: Shunt admittance in p.u.
+        :return: AdmittanceMatrix with shunt admittance in p.u.
         """
-        Zbase = (Vnom * Vnom) / Sbase
+
+        if circuit_idx == 0:
+            circuit_idx = 1
+
+        Zbase = (Vnom * Vnom) / (Sbase)
         Ybase = 1 / Zbase
-        k = (3 * (circuit_idx - 1)) + np.array([0, 1, 2])
-        y = self.y_abc[np.ix_(k, k)] * length * -1e6 / Ybase
-        return y
+
+        rows, columns = self.y_abc.shape
+        adm = AdmittanceMatrix(size=3)
+
+        if rows % 3 == 0 and columns % 3 == 0:
+            k = (3 * (circuit_idx - 1)) + np.array([0, 1, 2])
+            y = self.y_abc[np.ix_(k, k)] * length * 1e6 / Ybase
+            adm.values = y
+            adm.phA = 1
+            adm.phB = 1
+            adm.phC = 1
+
+        else:
+            phases = self.y_phases_abc
+
+            phases = phases[phases > 3 * (circuit_idx - 1)]
+            phases = phases[phases <= 3 * circuit_idx]
+            phases = phases - 3 * (circuit_idx - 1) - 1
+
+            y = self.y_abc * length * 1e6 / Ybase
+            y_3x3 = np.zeros((3, 3), dtype=complex)
+            y_3x3[np.ix_(phases, phases)] = y
+
+            adm.values = y_3x3
+            if 1 in self.y_phases_abc:
+                adm.phA = 1
+            if 2 in self.y_phases_abc:
+                adm.phB = 1
+            if 3 in self.y_phases_abc:
+                adm.phC = 1
+
+        return adm
 
     def add_wire_relationship(self, wire: Wire,
                               xpos: float = 0.0,
@@ -466,14 +566,30 @@ class OverheadLineType(EditableDevice):
 
         ok = True
         ok = ok and self.z_abc is not None
-        ok = ok and self.z_seq is not None
-        ok = ok and self.z_abcn is not None
+        # ok = ok and self.z_seq is not None
+        # ok = ok and self.z_abcn is not None
         ok = ok and self.z_phases_abc is not None
-        ok = ok and self.z_phases_abcn is not None
+        # ok = ok and self.z_phases_abcn is not None
         ok = ok and self.y_abc is not None
-        ok = ok and self.y_seq is not None
-        ok = ok and self.y_abcn is not None
+        # ok = ok and self.y_seq is not None
+        # ok = ok and self.y_abcn is not None
         ok = ok and self.y_phases_abc is not None
+        # ok = ok and self.y_phases_abcn is not None
+
+        return ok
+
+    def has_sequence_data(self) -> bool:
+        """
+        Boolean that tells if the template has already been computed or not
+        :return: if computed or not
+        """
+
+        ok = True
+        ok = ok and self.z_seq is not None
+        ok = ok and self.y_seq is not None
+        ok = ok and self.z_abcn is not None
+        ok = ok and self.y_abcn is not None
+        ok = ok and self.z_phases_abcn is not None
         ok = ok and self.y_phases_abcn is not None
 
         return ok
@@ -517,15 +633,15 @@ class OverheadLineType(EditableDevice):
             return False
 
         # if there is a phase, all the preceding ones must be present too
-        mx = max(phases)
-        missing_phases = False
-        for i in range(1, mx):
-            if i not in phases:
-                logger.add('Missing phase', value=i)
-                missing_phases = True
+        # mx = max(phases)
+        # missing_phases = False
+        # for i in range(1, mx):
+        #     if i not in phases:
+        #         logger.add('Missing phase', value=i)
+        #         missing_phases = True
 
-        if missing_phases:
-            return False
+        # if missing_phases:
+        #     return False
 
         return True
 
@@ -604,8 +720,9 @@ class OverheadLineType(EditableDevice):
             I_kA = self.Imax[circuit_idx - 1]
             return R1, X1, Bsh1, I_kA
         else:
-            warn(f"{self.name} tower is incorrect :(")
-            return 0.0, 1e-20, 0.0
+            #warn(f"{self.name} tower is incorrect :(")
+            I_kA = self.Imax[circuit_idx - 1]
+            return 0.0, 1e-20, 0.0, I_kA
 
     def get_values(self, Sbase, length, circuit_index: int = 1, round_vals: bool = False, Vnom: float | None = None):
         """
@@ -619,6 +736,15 @@ class OverheadLineType(EditableDevice):
         """
 
         Vn = self.Vnom if Vnom is None else Vnom
+
+        if self.z_seq is None and self.y_seq is None:
+            if self.Imax is not None:
+                # get the rating in MVA = kA * kV
+                rate = self.Imax[circuit_index - 1] * Vn * np.sqrt(3)
+                return 0.0, 1e-20, 0.0, 0.0, 1e-20, 0.0, rate
+            else:
+                return 0.0, 1e-20, 0.0, 0.0, 1e-20, 0.0, 0.0
+
         Zbase = (Vn * Vn) / Sbase
         Ybase = 1 / Zbase
 
@@ -1118,7 +1244,10 @@ def calc_z_matrix(wires_in_tower: ListOfWires, f: float = 50, rho: float = 100, 
     phases_abc = phases_abcn[a]
 
     # compute the sequence components
-    z_seq = abc_2_seq(z_abc)
+    if z_abc.shape[0] == 3:
+        z_seq = abc_2_seq(z_abc)
+    else:
+        z_seq = None
 
     return z_abcn, phases_abcn, z_abc, phases_abc, z_seq
 
@@ -1203,6 +1332,36 @@ def calc_y_matrix(wires_in_tower: ListOfWires, f: float = 50):
     y_abc = 1j * w * np.linalg.inv(p_abc)  # [S/km]
 
     # compute the sequence components
-    y_seq = abc_2_seq(y_abc)  # [S/km]
+    if y_abc.shape[0] == 3:
+        y_seq = abc_2_seq(y_abc)  # [S/km]
+    else:
+        y_seq = None
 
     return y_abcn, phases_abcn, y_abc, phases_abc, y_seq
+
+
+def create_known_abc_overhead_template(name: str, z_abc: CxMat, ysh_abc: CxMat, phases: IntVec,
+                                   Vnom: float = 1.0,
+                                   earth_resistivity: float = 100,
+                                   frequency: float = 50):
+    """
+
+    :param name:
+    :param z_abc:
+    :param ysh_abc:
+    :param phases:
+    :param Vnom:
+    :param earth_resistivity:
+    :param frequency:
+    :return:
+    """
+    template = OverheadLineType(name=name,
+                                Vnom=Vnom,
+                                earth_resistivity=earth_resistivity,
+                                frequency=frequency)
+
+    template._y_phases_abc = phases
+    template._z_phases_abc = phases
+    template._z_abc = z_abc
+    template._y_abc = ysh_abc
+    return template

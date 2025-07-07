@@ -100,7 +100,7 @@ class Line(BranchParent):
                  r2=1e-20, x2=1e-20, b2=1e-20,
                  capex=0,
                  opex=0,
-                 circuit_idx: int = 0,
+                 circuit_idx: int = 1,
                  build_status: BuildStatus = BuildStatus.Commissioned):
         """
         AC current Line
@@ -486,6 +486,7 @@ class Line(BranchParent):
             if not obj.is_computed():
                 obj.compute()
                 if not obj.is_computed():
+                    logger.add_error("No admittance data", device=obj.name)
                     return
             else:
                 pass
@@ -496,15 +497,18 @@ class Line(BranchParent):
             if not accept_line_connection(template_vn, vn, 0.1):
                 raise Exception('Template voltage differs too much from the line nominal voltage')
 
-            (self.R, self.X, self.B,
-             self.R0, self.X0, self.B0,
-             self.rate) = obj.get_values(Sbase=Sbase,
-                                         length=self.length,
-                                         circuit_index=self.circuit_idx,
-                                         Vnom=vn)
+            if obj.has_sequence_data():
+                (self.R, self.X, self.B,
+                 self.R0, self.X0, self.B0,
+                 self.rate) = obj.get_values(Sbase=Sbase,
+                                             length=self.length,
+                                             circuit_index=self.circuit_idx,
+                                             Vnom=vn)
+            else:
+                logger.add_info("No sequence data", device=obj.name)
 
-            self.ys.values = obj.get_ys(circuit_idx=self.circuit_idx, Sbase=Sbase, length=self.length, Vnom=vn)
-            self.ysh.values = obj.get_ysh(circuit_idx=self.circuit_idx, Sbase=Sbase, length=self.length, Vnom=vn)
+            self.ys = obj.get_ys(circuit_idx=self.circuit_idx, Sbase=Sbase, length=self.length, Vnom=vn)
+            self.ysh = obj.get_ysh(circuit_idx=self.circuit_idx, Sbase=Sbase, length=self.length, Vnom=vn)
 
             self.template = obj
 
@@ -522,6 +526,9 @@ class Line(BranchParent):
                                          freq=freq,
                                          length=self.length,
                                          line_Vnom=self.get_max_bus_nominal_voltage())
+
+            self.ys.values = obj.zs012_ysabc()
+            self.ysh.values = obj.zsh012_yshabc()
 
             self.template = obj
 

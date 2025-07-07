@@ -85,7 +85,7 @@ class SequenceLineType(EditableDevice):
 
 
     def __init__(self, name='SequenceLine', idtag=None, Imax=1, Vnom=1,
-                 R=0, X=0, B=0, R0=0, X0=0, B0=0, CnF=0, CnF0=0, use_conductance: bool = False):
+                 R=1e-20, X=1e-20, B=1e-20, R0=1e-20, X0=1e-20, B0=1e-20, CnF=1e-20, CnF0=1e-20, use_conductance: bool = False):
         """
         Constructor
         :param name: name of the model
@@ -172,3 +172,31 @@ class SequenceLineType(EditableDevice):
                                                        Sbase=Sbase, Vnom=line_Vnom)
 
         return R, X, B, R0, X0, B0, rate
+
+    def zs012_ysabc(self):
+        z1 = self.R + 1j * self.X
+        z0 = self.R0 + 1j * self.X0
+
+        diag = (2*z1 + z0) / 3
+        off_diag = (z0 - z1) / 3
+
+        zabc = np.full((3,3), off_diag)
+        np.fill_diagonal(zabc, diag)
+
+        ysabc = np.linalg.inv(zabc)
+
+        return ysabc
+
+    def zsh012_yshabc(self):
+        z1 = 1 / (1j * 2 * np.pi * 50 * self.Cnf / 10**9 + 1e-20)
+        z0 = 1 / (1j * 2 * np.pi * 50 * self.Cnf0 / 10**9 + 1e-20)
+
+        diag = (2*z1 + z0) / 3
+        off_diag = (z0 - z1) / 3
+
+        zabc = np.full((3, 3), off_diag)
+        np.fill_diagonal(zabc, diag)
+
+        yshabc = np.linalg.inv(zabc)
+
+        return yshabc

@@ -10,7 +10,7 @@ from GridCalEngine.Devices.Parents.physical_device import PhysicalDevice
 from GridCalEngine.Devices.Associations.association import Associations
 from GridCalEngine.Devices.Substation.bus import Bus
 from GridCalEngine.Devices.Substation.connectivity_node import ConnectivityNode
-from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType
+from GridCalEngine.enumerations import BuildStatus, DeviceType, SubObjectType, ShuntConnectionType
 from GridCalEngine.basic_structures import CxVec
 from GridCalEngine.Devices.profile import Profile
 from GridCalEngine.Devices.Aggregation.facility import Facility
@@ -60,7 +60,8 @@ class InjectionParent(PhysicalDevice):
         'shift_key',
         '_shift_key_prof',
         '_use_kw',
-        '_rms_model',
+        '_conn',
+        '_rms_model'
     )
 
     def __init__(self,
@@ -130,6 +131,8 @@ class InjectionParent(PhysicalDevice):
 
         self._use_kw: bool = False
 
+        self._conn: ShuntConnectionType = ShuntConnectionType.Star
+
         self._rms_model: DynamicModelHost = DynamicModelHost()
 
         self.register(key='bus', units='', tpe=DeviceType.BusDevice, definition='Connection bus', editable=False)
@@ -163,6 +166,9 @@ class InjectionParent(PhysicalDevice):
         self.register(key='shift_key', units='', tpe=float, definition='Shift key for net transfer capacity')
 
         self.register(key='use_kw', units='', tpe=bool, definition='Consider the injections in kW and kVAr?')
+
+        self.register(key='conn', units='', tpe=ShuntConnectionType,
+                      definition='Connection type for 3-phase studies')
 
         self.register(key='rms_model', units='', tpe=SubObjectType.DynamicModelHostType,
                       definition='RMS dynamic model', display=False)
@@ -285,6 +291,15 @@ class InjectionParent(PhysicalDevice):
                                      .replace( "kVA", "MVA"))
         else:
             self._use_kw = val
+
+    @property
+    def conn(self) -> ShuntConnectionType:
+        return self._conn
+
+    @conn.setter
+    def conn(self, val: ShuntConnectionType):
+        if isinstance(val, ShuntConnectionType):
+            self._conn = val
 
     @property
     def rms_model(self) -> DynamicModelHost:

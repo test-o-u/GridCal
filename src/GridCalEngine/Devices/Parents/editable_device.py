@@ -14,7 +14,8 @@ from GridCalEngine.enumerations import (DeviceType, TimeFrame, BuildStatus, Wind
                                         CpfParametrization, CpfStopAt, InvestmentEvaluationMethod, SolverType,
                                         InvestmentsEvaluationObjectives, NodalCapacityMethod, TimeGrouping,
                                         ZonalGrouping, MIPSolvers, AcOpfMode, SubstationTypes, BranchGroupTypes,
-                                        BranchImpedanceMode, FaultType, TapChangerTypes, ContingencyOperationTypes)
+                                        BranchImpedanceMode, FaultType, TapChangerTypes, ContingencyOperationTypes,
+                                        WindingType, MethodShortCircuit, PhasesShortCircuit)
 
 # types that can be assigned to a GridCal property
 GCPROP_TYPES = Union[
@@ -49,6 +50,9 @@ GCPROP_TYPES = Union[
     Type[ContingencyOperationTypes],
     Type[BranchGroupTypes],
     Type[ConverterControlType],
+    Type[WindingType],
+    Type[MethodShortCircuit],
+    Type[PhasesShortCircuit],
     Type[DeviceType]
 ]
 
@@ -84,7 +88,7 @@ def parse_idtag(val: Union[str, None]) -> str:
         return str(val)
 
 
-def smart_compare(a, b, atol = 1.e-10):
+def smart_compare(a, b, atol=1.e-10):
     """
     Compares two Python objects with tolerance for numerical values.
 
@@ -922,7 +926,7 @@ class EditableDevice:
                                 device=self.idtag + ":" + self.name,
                                 device_property=prop.name,
                                 value=str(new_obj))
-                
+
     def compare(self, other: Any,
                 logger: Logger,
                 detailed_profile_comparison=False,

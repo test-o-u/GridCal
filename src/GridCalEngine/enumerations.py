@@ -643,6 +643,73 @@ class FaultType(Enum):
         """
         return list(map(lambda c: c.value, cls))
 
+class MethodShortCircuit(Enum):
+    """
+    Short circuit type
+    """
+    sequences = 'sequences'
+    phases = 'phases'
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+        :param s:
+        :return:
+        """
+        try:
+            return MethodShortCircuit[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+class PhasesShortCircuit(Enum):
+    """
+    Short circuit type
+    """
+    abc = 'abc'
+    ab = 'ab'
+    bc = 'bc'
+    ca = 'ca'
+    a = 'a'
+    b = 'b'
+    c = 'c'
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+        :param s:
+        :return:
+        """
+        try:
+            return PhasesShortCircuit[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
 
 class WindingsConnection(Enum):
     """
@@ -673,6 +740,78 @@ class WindingsConnection(Enum):
         """
         try:
             return WindingsConnection[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+
+class WindingType(Enum):
+    """
+    Transformer windings connection types
+    """
+    Star = "Y"
+    GroundedStar = "Yn"
+    Delta = "D"
+    ZigZag = "Z"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+
+        :param s:
+        :return:
+        """
+        try:
+            return WindingType[s]
+        except KeyError:
+            return s
+
+    @classmethod
+    def list(cls):
+        """
+
+        :return:
+        """
+        return list(map(lambda c: c.value, cls))
+
+
+
+class ShuntConnectionType(Enum):
+    """
+    Loads, shunts, etc.. connection types
+    """
+    Star = "Y"
+    GroundedStar = "Yn"
+    Delta = "D"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def argparse(s):
+        """
+
+        :param s:
+        :return:
+        """
+        try:
+            return ShuntConnectionType[s]
         except KeyError:
             return s
 
@@ -1789,6 +1928,13 @@ class ContingencyOperationTypes(Enum):
     def __repr__(self):
         return str(self)
 
+    # def __call__(self, value, names=None, *, module=None, qualname=None, type=None, start=1, boundary=None):
+    #     if value == 'status':
+    #         return ContingencyOperationTypes.Active
+    #
+    #     return super.__call__(value, names=names,
+    #                           module=module, qualname=qualname, type=type, start=start, boundary=boundary)
+
     @staticmethod
     def argparse(s):
         """
@@ -1796,6 +1942,9 @@ class ContingencyOperationTypes(Enum):
         :param s:
         :return:
         """
+        if s == 'status':
+            return ContingencyOperationTypes.Active
+
         try:
             return ContingencyOperationTypes[s]
         except KeyError:

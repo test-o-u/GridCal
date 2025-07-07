@@ -15,3 +15,4 @@ from GridCalEngine.Devices.Diagrams import *
 from GridCalEngine.Devices.Fluid import *
 from GridCalEngine.Devices.Dynamic import *
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
+from GridCalEngine.Devices.admittance_matrix import AdmittanceMatrix
