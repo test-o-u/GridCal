@@ -55,9 +55,9 @@ Vline_to = Var("Vline_to")
 dline_from = Var("dline_from")
 dline_to = Var("dline_to")
 
-g = Const(5,'g')
-b = Const(-12,'b')
-bsh = Const(0.03,'bsh')
+g = Const(5)
+b = Const(-12)
+bsh = Const(0.03)
 
 
 
@@ -69,8 +69,7 @@ line_block = Block(
         Qline_to - (Vline_to ** 2 * (-bsh/2 - b) - g * Vline_to * Vline_from * sin(dline_to - dline_from) + b * Vline_to * Vline_from * sin(dline_to - dline_from + np.pi/2)),
     ],
     algebraic_vars=[dline_from, Vline_from, dline_to, Vline_to],
-    parameters=[g, b, bsh],
-    events=[]
+    parameters=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -80,10 +79,10 @@ line_block = Block(
 Ql = Var("Ql")
 Pl = Var("Pl")
 
-coeff_alfa = Const(1.8,'coeff_alfa')
-Pl0 = Const(0.1,'Pl0')
-Ql0 = Const(0.1,'Ql0')
-coeff_beta = Const(8.0,'coeff_beta')
+coeff_alfa = Const(1.8)
+Pl0 = Var('Pl0', 0.1)
+Ql0 = Const(0.1)
+coeff_beta = Const(8.0)
 
 load_block = Block(
     algebraic_eqs=[
@@ -91,8 +90,7 @@ load_block = Block(
         Ql - (Ql0)
     ],
     algebraic_vars=[Ql, Pl],
-    parameters=[Pl0, Ql0, coeff_alfa, coeff_beta],
-    events=[]
+    parameters=[Pl0]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -116,18 +114,18 @@ tm = Var("tm")
 et = Var("et")
 
 
-pi = Const(math.pi,'pi')
-fn =  Const(50,'fn')
+pi = Const(math.pi)
+fn =  Const(50)
 # tm = Const(0.1)
-M = Const(1.0,'M')
-D = Const(100,'D')
-ra = Const(0.3,'ra')
-xd = Const(0.86138701,'xd')
-vf = Const(1.081099313,'vf')
+M = Const(1.0)
+D = Const(100)
+ra = Const(0.3)
+xd = Const(0.86138701)
+vf = Const(1.081099313)
 
-Kp = Const(1.0,'Kp')
-Ki = Const(10.0,'Ki')
-Kw = Const(10.0,'Kw')
+Kp = Const(1.0)
+Ki = Const(10.0)
+Kw = Const(10.0)
 
 
 generator_block = Block(
@@ -152,8 +150,7 @@ generator_block = Block(
         (v_q * i_d - v_d * i_q) - Q_g
     ],
     algebraic_vars=[tm, psid, psiq, i_d, i_q, v_d, v_q, t_e, p_g, Q_g],
-    parameters=[pi, fn, M, D, ra, xd, vf, Kp, Ki, Kw],
-    events=[]
+    parameters=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -167,8 +164,7 @@ bus1_block = Block(
         Vg - Vline_from,
         dg - dline_from
     ],
-    algebraic_vars=[Pline_from, Qline_from, Vg, dg],
-    events=[]
+    algebraic_vars=[Pline_from, Qline_from, Vg, dg]
 )
 
 bus2_block = Block(
@@ -176,8 +172,7 @@ bus2_block = Block(
         Pl + Pline_to,
         Ql + Qline_to,
     ],
-    algebraic_vars=[Pline_to, Qline_to],
-    events=[]
+    algebraic_vars=[Pline_to, Qline_to]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -186,8 +181,7 @@ bus2_block = Block(
 
 sys = Block(
     children=[line_block, load_block, generator_block, bus1_block, bus2_block],
-    in_vars=[],
-    out_vars=[]
+    in_vars=[]
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -197,24 +191,7 @@ slv = BlockSolver(sys)
 
 
 params_mapping = {
-
-    coeff_alfa: 1.8,
-    Pl0: 0.1,
-    Ql0: 0.1,
-    coeff_beta: 8.0,
-    g: 5.0,
-    b: -12,
-    bsh: 0.03,
-    pi: math.pi,
-    fn: 50,
-    M: 1.0,
-    D: 100,
-    ra: 0.3,
-    xd: 0.86138701,
-    vf: 1.081099313,
-    Kp: 1.0,
-    Ki: 10.0,
-    Kw: 10.0
+    Pl0: 0.1
 }
 vars_mapping = {
 
@@ -254,7 +231,6 @@ my_events = Events([event1, event2])
 
 x0 = slv.build_init_vars_vector(vars_mapping)
 params0 = slv.build_init_params_vector(params_mapping)
-#events = slv.build_init_events_vector(vars_mapping)
 vars_in_order = slv.sort_vars(vars_mapping)
 
 t, y = slv.simulate(

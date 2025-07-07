@@ -31,10 +31,7 @@ class Block:
     algebraic_eqs: List[Expr] = field(default_factory=list)
 
     # parameters
-    parameters: List[Const] = field(default_factory=list)
-
-    # events
-    events: List[EventParam] = field(default_factory=list)
+    parameters: List[Var] = field(default_factory=list)
 
     name: str = ""
 

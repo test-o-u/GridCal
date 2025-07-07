@@ -184,12 +184,13 @@ class Expr:
 # Atomic nodes
 # ----------------------------------------------------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class Const(Expr):
     """
     Constant expression (i.e a number)
     """
-    value: float
+    value: NUMBER
     uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
@@ -201,16 +202,8 @@ class Const(Expr):
     def _diff1(self, var: Var | str) -> "Expr":
         return Const(0)
 
-    def subs(self, mapping: Dict[Any, Expr]) -> Expr:
-        if self in mapping:
-            return mapping[self]
-        if self.name in mapping:
-            return mapping[self.name]
-        return self
-
     def __str__(self) -> str:
         return str(self.value)
-
 
 
 @dataclass(frozen=True)
@@ -219,6 +212,7 @@ class Var(Expr):
     Any variable
     """
     name: str
+    value: float = 0
     uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
@@ -661,9 +655,12 @@ def _emit(expr: Expr, uid_map_vars: Dict[int, str], uid_map_params: Dict[int, st
     """
     if isinstance(expr, Const):
         pdb.set_trace()
-        return uid_map_params[expr.uid]
+        return expr.value
     if isinstance(expr, Var):
-        return uid_map_vars[expr.uid]  # positional variable
+        if expr.uid in uid_map_vars.keys():
+            return uid_map_vars[expr.uid]  # positional variable
+        else:
+            return uid_map_params[expr.uid]
     if isinstance(expr, UnOp):
         return f"-({_emit(expr.operand, uid_map_vars, uid_map_params)})"
     if isinstance(expr, BinOp):

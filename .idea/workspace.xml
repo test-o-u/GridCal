@@ -29,8 +29,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="no events in symbolic library">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/block.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -304,7 +305,7 @@
       <recent name="D:\SIROCO\GridCal\src\GridCal\Gui\Diagrams\MapWidget\Substation" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.admittance_matrices">
     <configuration default="true" type="DjangoTestsConfigurationType">
       <module name="GridCalEngine" />
       <option name="ENV_FILES" value="" />
