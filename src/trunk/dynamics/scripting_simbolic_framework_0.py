@@ -80,7 +80,7 @@ Ql = Var("Ql")
 Pl = Var("Pl")
 
 coeff_alfa = Const(1.8)
-Pl0 = Var('Pl0', 0.1)
+Pl0 = Var('Pl0')
 Ql0 = Const(0.1)
 coeff_beta = Const(8.0)
 

@@ -212,7 +212,6 @@ class Var(Expr):
     Any variable
     """
     name: str
-    value: float = 0
     uid: int = field(default_factory=_new_uid, init=False)
 
     def eval(self, **bindings: NUMBER) -> NUMBER:
