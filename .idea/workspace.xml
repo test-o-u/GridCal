@@ -28,11 +28,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="events without events dictionary">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/GridCalEngine/Utils/Symbolic/symbolic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/trunk/dynamics/scripting_simbolic_framework_0.py" afterDir="false" />
-    </list>
+    <list default="true" id="aa3ee678-6e91-470f-91a9-09e9d8a4756d" name="Changes" comment="events without events dictionary 2" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -2400,7 +2396,7 @@
       <option name="project" value="LOCAL" />
       <updated>1698766404661</updated>
     </task>
-    <option name="localTasksCounter" value="719" />
+    <option name="localTasksCounter" value="720" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -2446,7 +2442,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implemented fast admittance matrix update" />
     <MESSAGE value="Fixed fast update, removed prints from nr_fx" />
     <MESSAGE value="Some admittances refactoring" />
     <MESSAGE value="All tests passing" />
@@ -2471,7 +2466,8 @@
     <MESSAGE value="events as variables 1" />
     <MESSAGE value="events as variables 2" />
     <MESSAGE value="events without events dictionary" />
-    <option name="LAST_COMMIT_MESSAGE" value="events without events dictionary" />
+    <MESSAGE value="events without events dictionary 2" />
+    <option name="LAST_COMMIT_MESSAGE" value="events without events dictionary 2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
