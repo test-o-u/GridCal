@@ -641,6 +641,23 @@ def _dict_to_expr(data: Dict[str, Any]) -> Expr:
     object.__setattr__(obj, "uid", data["uid"])
     return obj
 
+def expr_to_str(expr):
+    if isinstance(expr, Const):
+        return str(expr.value)
+    elif isinstance(expr, Var):
+        return expr.name
+    elif isinstance(expr, UnOp):
+        return f"({expr.op}{expr_to_str(expr.operand)})"
+    elif isinstance(expr, BinOp):
+        left = expr_to_str(expr.left)
+        right = expr_to_str(expr.right)
+        return f"({left} {expr.op} {right})"
+    elif isinstance(expr, Func):
+        arg_str = expr_to_str(expr.arg)
+        return f"{expr.name}({arg_str})"
+    else:
+        raise TypeError(f"Unknown expression type: {type(expr)}")
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Convenience top‑level helpers
