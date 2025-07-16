@@ -305,7 +305,7 @@ class BlockSolver:
         """
         Return (algebraic_eqs, state_eqs) as *originally declared* (no substitution).
         """
-        return self._algebraic_eqs, self._state_eqs
+        return self._state_eqs, self._algebraic_eqs
 
     def check_events(self, t):
         new_values = list()

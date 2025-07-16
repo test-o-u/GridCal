@@ -3,9 +3,12 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
 import math
+import pdb
 
 import numpy as np
 from matplotlib import pyplot as plt
+
+from GridCalEngine.Simulations.Rms.initialization import initialize
 #from pygments.lexers.dsls import VGLLexer
 
 #from GridCalEngine.Utils.Symbolic.events import EventParam
@@ -247,6 +250,12 @@ slv = BlockSolver(sys)
 #TODO: run initialization
 
 x0 = slv.build_init_vector(mapping)
+
+init_values = initialize(slv, x0, 'Newton-Krylov')
+print(init_values)
+
+pdb.set_trace()
+
 events = slv.build_init_events_vector(mapping)
 vars_in_order = slv.sort_vars(mapping)
 
