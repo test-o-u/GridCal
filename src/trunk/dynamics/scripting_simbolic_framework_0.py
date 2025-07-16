@@ -15,40 +15,6 @@ from GridCalEngine.Utils.Symbolic.block_solver import BlockSolver
 import GridCalEngine.api as gce
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Intialization
-# ----------------------------------------------------------------------------------------------------------------------
-grid = gce.MultiCircuit()
-
-bus1 = gce.Bus(name="Bus1", Vnom=10)
-bus2 = gce.Bus(name="Bus2", Vnom=10)
-grid.add_bus(bus1)
-grid.add_bus(bus2)
-
-line = gce.Line(name="line 1-2", bus_from=bus1, bus_to=bus2,
-                r=0.029585798816568046, x=0.07100591715976332, b=0.03, rate=100.0)
-grid.add_line(line)
-
-gen = gce.Generator(name="Gen1", P=10, vset=1.0) # PV
-grid.add_generator(bus=bus1, api_obj=gen)
-
-load = gce.Load(name="Load1", P=10, Q=10)        # PQ
-grid.add_load(bus=bus2, api_obj=load)
-
-res = gce.power_flow(grid)
-
-print(f"Converged: {res.converged}")
-
-vf_0 = res.voltage[0]
-vt_0 = res.voltage[1]
-
-Sf_0 = res.Sf / grid.Sbase
-St_0 = res.St / grid.Sbase
-
-print(res.get_bus_df())
-print(res.get_branch_df())
-
-
-# ----------------------------------------------------------------------------------------------------------------------
 # Line
 # ----------------------------------------------------------------------------------------------------------------------
 g = Const(5)
@@ -126,7 +92,7 @@ D = EventParam(100, 100, 50, 'D')
 #D = Const(100)
 ra = Const(0.3)
 xd = Const(0.86138701)
-vf = Const(1.081099313)
+vf = Const(0.9584725405467506) #1.081099313
 
 Kp = Const(1.0)
 Ki = Const(10.0)
@@ -195,41 +161,90 @@ sys = Block(
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
+# Intialization
+# ----------------------------------------------------------------------------------------------------------------------
+grid = gce.MultiCircuit()
+
+bus1 = gce.Bus(name="Bus1", Vnom=10)
+bus2 = gce.Bus(name="Bus2", Vnom=10)
+grid.add_bus(bus1)
+grid.add_bus(bus2)
+
+line = gce.Line(name="line 1-2", bus_from=bus1, bus_to=bus2,
+                r=0.029585798816568046, x=0.07100591715976332, b=0.03, rate=100.0)
+grid.add_line(line)
+
+gen = gce.Generator(name="Gen1", P=10, vset=1.0) # PV
+grid.add_generator(bus=bus1, api_obj=gen)
+
+load = gce.Load(name="Load1", P=10, Q=10)        # PQ
+grid.add_load(bus=bus2, api_obj=load)
+
+res = gce.power_flow(grid)
+
+print(f"Converged: {res.converged}")
+
+# System
+v1 = res.voltage[0]
+v2 = res.voltage[1]
+
+Sb1 = res.Sbus[0] / grid.Sbase
+Sb2 = res.Sbus[1] / grid.Sbase
+Sf = res.Sf / grid.Sbase
+St = res.St / grid.Sbase
+
+# Generator
+# Current from power and voltage
+i = np.conj(Sb1 / v1)          # ī = (p - jq) / v̄*
+# Delta angle 
+delta0 = np.angle(v1 + ra.value + 1j*xd.value * i)
+# dq0 rotation
+rot = np.exp(-1j * (delta0 - np.pi/2))
+# dq voltages and currents
+v_d0 = np.real(v1*rot)
+v_q0 = np.imag(v1*rot)
+i_d0 = np.real(i*rot)
+i_q0 = np.imag(i*rot)
+# inductances 
+psid0 = -ra.value * i_q0 + v_q0
+psiq0 = -ra.value * i_d0 + v_d0
+
+vf0 = - i_d0 + psid0 + xd.value * i_d0
+print(f"vf = {vf0}")
+
+mapping = {
+    dline_from: np.angle(v1),
+    dline_to: np.angle(v2),
+    Vline_from: np.abs(v1),
+    Vline_to: np.abs(v2),
+    Vg: np.abs(v1),
+    dg: np.angle(v1),
+    Pline_from: Sf.imag,
+    Qline_from: Sf.imag,
+    Pline_to: St.real,
+    Qline_to: St.imag,
+    Pl: Sb2.real,  # P2
+    Ql: Sb2.imag,  # Q2
+    delta: delta0,
+    omega: 1.0,
+    psid: psid0,  # d-axis flux linkage (pu)
+    psiq: psiq0,  # q-axis flux linkage (pu)
+    i_d: i_d0,  # d-axis stator current (pu)
+    i_q: i_q0,  # q-axis stator current (pu)
+    v_d: v_d0,  # d-axis voltage (pu)
+    v_q: v_q0,  # q-axis voltage (pu)
+    t_e: 0.1,  # electromagnetic torque (pu)
+    p_g: Sb1.real,
+    Q_g: Sb1.imag
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # Solver
 # ----------------------------------------------------------------------------------------------------------------------
 slv = BlockSolver(sys)
 
-mapping = {
-
-    dline_from: 15 * (np.pi / 180),
-    dline_to: 10 * (np.pi / 180),
-    Vline_from: 1.0,
-    Vline_to: 0.95,
-    Vg: 1.0,
-    dg: 15 * (np.pi / 180),
-
-    Pline_from: 0.1,
-    Qline_from: 0.2,
-    Pline_to: -0.1,
-    Qline_to: -0.2,
-
-
-    Pl: 0.1,  # P2
-    Ql: 0.2,  # Q2
-
-
-    delta: 0.5,
-    omega: 1.001,
-    psid: 3.825,  # d-axis flux linkage (pu)
-    psiq: 0.0277,  # q-axis flux linkage (pu)
-    i_d: 0.1,  # d-axis stator current (pu)
-    i_q: 0.2,  # q-axis stator current (pu)
-    v_d: -0.2588,  # d-axis voltage (pu)
-    v_q:  0.9659,  # q-axis voltage (pu)
-    t_e: 0.1,  # electromagnetic torque (pu)
-    p_g: 0.1673,
-    Q_g: 0.1484
-}
+#TODO: run initialization
 
 x0 = slv.build_init_vector(mapping)
 events = slv.build_init_events_vector(mapping)
