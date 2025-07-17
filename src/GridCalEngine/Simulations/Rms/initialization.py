@@ -22,8 +22,6 @@ def initialize(system: BlockSolver, guess: list(), method: str)-> np.ndarray:
 def init_newton_krylov(system: BlockSolver, guess) -> np.ndarray:
     state_eqs, algeb_eqs = system.equations()
     equations = state_eqs + algeb_eqs
-    pdb.set_trace()
-    #equations = np.array(state_eqs + algeb_eqs)
 
     def F(x):
         return np.array(equations)

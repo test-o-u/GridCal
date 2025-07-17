@@ -216,31 +216,61 @@ vf0 = - i_d0 + psid0 + xd.value * i_d0
 print(f"vf = {vf0}")
 
 mapping = {
-    dline_from: np.angle(v1),
-    dline_to: np.angle(v2),
-    Vline_from: np.abs(v1),
-    Vline_to: np.abs(v2),
-    Vg: np.abs(v1),
-    dg: np.angle(v1),
-    Pline_from: Sf.imag,
-    Qline_from: Sf.imag,
-    Pline_to: St.real,
-    Qline_to: St.imag,
-    Pl: Sb2.real,  # P2
-    Ql: Sb2.imag,  # Q2
-    delta: delta0,
-    omega: 1.0,
-    psid: psid0,  # d-axis flux linkage (pu)
-    psiq: psiq0,  # q-axis flux linkage (pu)
-    i_d: i_d0,  # d-axis stator current (pu)
-    i_q: i_q0,  # q-axis stator current (pu)
-    v_d: v_d0,  # d-axis voltage (pu)
-    v_q: v_q0,  # q-axis voltage (pu)
-    t_e: 0.1,  # electromagnetic torque (pu)
-    p_g: Sb1.real,
-    Q_g: Sb1.imag
+    "dline_from": np.angle(v1),
+    "dline_to":   np.angle(v2),
+    "Vline_from": np.abs(v1),
+    "Vline_to":   np.abs(v2),
+    "Vg":  np.abs(v1),
+    "dg":  np.angle(v1),
+    "Pline_from": Sf.real,      # notice .real here
+    "Qline_from": Sf.imag,
+    "Pline_to":   St.real,
+    "Qline_to":   St.imag,
+    "Pl": Sb2.real,
+    "Ql": Sb2.imag,
+    "delta": delta0,
+    "omega": 1.0,
+    "psid": psid0,
+    "psiq": psiq0,
+    "i_d": i_d0,
+    "i_q": i_q0,
+    "v_d": v_d0,
+    "v_q": v_q0,
+    "t_e": 0.1,
+    "p_g": Sb1.real,
+    "Q_g": Sb1.imag,
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Check
+# ----------------------------------------------------------------------------------------------------------------------
+def line_power_terms(m, g, b, bsh):
+    d_f, d_t = m["dline_from"], m["dline_to"]
+    Vf,  Vt  = m["Vline_from"], m["Vline_to"]
+    
+    P_from = (Vf**2 * g.value
+              - g.value * Vf * Vt * np.cos(d_f - d_t)
+              + b.value * Vf * Vt * np.cos(d_f - d_t + np.pi/2))
+    
+    Q_from = (Vf**2 * (-bsh.value/2 - b.value)
+              - g.value * Vf * Vt * np.sin(d_f - d_t)
+              + b.value * Vf * Vt * np.sin(d_f - d_t + np.pi/2))
+    
+    P_to   = (Vt**2 * g.value
+              - g.value * Vt * Vf * np.cos(d_t - d_f)
+              + b.value * Vt * Vf * np.cos(d_t - d_f + np.pi/2))
+    
+    Q_to   = (Vt**2 * (-bsh.value/2 - b.value)
+              - g.value * Vt * Vf * np.sin(d_t - d_f)
+              + b.value * Vt * Vf * np.sin(d_t - d_f + np.pi/2))
+    return P_from, Q_from, P_to, Q_to
+
+P_from, Q_from, P_to, Q_to = line_power_terms(mapping, g, b, bsh)
+
+print("P_from =", P_from)
+print("Q_from =", Q_from)
+print("P_to   =", P_to)
+print("Q_to   =", Q_to)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Solver
@@ -250,11 +280,6 @@ slv = BlockSolver(sys)
 #TODO: run initialization
 
 x0 = slv.build_init_vector(mapping)
-
-init_values = initialize(slv, x0, 'Newton-Krylov')
-print(init_values)
-
-pdb.set_trace()
 
 events = slv.build_init_events_vector(mapping)
 vars_in_order = slv.sort_vars(mapping)
