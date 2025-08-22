@@ -868,6 +868,8 @@ def solve_se_gauss_newton(nc: NumericalCircuit,
             Vm += dVm
 
         V = Vm * np.exp(1j * Va)
+        Vm = np.abs(V)
+        Va = np.angle(V)
 
         # Check convergence
         norm_f = np.linalg.norm(dx, np.inf)
