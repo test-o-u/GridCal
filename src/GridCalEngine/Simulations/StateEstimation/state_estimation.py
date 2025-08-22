@@ -56,6 +56,14 @@ def Jacobian_SE(Ybus: csc_matrix, Yf: csc_matrix, Yt: csc_matrix, V: CxVec,
     dSf_dVa, dSf_dVm, dSt_dVa, dSt_dVm = dSbr_dV_matpower(Yf, Yt, V, f, t, Cf, Ct)
     dIf_dVa, dIf_dVm, dIt_dVa, dIt_dVm = dIbr_dV_matpower(Yf, Yt, V)
 
+    # compute the derivatives of absolute current:
+    # using the identity d|I|2/dx = 2 * re(diags(conj(I)) x dI/dx)
+    # so we will square the current measurements for using these derivatives
+    dabsIf2_dVa = 2.0 * (diags(np.conj(If)) @ dIf_dVa).real
+    dabsIf2_dVm = 2.0 * (diags(np.conj(If)) @ dIf_dVm).real
+    dabsIt2_dVa = 2.0 * (diags(np.conj(It)) @ dIt_dVa).real
+    dabsIt2_dVm = 2.0 * (diags(np.conj(It)) @ dIt_dVm).real
+
     # slice derivatives
     dP_dVa = dS_dVa[np.ix_(inputs.p_idx, pvpq)].real
     dQ_dVa = dS_dVa[np.ix_(inputs.q_idx, pvpq)].imag
@@ -65,8 +73,8 @@ def Jacobian_SE(Ybus: csc_matrix, Yf: csc_matrix, Yt: csc_matrix, V: CxVec,
     dPt_dVa = dSt_dVa[np.ix_(inputs.pt_idx, pvpq)].real
     dQf_dVa = dSf_dVa[np.ix_(inputs.qf_idx, pvpq)].imag
     dQt_dVa = dSt_dVa[np.ix_(inputs.qt_idx, pvpq)].imag
-    dIf_dVa = np.abs(dIf_dVa[np.ix_(inputs.if_idx, pvpq)])
-    dIt_dVa = np.abs(dIt_dVa[np.ix_(inputs.it_idx, pvpq)])
+    dIf_dVa = np.abs(dabsIf2_dVa[np.ix_(inputs.if_idx, pvpq)])
+    dIt_dVa = np.abs(dabsIt2_dVa[np.ix_(inputs.it_idx, pvpq)])
     dVm_dVa = csc_matrix(np.zeros((len(inputs.vm_idx), len(pvpq))))
     dVa_dVa = csc_matrix(np.diag(np.ones(n))[np.ix_(inputs.va_idx, pvpq)])
 
@@ -80,8 +88,8 @@ def Jacobian_SE(Ybus: csc_matrix, Yf: csc_matrix, Yt: csc_matrix, V: CxVec,
         dPt_dVm = dSt_dVm[np.ix_(inputs.pt_idx, pvpq)].real
         dQf_dVm = dSf_dVm[np.ix_(inputs.qf_idx, pvpq)].imag
         dQt_dVm = dSt_dVm[np.ix_(inputs.qt_idx, pvpq)].imag
-        dIf_dVm = np.abs(dIf_dVm[np.ix_(inputs.if_idx, pvpq)])
-        dIt_dVm = np.abs(dIt_dVm[np.ix_(inputs.it_idx, pvpq)])
+        dIf_dVm = np.abs(dabsIf2_dVm[np.ix_(inputs.if_idx, pvpq)])
+        dIt_dVm = np.abs(dabsIt2_dVm[np.ix_(inputs.it_idx, pvpq)])
         dVm_dVm = csc_matrix(np.diag(np.ones(n))[np.ix_(inputs.vm_idx, pvpq)])
         dVa_dVm = csc_matrix(np.zeros((len(inputs.va_idx), len(pvpq))))
     else:
@@ -94,8 +102,8 @@ def Jacobian_SE(Ybus: csc_matrix, Yf: csc_matrix, Yt: csc_matrix, V: CxVec,
         dPt_dVm = dSt_dVm[inputs.pt_idx, :].real
         dQf_dVm = dSf_dVm[inputs.qf_idx, :].imag
         dQt_dVm = dSt_dVm[inputs.qt_idx, :].imag
-        dIf_dVm = np.abs(dIf_dVm[inputs.if_idx, :])
-        dIt_dVm = np.abs(dIt_dVm[inputs.it_idx, :])
+        dIf_dVm = np.abs(dabsIf2_dVm[inputs.if_idx, :])
+        dIt_dVm = np.abs(dabsIt2_dVm[inputs.it_idx, :])
         dVm_dVm = csc_matrix(np.diag(np.ones(n))[inputs.vm_idx, :])
         dVa_dVm = csc_matrix(np.zeros((len(inputs.va_idx), n)))
 
@@ -125,8 +133,8 @@ def Jacobian_SE(Ybus: csc_matrix, Yf: csc_matrix, Yt: csc_matrix, V: CxVec,
         St[inputs.pt_idx].real,  # Pt
         Sf[inputs.qf_idx].imag,  # Qf
         St[inputs.qt_idx].imag,  # Qt
-        np.abs(If[inputs.if_idx]),  # If
-        np.abs(It[inputs.it_idx]),  # It
+        np.power(np.abs(If[inputs.if_idx]), 2),  # If
+        np.power(np.abs(It[inputs.it_idx]), 2),  # It
         np.abs(V[inputs.vm_idx]),  # Vm
         np.angle(V[inputs.va_idx]),  # Va
     ]
@@ -157,11 +165,18 @@ def get_measurements_and_deviations(se_input: StateEstimationInput, Sbase: float
                 se_input.pf_value,
                 se_input.pt_value,
                 se_input.qf_value,
-                se_input.qt_value,
-                se_input.if_value,
-                se_input.it_value]:
+                se_input.qt_value]:
         for m in lst:
             magnitudes[k] = m.get_value_pu(Sbase)
+            sigma[k] = m.get_standard_deviation_pu(Sbase)
+            measurements[k] = m
+            k += 1
+
+    # current measurements need to be squared
+    for lst in [se_input.if_value,
+                se_input.it_value]:
+        for m in lst:
+            magnitudes[k] = np.power(m.get_value_pu(Sbase), 2)
             sigma[k] = m.get_standard_deviation_pu(Sbase)
             measurements[k] = m
             k += 1
@@ -191,6 +206,7 @@ def b_test(sigma2: Vec,
     :param dz: residuals r = z - h(x^) (length m)
     :param HtWH: G = H^T W H (k x k)
     :param c_threshold: detection threshold 'c' (use 4.0 as in the paper)
+    :param logger: Logger
     :return:
         'r'      : residuals r_i
         'sigma2' : sigma_i^2
