@@ -2,12 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 # SPDX-License-Identifier: MPL-2.0
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import time
 import numpy as np
-from GridCalEngine.Simulations.PowerFlow.power_flow_results import NumericPowerFlowResults
 from GridCalEngine.Simulations.PowerFlow.Formulations.pf_formulation_template import PfFormulationTemplate
 from GridCalEngine.Utils.Sparse.csc2 import CSC, spsolve_csc
 from GridCalEngine.basic_structures import Logger
+
+if TYPE_CHECKING:
+    from GridCalEngine.Simulations.PowerFlow.power_flow_results import NumericPowerFlowResults
+    from GridCalEngine.Simulations.StateEstimation.state_estimation_results import NumericStateEstimationResults
 
 
 def newton_raphson_fx(problem: PfFormulationTemplate,
@@ -15,7 +20,7 @@ def newton_raphson_fx(problem: PfFormulationTemplate,
                       max_iter: int = 10,
                       trust: float = 1.0,
                       verbose: int = 0,
-                      logger: Logger = Logger()) -> NumericPowerFlowResults:
+                      logger: Logger = Logger()) -> NumericPowerFlowResults | NumericStateEstimationResults:
     """
     Newton-Raphson with Line search to solve:
 

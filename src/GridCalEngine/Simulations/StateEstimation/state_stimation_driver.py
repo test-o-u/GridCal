@@ -9,34 +9,15 @@ from GridCalEngine.Simulations.StateEstimation.state_estimation_results import S
 from GridCalEngine.basic_structures import ConvergenceReport
 from GridCalEngine.Simulations.StateEstimation.state_estimation import solve_se_nr, solve_se_lm
 from GridCalEngine.Simulations.StateEstimation.state_estimation_inputs import StateEstimationInput
+from GridCalEngine.Simulations.StateEstimation.state_estimation_options import StateEstimationOptions
+from GridCalEngine.Simulations.StateEstimation.se_formulation import StateEstimationFormulation
+from GridCalEngine.Simulations.PowerFlow.NumericalMethods.newton_raphson_fx import newton_raphson_fx
+from GridCalEngine.Simulations.PowerFlow.NumericalMethods.powell_fx import powell_fx
+from GridCalEngine.Simulations.PowerFlow.NumericalMethods.levenberg_marquadt_fx import levenberg_marquardt_fx
 from GridCalEngine.Devices.multi_circuit import MultiCircuit
 from GridCalEngine.Compilers.circuit_to_data import compile_numerical_circuit_at
 from GridCalEngine.Simulations.driver_template import DriverTemplate
 from GridCalEngine.enumerations import SolverType
-
-
-class StateEstimationOptions:
-
-    def __init__(self, solver: SolverType = SolverType.NR,
-                 tol: float = 1e-9, max_iter: int = 100, verbose: int = 0,
-                 prefer_correct: bool = True, c_threshold: int = 4.0,
-                 fixed_slack: bool = False):
-        """
-        StateEstimationOptions
-        :param tol: Tolerance
-        :param max_iter: Maximum number of iterations
-        :param verbose: Verbosity level (1 light, 2 heavy)
-        :param prefer_correct: Prefer measurement correction? otherwise measurement deletion is used
-        :param c_threshold: confidence threshold (default 4.0)
-        :param fixed_slack: if true, the measurements on the slack bus are omitted
-        """
-        self.solver = solver
-        self.tol = tol
-        self.max_iter = max_iter
-        self.verbose = verbose
-        self.prefer_correct = prefer_correct
-        self.c_threshold = c_threshold
-        self.fixed_slack: bool = fixed_slack
 
 
 class StateEstimationConvergenceReport(ConvergenceReport):
@@ -190,11 +171,9 @@ class StateEstimation(DriverTemplate):
         for island in islands:
             idx = island.get_simulation_indices()
             adm = island.get_admittance_matrices()
-
+            conn = island.get_connectivity_matrices()
             se_input_island = se_input.slice(bus_idx=island.bus_data.original_idx,
                                              branch_idx=island.passive_branch_data.original_idx)
-
-            conn = island.get_connectivity_matrices()
 
             # run solver
             if self.options.solver == SolverType.NR:
@@ -211,13 +190,26 @@ class StateEstimation(DriverTemplate):
                                        vd=idx.vd,
                                        pv=idx.pv,
                                        no_slack=idx.no_slack,
-                                       tol=self.options.tol,
+                                       tol=self.options.tolerance,
                                        max_iter=self.options.max_iter,
                                        verbose=self.options.verbose,
                                        prefer_correct=self.options.prefer_correct,
                                        c_threshold=self.options.c_threshold,
                                        fixed_slack=self.options.fixed_slack,
                                        logger=self.logger)
+
+                # problem = StateEstimationFormulation(V0=island.bus_data.Vbus,
+                #                                      nc=nc,
+                #                                      options=self.options,
+                #                                      se_input=se_input_island,
+                #                                      logger=self.logger)
+                #
+                # solution = newton_raphson_fx(problem=problem,
+                #                              tol=self.options.tolerance,
+                #                              max_iter=self.options.max_iter,
+                #                              trust=self.options.trust_radius,
+                #                              verbose=self.options.verbose,
+                #                              logger=self.logger)
 
             elif self.options.solver == SolverType.LM:
                 solution = solve_se_lm(nc=island,
@@ -233,13 +225,37 @@ class StateEstimation(DriverTemplate):
                                        vd=idx.vd,
                                        pv=idx.pv,
                                        no_slack=idx.no_slack,
-                                       tol=self.options.tol,
+                                       tol=self.options.tolerance,
                                        max_iter=self.options.max_iter,
                                        verbose=self.options.verbose,
                                        prefer_correct=self.options.prefer_correct,
                                        c_threshold=self.options.c_threshold,
                                        fixed_slack=self.options.fixed_slack,
                                        logger=self.logger)
+                # problem = StateEstimationFormulation(V0=island.bus_data.Vbus,
+                #                                      nc=nc,
+                #                                      options=self.options,
+                #                                      se_input=se_input_island,
+                #                                      logger=self.logger)
+                # solution = levenberg_marquardt_fx(problem=problem,
+                #                                   tol=self.options.tolerance,
+                #                                   max_iter=self.options.max_iter,
+                #                                   verbose=self.options.verbose,
+                #                                   logger=self.logger)
+
+            # elif self.options.solver == SolverType.PowellDogLeg:
+            #
+            #     problem = StateEstimationFormulation(V0=island.bus_data.Vbus,
+            #                                          nc=nc,
+            #                                          options=self.options,
+            #                                          se_input=se_input_island,
+            #                                          logger=self.logger)
+            #     solution = powell_fx(problem=problem,
+            #                          tol=self.options.tolerance,
+            #                          max_iter=self.options.max_iter,
+            #                          verbose=self.options.verbose,
+            #                          logger=self.logger)
+
             else:
                 raise ValueError(f"State Estimation solver type not recognized: {self.options.solver.value}")
 

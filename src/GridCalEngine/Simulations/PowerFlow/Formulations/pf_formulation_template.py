@@ -2,13 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.  
 # SPDX-License-Identifier: MPL-2.0
-from typing import Tuple, List
+from __future__ import annotations
+from typing import Tuple, List, TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from GridCalEngine.basic_structures import Vec, CxVec
 from GridCalEngine.Utils.Sparse.csc2 import CSC, spsolve_csc
-from GridCalEngine.Simulations.PowerFlow.power_flow_results import NumericPowerFlowResults
-from GridCalEngine.Simulations.PowerFlow.power_flow_options import PowerFlowOptions
+
+
+if TYPE_CHECKING:
+    from GridCalEngine.Simulations.PowerFlow.power_flow_results import NumericPowerFlowResults
+    from GridCalEngine.Simulations.PowerFlow.power_flow_options import PowerFlowOptions
+    from GridCalEngine.Simulations.StateEstimation.state_estimation_options import StateEstimationOptions
+
 
 pd.set_option('display.float_format', '{:.6f}'.format)
 
@@ -18,7 +24,7 @@ class PfFormulationTemplate:
     Base Power Flow Formulation class
     """
 
-    def __init__(self, V0: CxVec, options: PowerFlowOptions):
+    def __init__(self, V0: CxVec, options: PowerFlowOptions | StateEstimationOptions):
         """
 
         :param V0:
@@ -31,7 +37,7 @@ class PfFormulationTemplate:
 
         self.Scalc: CxVec = np.zeros(len(V0), dtype=complex)
 
-        self.options: PowerFlowOptions = options
+        self.options: PowerFlowOptions | StateEstimationOptions = options
 
         self._f: Vec = np.zeros(0)
 
