@@ -8,7 +8,7 @@ from typing import Tuple
 
 import pandas as pd
 from scipy.sparse import hstack as sphs, vstack as spvs, csc_matrix, diags
-from scipy.sparse.linalg import factorized, spsolve
+from scipy.sparse.linalg import factorized, spsolve, spilu
 import numpy as np
 from GridCalEngine.Simulations.StateEstimation.state_estimation_inputs import StateEstimationInput
 from GridCalEngine.Simulations.PowerFlow.NumericalMethods.common_functions import power_flow_post_process_nonlinear
@@ -786,6 +786,7 @@ def solve_se_nr(nc: NumericalCircuit,
                                          elapsed=time.time() - start_time,
                                          bad_data_detected=bad_data_detected)
 
+
 def solve_se_gauss_newton(nc: NumericalCircuit,
                           Ybus: CscMat,
                           Yf: CscMat,
@@ -852,7 +853,7 @@ def solve_se_gauss_newton(nc: NumericalCircuit,
             dx = spsolve(G, g)
         except:
             # If matrix is singular, use pseudo-inverse
-            dx = np.linalg.lstsq(G.todense(), g, rcond=None)[0]
+            dx = spilu(G).solve(g)
 
         # Update state
         if fixed_slack:
