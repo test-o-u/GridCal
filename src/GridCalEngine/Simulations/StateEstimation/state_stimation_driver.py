@@ -255,7 +255,6 @@ class StateEstimation(DriverTemplate):
             #                          verbose=self.options.verbose,
             #                          logger=self.logger)
 
-
             elif self.options.solver == SolverType.GN:
                 solution = solve_se_gauss_newton(nc=island,
                                                  Ybus=adm.Ybus,
@@ -270,7 +269,7 @@ class StateEstimation(DriverTemplate):
                                                  vd=idx.vd,
                                                  pv=idx.pv,
                                                  no_slack=idx.no_slack,
-                                                 tol=self.options.tol,
+                                                 tol=self.options.tolerance,
                                                  max_iter=self.options.max_iter,
                                                  verbose=self.options.verbose,
                                                  prefer_correct=self.options.prefer_correct,
