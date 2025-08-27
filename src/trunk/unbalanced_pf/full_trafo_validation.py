@@ -69,18 +69,18 @@ grid.add_line(obj=line_632_633)
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Yy (Validated with OpenDSS)
-XFM_1 = gce.Transformer2W(name='XFM-1',
-                          bus_from=bus_633,
-                          bus_to=bus_634,
-                          HV=4.16,
-                          LV=0.48,
-                          nominal_power=0.5,
-                          rate=0.5,
-                          r=1.1*2,
-                          x=2*2)
-XFM_1.conn_f = WindingType.GroundedStar
-XFM_1.conn_t = WindingType.GroundedStar
-grid.add_transformer2w(XFM_1)
+# XFM_1 = gce.Transformer2W(name='XFM-1',
+#                           bus_from=bus_633,
+#                           bus_to=bus_634,
+#                           HV=4.16,
+#                           LV=0.48,
+#                           nominal_power=0.5,
+#                           rate=0.5,
+#                           r=1.1*2,
+#                           x=2*2)
+# XFM_1.conn_f = WindingType.GroundedStar
+# XFM_1.conn_t = WindingType.GroundedStar
+# grid.add_transformer2w(XFM_1)
 
 # Yd
 # XFM_1 = gce.Transformer2W(name='XFM-1',
@@ -111,25 +111,28 @@ grid.add_transformer2w(XFM_1)
 # grid.add_transformer2w(XFM_1)
 
 # Dd
-# XFM_1 = gce.Transformer2W(name='XFM-1',
-#                           bus_from=bus_633,
-#                           bus_to=bus_634,
-#                           HV=4.16,
-#                           LV=0.48,
-#                           nominal_power=0.5,
-#                           rate=0.5,
-#                           r=1.1*2,
-#                           x=2*2)
-# XFM_1.conn_f = WindingType.Delta
-# XFM_1.conn_t = WindingType.Delta
-# grid.add_transformer2w(XFM_1)
+XFM_1 = gce.Transformer2W(name='XFM-1',
+                          bus_from=bus_633,
+                          bus_to=bus_634,
+                          HV=4.16,
+                          LV=0.48,
+                          nominal_power=0.5,
+                          rate=0.5,
+                          r=1.1*2,
+                          x=2*2)
+XFM_1.conn_f = WindingType.Delta
+XFM_1.conn_t = WindingType.Delta
+grid.add_transformer2w(XFM_1)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Run power flow
 # ----------------------------------------------------------------------------------------------------------------------
-res = gce.power_flow(grid=grid, options=gce.PowerFlowOptions(three_phase_unbalanced=True))
+res = gce.power_flow(grid=grid, options=gce.PowerFlowOptions(three_phase_unbalanced=True, max_iter=25))
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Show the results
 # ----------------------------------------------------------------------------------------------------------------------
 print(res.get_voltage_df())
+
+print("\nIterations: ", res.iterations)
+print("\nConverged? ", res.converged)
